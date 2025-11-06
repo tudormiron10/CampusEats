@@ -1,0 +1,36 @@
+# # Bune practici .NET #
+# Fișiere de build și intermediare
+[Bb]in/
+[Oo]bj/
+
+# # IDE (Rider / Visual Studio) #
+# Fișiere specifice Rider
+.idea/
+
+# Fișiere specifice Visual Studio
+.vs/
+*.suo
+*.user
+*.sln.DotSettings.user
+
+# # Secrete și Configurare Locală #
+# Fișiere de configurare care conțin secrete locale (parole, chei API)
+appsettings.Development.json
+secrets.json
+*.secrets.json
+
+# Fișiere de baze de date locale (dacă ați folosi SQLite pentru teste)
+*.db
+*.db-journal
+
+# # Fișiere generate de OS #
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# macOS
+.DS_Store
+
+# # Fișiere de log #
+*.log
+logs/
