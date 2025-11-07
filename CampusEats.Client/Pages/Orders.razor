@@ -1,0 +1,177 @@
+@page "/orders"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject OrderService OrderService
+
+<PageTitle>My Orders - CampusEats</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">📦 My Orders</h1>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading orders...</p>
+        </div>
+    }
+    else if (error != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @error
+        </div>
+    }
+    else if (!orders.Any())
+    {
+        <div class="alert alert-info">
+            <p>You haven't placed any orders yet.</p>
+            <a href="/menu" class="btn btn-primary">Browse Menu</a>
+        </div>
+    }
+    else
+    {
+        @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
+        {
+            <div class="card mb-3">
+                <div class="card-header" style="cursor: pointer;" @onclick="() => ToggleOrderDetails(order.OrderId)">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>Order #@GetOrderNumber(order.OrderId)</strong>
+                        </div>
+                        <div class="col-md-3">
+                            @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge @GetStatusBadgeClass(order.Status)">
+                                @FormatStatus(order.Status)
+                            </span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <strong>@order.TotalAmount.ToString("C")</strong>
+                        </div>
+                        <div class="col-md-1 text-end">
+                            @if (expandedOrders.Contains(order.OrderId))
+                            {
+                                <span>▲</span>
+                            }
+                            else
+                            {
+                                <span>▼</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                @if (expandedOrders.Contains(order.OrderId))
+                {
+                    <div class="card-body">
+                        @if (orderDetails.ContainsKey(order.OrderId) && orderDetails[order.OrderId] != null)
+                        {
+                            var details = orderDetails[order.OrderId];
+                            <h6>Items:</h6>
+                            <ul class="list-unstyled">
+                                @foreach (var item in details!.Items)
+                                {
+                                    <li>• @item.Name - @item.Price.ToString("C")</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="ms-2">Loading items...</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<SimpleOrderResponse> orders = new();
+    private Dictionary<Guid, OrderResponse?> orderDetails = new();
+    private HashSet<Guid> expandedOrders = new();
+    private bool isLoading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+            orders = await OrderService.GetAllOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load orders: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ToggleOrderDetails(Guid orderId)
+    {
+        if (expandedOrders.Contains(orderId))
+        {
+            expandedOrders.Remove(orderId);
+        }
+        else
+        {
+            expandedOrders.Add(orderId);
+
+            // Load details if not already loaded
+            if (!orderDetails.ContainsKey(orderId))
+            {
+                try
+                {
+                    var details = await OrderService.GetOrderByIdAsync(orderId);
+                    orderDetails[orderId] = details;
+                }
+                catch (Exception ex)
+                {
+                    // Handle error silently or show message
+                    Console.WriteLine($"Failed to load order details: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "bg-warning",
+            "InPreparation" => "bg-info",
+            "Ready" => "bg-success",
+            "Completed" => "bg-secondary",
+            "Cancelled" => "bg-danger",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    private string GetOrderNumber(Guid orderId)
+    {
+        // Convert GUID to a short, friendly order number (6 digits)
+        return Math.Abs(orderId.GetHashCode() % 1000000).ToString("D6");
+    }
+
+    private string FormatStatus(string status)
+    {
+        // Add spaces before capital letters for better readability
+        return System.Text.RegularExpressions.Regex.Replace(status, "([a-z])([A-Z])", "$1 $2");
+    }
+}

@@ -18,6 +18,19 @@ builder.Services.AddDbContext<CampusEats.Api.Infrastructure.Persistence.CampusEa
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --- CORS Configuration for Blazor Frontend ---
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // --- Validator Registration ---
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // Scans and registers all validators in this assembly
 
@@ -63,6 +76,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS
+app.UseCors();
 
 // --- SEEDER CODE BLOCK ---
 // Run the seeder only in the Development environment

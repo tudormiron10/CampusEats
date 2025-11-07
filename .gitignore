@@ -16,8 +16,13 @@
 # # Secrete și Configurare Locală #
 # Fișiere de configurare care conțin secrete locale (parole, chei API)
 appsettings.Development.json
+**/wwwroot/appsettings.Development.json
+**/wwwroot/appsettings.Production.json
 secrets.json
 *.secrets.json
+.env
+.env.local
+.env.production
 
 # Fișiere de baze de date locale (dacă ați folosi SQLite pentru teste)
 *.db

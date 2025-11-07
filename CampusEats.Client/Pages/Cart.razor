@@ -1,0 +1,170 @@
+@page "/cart"
+@using CampusEats.Client.Services
+@using CampusEats.Client.Models
+@inject CartService CartService
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Shopping Cart - CampusEats</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">🛒 Shopping Cart</h1>
+
+    @if (!CartService.Items.Any())
+    {
+        <div class="alert alert-info">
+            <p>Your cart is empty.</p>
+            <a href="/menu" class="btn btn-primary">Browse Menu</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                @foreach (var item in CartService.Items)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="card-title">@item.Name</h5>
+                                    <p class="card-text text-muted">@item.Price.ToString("C") each</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, -1)">-</button>
+                                        <input type="number" class="form-control text-center" value="@item.Quantity" readonly />
+                                        <button class="btn btn-outline-secondary" @onclick="() => UpdateQuantity(item, 1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <strong>@((item.Price * item.Quantity).ToString("C"))</strong>
+                                    <button class="btn btn-danger btn-sm ms-2" @onclick="() => RemoveItem(item)">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <hr />
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Items:</span>
+                            <span>@CartService.TotalItems</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong>@CartService.TotalAmount.ToString("C")</strong>
+                        </div>
+                        <button class="btn btn-primary w-100 mb-2" @onclick="PlaceOrder" disabled="@isPlacingOrder">
+                            @if (isPlacingOrder)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Placing Order...</span>
+                            }
+                            else
+                            {
+                                <span>Place Order</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" @onclick="ClearCart">
+                            Clear Cart
+                        </button>
+
+                        @if (orderError != null)
+                        {
+                            <div class="alert alert-danger mt-3">
+                                @orderError
+                            </div>
+                        }
+
+                        @if (orderSuccess)
+                        {
+                            <div class="alert alert-success mt-3">
+                                Order placed successfully!
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isPlacingOrder = false;
+    private string? orderError;
+    private bool orderSuccess = false;
+
+    // Hardcoded user ID for now (from your seeder - admin user)
+    private readonly Guid userId = Guid.Parse("a0000000-0000-0000-0000-000000000001");
+
+    protected override void OnInitialized()
+    {
+        CartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnChange -= StateHasChanged;
+    }
+
+    private void UpdateQuantity(CartItem item, int delta)
+    {
+        var newQuantity = item.Quantity + delta;
+        if (newQuantity > 0)
+        {
+            CartService.UpdateQuantity(item.MenuItemId, newQuantity);
+        }
+    }
+
+    private void RemoveItem(CartItem item)
+    {
+        CartService.RemoveItem(item.MenuItemId);
+    }
+
+    private void ClearCart()
+    {
+        CartService.Clear();
+    }
+
+    private async Task PlaceOrder()
+    {
+        try
+        {
+            isPlacingOrder = true;
+            orderError = null;
+            orderSuccess = false;
+
+            var menuItemIds = CartService.GetMenuItemIds();
+            var request = new CreateOrderRequest(userId, menuItemIds);
+
+            var order = await OrderService.CreateOrderAsync(request);
+
+            if (order != null)
+            {
+                orderSuccess = true;
+                CartService.Clear();
+
+                // Navigate to orders page after a short delay
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/orders");
+            }
+        }
+        catch (Exception ex)
+        {
+            orderError = $"Failed to place order: {ex.Message}";
+        }
+        finally
+        {
+            isPlacingOrder = false;
+        }
+    }
+}

@@ -1,0 +1,147 @@
+@page "/menu"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject MenuService MenuService
+@inject CartService CartService
+@inject NavigationManager Navigation
+
+<PageTitle>Menu - CampusEats</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">🍽️ CampusEats Menu</h1>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading menu...</p>
+        </div>
+    }
+    else if (error != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error:</strong> @error
+        </div>
+    }
+    else
+    {
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="Search dietary keywords..." @bind="searchKeyword" @bind:event="oninput" />
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" @bind="selectedCategory">
+                    <option value="">All Categories</option>
+                    @foreach (var category in categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary" @onclick="LoadMenu">Filter</button>
+                <button class="btn btn-secondary" @onclick="ClearFilters">Clear</button>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach (var item in menuItems)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No image</span>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="card-text text-muted small">@item.Category</p>
+                            @if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                <p class="card-text">@item.Description</p>
+                            }
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h4 mb-0 text-primary">@item.Price.ToString("C")</span>
+                                <button class="btn btn-success" @onclick="() => AddToCart(item)">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!menuItems.Any())
+        {
+            <div class="alert alert-info">
+                No menu items found. Try different filters.
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<MenuItemResponse> menuItems = new();
+    private List<string> categories = new();
+    private bool isLoading = true;
+    private string? error;
+    private string searchKeyword = "";
+    private string selectedCategory = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenu();
+    }
+
+    private async Task LoadMenu()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+
+            var allItems = await MenuService.GetMenuAsync(
+                string.IsNullOrEmpty(selectedCategory) ? null : selectedCategory,
+                string.IsNullOrEmpty(searchKeyword) ? null : searchKeyword
+            );
+
+            menuItems = allItems;
+
+            // Extract unique categories
+            categories = allItems
+                .Select(i => i.Category)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load menu: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        searchKeyword = "";
+        selectedCategory = "";
+        await LoadMenu();
+    }
+
+    private void AddToCart(MenuItemResponse item)
+    {
+        CartService.AddItem(item);
+    }
+}
