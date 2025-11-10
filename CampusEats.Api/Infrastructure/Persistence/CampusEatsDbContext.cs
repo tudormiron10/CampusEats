@@ -13,6 +13,7 @@ public class CampusEatsDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<MenuItem> MenuItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,11 +23,19 @@ public class CampusEatsDbContext : DbContext
             .WithOne(l => l.User)
             .HasForeignKey<Loyalty>(l => l.UserId);
 
-        // Configurăm relația mulți-la-mulți dintre Order și MenuItem
+        // Configurăm relația 1-la-mulți dintre Order și OrderItem
         modelBuilder.Entity<Order>()
             .HasMany(o => o.Items)
-            .WithMany(mi => mi.Orders);
-            
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(oi => oi.MenuItem)
+            .WithMany() // MenuItem doesn't have OrderItems navigation
+            .HasForeignKey(oi => oi.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Convertim enumerările în string-uri în baza de date
         modelBuilder.Entity<Order>()
             .Property(o => o.Status)

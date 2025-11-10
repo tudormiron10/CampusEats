@@ -85,12 +85,31 @@ public static class DataSeeder
                 {
                     OrderId = Guid.NewGuid(),
                     UserId = client.UserId,
-                    Items = itemsForOrder,
-                    TotalAmount = itemsForOrder.Sum(item => item.Price),
+                    OrderDate = faker.Date.Past(1).ToUniversalTime(),
                     Status = orderStatus,
-                    OrderDate = faker.Date.Past(1).ToUniversalTime() 
+                    TotalAmount = 0 // va fi calculat mai târziu
                 };
                 fakeOrders.Add(newOrder);
+
+                var orderItems = new List<OrderItem>();
+
+                // Creăm OrderItems pentru fiecare articol din comandă
+                foreach (var menuItem in itemsForOrder)
+                {
+                    orderItems.Add(new OrderItem
+                    {
+                        OrderId = newOrder.OrderId,
+                        MenuItemId = menuItem.MenuItemId,
+                        Quantity = faker.Random.Int(1, 3),
+                        UnitPrice = menuItem.Price
+                    });
+                }
+
+                // Adăugăm OrderItems în context
+                context.OrderItems.AddRange(orderItems);
+
+                // Calculăm suma totală a comenzii
+                newOrder.TotalAmount = orderItems.Sum(oi => oi.Quantity * oi.UnitPrice);
 
                 // Dacă comanda este finalizată, creăm și o plată reușită
                 if (newOrder.Status == OrderStatus.Completed)

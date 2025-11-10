@@ -1,6 +1,7 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace CampusEats.Api.Features.Orders
 {
@@ -30,9 +31,10 @@ namespace CampusEats.Api.Features.Orders
 
             await _context.SaveChangesAsync();
 
-            // Re-încărcăm comanda pentru a include articolele
+            // Re-load order including items and menuitem
             var updatedOrder = await _context.Orders
                 .Include(o => o.Items)
+                    .ThenInclude(oi => oi.MenuItem)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
@@ -42,7 +44,11 @@ namespace CampusEats.Api.Features.Orders
                 updatedOrder.Status.ToString(),
                 updatedOrder.TotalAmount,
                 updatedOrder.OrderDate,
-                updatedOrder.Items.Select(item => new OrderItemResponse(item.MenuItemId, item.Name, item.Price)).ToList()
+                updatedOrder.Items.Select(oi => new OrderItemResponse(
+                    oi.MenuItemId,
+                    oi.MenuItem != null ? oi.MenuItem.Name : string.Empty,
+                    oi.UnitPrice,
+                    oi.Quantity)).ToList()
             );
 
             return Results.Ok(response);

@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34316.72
-MinimumVisualStudioVersion = 10.0.40219.1
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusEats.Api", "CampusEats.Api\CampusEats.Api.csproj", "{003937D3-DD10-4CAD-9298-AA62108A5B39}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusEats.Client", "CampusEats.Client\CampusEats.Client.csproj", "{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}"
@@ -21,11 +19,5 @@ Global
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {59DC290F-2509-4B66-B3D3-EA914D9B1EAB}
 	EndGlobalSection
 EndGlobal
