@@ -59,7 +59,7 @@ builder.Services.AddScoped<GetKitchenOrdersHandler>();
 builder.Services.AddScoped<PrepareOrderHandler>();
 builder.Services.AddScoped<ReadyOrderHandler>();
 builder.Services.AddScoped<CompleteOrderHandler>();
-builder.Services.AddScoped<GetDailySalesReportHandler>();
+builder.Services.AddScoped<GetDailySalesReportItemHandler>();
 
 // User
 builder.Services.AddScoped<CreateUserHandler>();
@@ -273,7 +273,7 @@ app.MapPost("/kitchen/orders/{orderId:guid}/complete", async (
 
 // Endpoint to get the daily sales report.
 app.MapGet("/kitchen/report", async (
-        GetDailySalesReportHandler handler) =>
+        GetDailySalesReportItemHandler handler) =>
     {
         return await handler.Handle();
         })

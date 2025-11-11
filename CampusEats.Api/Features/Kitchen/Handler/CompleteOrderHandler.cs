@@ -2,6 +2,7 @@
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders;
+using System.Linq;
 
 namespace CampusEats.Api.Features.Kitchen
 {
@@ -14,6 +15,7 @@ namespace CampusEats.Api.Features.Kitchen
         {
             var order = await _context.Orders
                 .Include(o => o.Items)
+                    .ThenInclude(oi => oi.MenuItem)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
             if (order == null) return Results.NotFound("Order not found.");
@@ -32,7 +34,11 @@ namespace CampusEats.Api.Features.Kitchen
                 order.Status.ToString(),
                 order.TotalAmount,
                 order.OrderDate,
-                order.Items.Select(item => new OrderItemResponse(item.MenuItemId, item.Name, item.Price)).ToList()
+                order.Items.Select(oi => new OrderItemResponse(
+                    oi.MenuItemId,
+                    oi.MenuItem != null ? oi.MenuItem.Name : string.Empty,
+                    oi.UnitPrice,
+                    oi.Quantity)).ToList()
             );
 
             return Results.Ok(response);

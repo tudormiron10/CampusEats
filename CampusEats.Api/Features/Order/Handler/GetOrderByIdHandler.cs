@@ -1,5 +1,6 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace CampusEats.Api.Features.Orders
 {
@@ -17,6 +18,7 @@ namespace CampusEats.Api.Features.Orders
             var response = await _context.Orders
                 .AsNoTracking()
                 .Include(o => o.Items)
+                    .ThenInclude(oi => oi.MenuItem)
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new DetailedOrderResponse(
                     o.OrderId,
@@ -24,7 +26,11 @@ namespace CampusEats.Api.Features.Orders
                     o.Status.ToString(),
                     o.TotalAmount,
                     o.OrderDate,
-                    o.Items.Select(item => new OrderItemResponse(item.MenuItemId, item.Name, item.Price)).ToList()
+                    o.Items.Select(oi => new OrderItemResponse(
+                        oi.MenuItemId,
+                        oi.MenuItem != null ? oi.MenuItem.Name : string.Empty,
+                        oi.UnitPrice,
+                        oi.Quantity)).ToList()
                 ))
                 .FirstOrDefaultAsync();
 

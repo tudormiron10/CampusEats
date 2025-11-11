@@ -11,8 +11,8 @@ public class Order
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
 
-    // Many-to-many relationship (EF Core will create a join table)
-    public List<MenuItem> Items { get; set; } = new();
+    // Replace many-to-many items (MenuItem) with order lines
+    public List<OrderItem> Items { get; set; } = new();
     
     // 1-to-many relationship (An order can have multiple payment attempts)
     public List<Payment> Payments { get; set; } = new();
