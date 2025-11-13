@@ -1,7 +1,7 @@
-﻿
-using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+using MediatR;
 
-namespace CampusEats.Api.Features.Orders;
-
-// Trimitem noul status în corpul (body) request-ului
-public record UpdateOrderRequest(OrderStatus NewStatus);
+namespace CampusEats.Api.Features.Orders.Request
+{
+    public record UpdateOrderRequest(OrderStatus NewStatus) : IRequest<IResult>;
+}

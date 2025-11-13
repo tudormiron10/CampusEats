@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 // Import ALL feature folders
 using CampusEats.Api.Features.Menu;
-using CampusEats.Api.Features.Orders;
 using CampusEats.Api.Features.Payments;
-using CampusEats.Api.Features.Kitchen;
+using CampusEats.Api.Features.Kitchen.Request;
+using CampusEats.Api.Features.Order.Request;
+using CampusEats.Api.Features.Orders.Request;
 using CampusEats.Api.Features.Users;
 using CampusEats.Api.Infrastructure.Persistence;
-using FluentValidation; // Add this using to use IValidator
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,8 @@ builder.Services.AddDbContext<CampusEats.Api.Infrastructure.Persistence.CampusEa
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMediatR(cfg => 
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 // --- CORS Configuration for Blazor Frontend ---
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -43,23 +48,10 @@ builder.Services.AddScoped<GetMenuItemByIdHandler>();
 builder.Services.AddScoped<UpdateMenuItemHandler>();
 builder.Services.AddScoped<DeleteMenuItemHandler>();
 
-// Orders
-builder.Services.AddScoped<CreateOrderHandler>();
-builder.Services.AddScoped<CancelOrderHandler>();
-builder.Services.AddScoped<GetOrderByIdHandler>();
-builder.Services.AddScoped<GetAllOrdersHandler>();
-
 // Payments
 builder.Services.AddScoped<CreatePaymentHandler>();
 builder.Services.AddScoped<GetPaymentByUserIdHandler>();
 builder.Services.AddScoped<PaymentConfirmationHandler>();
-
-// Kitchen
-builder.Services.AddScoped<GetKitchenOrdersHandler>();
-builder.Services.AddScoped<PrepareOrderHandler>();
-builder.Services.AddScoped<ReadyOrderHandler>();
-builder.Services.AddScoped<CompleteOrderHandler>();
-builder.Services.AddScoped<GetDailySalesReportItemHandler>();
 
 // User
 builder.Services.AddScoped<CreateUserHandler>();
@@ -165,42 +157,32 @@ app.MapDelete("/menu/{menuItemId:guid}", async (
 // Endpoint for creating a new order.
 app.MapPost("/orders", async (
         CreateOrderRequest request,
-        CreateOrderHandler handler,
-        IValidator<CreateOrderRequest> validator) => // Inject the validator
-    {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(request);
-    })
-    .WithTags("Orders");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(request)
+)
+.WithTags("Orders");
 
 // Endpoint for canceling an order.
 app.MapDelete("/orders/{orderId:guid}", async (
         Guid orderId,
-        CancelOrderHandler handler) =>
-    {
-        return await handler.Handle(orderId);
-    })
-    .WithTags("Orders");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new CancelOrderRequest(orderId))
+)
+.WithTags("Orders");
 
 // Endpoint for retrieving a specific order by ID.
 app.MapGet("/orders/{orderId:guid}", async (
         Guid orderId,
-        GetOrderByIdHandler handler) =>
-    {
-        return await handler.Handle(orderId);
-    })
-    .WithTags("Orders");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetOrderByIdRequest(orderId))
+)
+.WithTags("Orders");
 
 // Endpoint for retrieving all orders.
-app.MapGet("/orders", async (GetAllOrdersHandler handler) => // Corrected from GetOrderHandler
-    {
-        return await handler.Handle();
-    })
-    .WithTags("Orders");
+app.MapGet("/orders", async ([FromServices] IMediator mediator) =>
+    await mediator.Send(new GetAllOrdersRequest())
+)
+.WithTags("Orders");
 
 // ====== PAYMENTS GROUP ======
 // Endpoint for initiating a payment for an order.
@@ -228,56 +210,51 @@ app.MapGet("/payments/user/{userId:guid}", async (
     .WithTags("Payments");
 
 // Endpoint for handling payment confirmations (webhook).
-app.MapPost("/payments/confirmation", async ( // Corrected from /webhook
+app.MapPost("/payments/confirmation", async (
         PaymentConfirmationRequest request,
-        PaymentConfirmationHandler handler) =>
-    {
-        return await handler.Handle(request);
-    })
-    .WithTags("Payments");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(request)
+)
+.WithTags("Payments");
 
 // ====== KITCHEN GROUP ======
 // Endpoint for kitchen staff to view pending orders.
-app.MapGet("/kitchen/orders", async (GetKitchenOrdersHandler handler) =>
-    {
-        return await handler.Handle();
-    })
-    .WithTags("Kitchen");
+app.MapGet("/kitchen/orders", async ([FromServices] IMediator mediator) =>
+    await mediator.Send(new GetKitchenOrdersRequest())
+)
+.WithTags("Kitchen");
 
 // Endpoint to mark an order as being in preparation.
 app.MapPost("/kitchen/orders/{orderId:guid}/prepare", async (
         Guid orderId,
-        PrepareOrderHandler handler) =>
-    {
-        return await handler.Handle(orderId);
-    })
-    .WithTags("Kitchen");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new PrepareOrderRequest(orderId))
+)
+.WithTags("Kitchen");
 
 // Endpoint to mark an order as ready for pickup.
 app.MapPost("/kitchen/orders/{orderId:guid}/ready", async (
         Guid orderId,
-        ReadyOrderHandler handler) =>
-    {
-        return await handler.Handle(orderId);
-    })
-    .WithTags("Kitchen");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new ReadyOrderRequest(orderId))
+)
+.WithTags("Kitchen");
 
 // Endpoint to mark an order as completed.
 app.MapPost("/kitchen/orders/{orderId:guid}/complete", async (
         Guid orderId,
-        CompleteOrderHandler handler) =>
-    {
-        return await handler.Handle(orderId);
-    })
-    .WithTags("Kitchen");
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new CompleteOrderRequest(orderId))
+)
+.WithTags("Kitchen");
 
 // Endpoint to get the daily sales report.
 app.MapGet("/kitchen/report", async (
-        GetDailySalesReportItemHandler handler) =>
-    {
-        return await handler.Handle();
-        })
-    .WithTags("Kitchen");
+        DateOnly? date, // optional query parameter: ?date=2025-11-11
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetDailySalesReportRequest(date ?? DateOnly.FromDateTime(DateTime.UtcNow)))
+)
+.WithTags("Kitchen");
 
 // ====== USER GROUP ======
 

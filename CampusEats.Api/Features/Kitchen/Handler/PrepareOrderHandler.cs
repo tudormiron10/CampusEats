@@ -1,12 +1,13 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using MediatR;
+using CampusEats.Api.Features.Kitchen.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
-using CampusEats.Api.Features.Orders;
-using System.Linq;
+using CampusEats.Api.Features.Orders.Response;
 
 namespace CampusEats.Api.Features.Kitchen
 {
-    public class PrepareOrderHandler
+    public class PrepareOrderHandler : IRequestHandler<PrepareOrderRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -15,12 +16,14 @@ namespace CampusEats.Api.Features.Kitchen
             _context = context;
         }
 
-        public async Task<IResult> Handle(Guid orderId)
+        public async Task<IResult> Handle(PrepareOrderRequest request, CancellationToken cancellationToken)
         {
+            var orderId = request.OrderId;
+
             var order = await _context.Orders
                 .Include(o => o.Items)
                     .ThenInclude(oi => oi.MenuItem)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+                .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
 
             if (order == null)
             {
@@ -34,7 +37,7 @@ namespace CampusEats.Api.Features.Kitchen
 
             order.Status = OrderStatus.InPreparation;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var response = new DetailedOrderResponse(
                 order.OrderId,
