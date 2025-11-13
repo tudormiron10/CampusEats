@@ -5,91 +5,94 @@
 
 <PageTitle>My Orders - CampusEats</PageTitle>
 
-<div class="container mt-4">
-    <h1 class="mb-4">📦 My Orders</h1>
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-oxford-blue mb-8">📦 My Orders</h1>
 
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading orders...</p>
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin text-6xl mb-4">⏳</div>
+            <p class="text-gray-600 text-lg">Loading orders...</p>
         </div>
     }
     else if (error != null)
     {
-        <div class="alert alert-danger">
-            <strong>Error:</strong> @error
+        <div class="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6">
+            <strong class="font-semibold">Error:</strong> @error
         </div>
     }
     else if (!orders.Any())
     {
-        <div class="alert alert-info">
-            <p>You haven't placed any orders yet.</p>
-            <a href="/menu" class="btn btn-primary">Browse Menu</a>
+        <div class="bg-blue-50 border-2 border-blue-200 text-blue-700 px-6 py-4 rounded-lg">
+            <p class="mb-4">You haven't placed any orders yet.</p>
+            <a href="/menu" class="inline-block bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-oxford-blue/40 transition-all">
+                Browse Menu
+            </a>
         </div>
     }
     else
     {
-        @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
-        {
-            <div class="card mb-3">
-                <div class="card-header" style="cursor: pointer;" @onclick="() => ToggleOrderDetails(order.OrderId)">
-                    <div class="row align-items-center">
-                        <div class="col-md-3">
-                            <strong>Order #@GetOrderNumber(order.OrderId)</strong>
+        <div class="space-y-4">
+            @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
+            {
+                <div class="bg-white rounded-lg shadow-md border border-tan-light overflow-hidden">
+                    <div class="bg-tan-light px-6 py-4 cursor-pointer hover:bg-tan transition-colors" @onclick="() => ToggleOrderDetails(order.OrderId)">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                            <div>
+                                <span class="font-bold text-oxford-blue">Order #@GetOrderNumber(order.OrderId)</span>
+                            </div>
+                            <div class="text-gray-700">
+                                @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            <div>
+                                <span class="@GetStatusBadgeClass(order.Status) px-3 py-1 rounded-full text-sm font-semibold">
+                                    @FormatStatus(order.Status)
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-2xl font-bold text-oxford-blue">@order.TotalAmount.ToString("C")</span>
+                            </div>
+                            <div class="text-right text-oxford-blue text-xl">
+                                @if (expandedOrders.Contains(order.OrderId))
+                                {
+                                    <span>▲</span>
+                                }
+                                else
+                                {
+                                    <span>▼</span>
+                                }
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
-                        </div>
-                        <div class="col-md-3">
-                            <span class="badge @GetStatusBadgeClass(order.Status)">
-                                @FormatStatus(order.Status)
-                            </span>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <strong>@order.TotalAmount.ToString("C")</strong>
-                        </div>
-                        <div class="col-md-1 text-end">
-                            @if (expandedOrders.Contains(order.OrderId))
+                    </div>
+                    @if (expandedOrders.Contains(order.OrderId))
+                    {
+                        <div class="px-6 py-4 bg-white border-t-2 border-tan-light">
+                            @if (orderDetails.ContainsKey(order.OrderId) && orderDetails[order.OrderId] != null)
                             {
-                                <span>▲</span>
+                                var details = orderDetails[order.OrderId];
+                                <h6 class="font-bold text-oxford-blue mb-3">Items:</h6>
+                                <ul class="space-y-2">
+                                    @foreach (var item in details!.Items)
+                                    {
+                                        <li class="flex justify-between items-center text-gray-700">
+                                            <span>• @item.Name x @item.Quantity</span>
+                                            <span class="font-semibold">@item.UnitPrice.ToString("C")</span>
+                                        </li>
+                                    }
+                                </ul>
                             }
                             else
                             {
-                                <span>▼</span>
+                                <div class="text-center py-4">
+                                    <div class="inline-block animate-spin text-3xl mb-2">⏳</div>
+                                    <p class="text-gray-600">Loading items...</p>
+                                </div>
                             }
                         </div>
-                    </div>
+                    }
                 </div>
-                @if (expandedOrders.Contains(order.OrderId))
-                {
-                    <div class="card-body">
-                        @if (orderDetails.ContainsKey(order.OrderId) && orderDetails[order.OrderId] != null)
-                        {
-                            var details = orderDetails[order.OrderId];
-                            <h6>Items:</h6>
-                            <ul class="list-unstyled">
-                                @foreach (var item in details!.Items)
-                                {
-                                    <li>• @item.Name - @item.Price.ToString("C")</li>
-                                }
-                            </ul>
-                        }
-                        else
-                        {
-                            <div class="text-center">
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <span class="ms-2">Loading items...</span>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        }
+            }
+        </div>
     }
 </div>
 
@@ -154,12 +157,12 @@
     {
         return status switch
         {
-            "Pending" => "bg-warning",
-            "InPreparation" => "bg-info",
-            "Ready" => "bg-success",
-            "Completed" => "bg-secondary",
-            "Cancelled" => "bg-danger",
-            _ => "bg-light text-dark"
+            "Pending" => "bg-yellow-100 text-yellow-800",
+            "InPreparation" => "bg-blue-100 text-blue-800",
+            "Ready" => "bg-green-100 text-green-800",
+            "Completed" => "bg-gray-100 text-gray-800",
+            "Cancelled" => "bg-red-100 text-red-800",
+            _ => "bg-gray-100 text-gray-800"
         };
     }
 

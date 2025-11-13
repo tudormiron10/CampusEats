@@ -1,62 +1,161 @@
 @using CampusEats.Client.Services
 @inject CartService CartService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 @implements IDisposable
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">🍽️ CampusEats</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
+<div class="h-14 bg-oxford-blue/95 px-4 flex items-center justify-between">
+    <a class="flex items-center no-underline" href="">
+        <img src="/images/logo.svg" alt="CampusEats Logo" class="h-10" />
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center gap-2">
+        <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                 href="menu"
+                 ActiveClass="bg-tan text-oxford-blue font-semibold">
+            Menu
+        </NavLink>
+        <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline relative"
+                 href="cart"
+                 ActiveClass="bg-tan text-oxford-blue font-semibold">
+            Cart
+            @if (CartService.TotalItems > 0)
+            {
+                <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">@CartService.TotalItems</span>
+            }
+        </NavLink>
+        <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                 href="orders"
+                 ActiveClass="bg-tan text-oxford-blue font-semibold">
+            My Orders
+        </NavLink>
+
+        @if (!string.IsNullOrEmpty(userFullName))
+        {
+            <div class="ml-2 pl-2 border-l border-tan/30 flex items-center gap-3">
+                <div class="text-right">
+                    <div class="text-tan text-sm font-semibold">@userFullName</div>
+                    <div class="text-tan-light text-xs">@userEmail</div>
+                </div>
+                <button class="px-4 py-2 rounded-lg bg-tan/20 text-tan-light font-medium transition-all hover:bg-red-600 hover:text-white"
+                        @onclick="HandleLogout">
+                    Logout
+                </button>
+            </div>
+        }
+    </nav>
+
+    <!-- Mobile Menu Button -->
+    <button title="Navigation menu"
+            class="md:hidden bg-tan/30 border-2 border-tan/50 rounded px-3 py-2 text-tan-light hover:bg-tan/40 transition-colors"
+            @onclick="ToggleNavMenu">
+        <i class="bi bi-list text-xl"></i>
+    </button>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+<!-- Mobile Sidebar Overlay -->
+@if (!collapseNavMenu)
+{
+    <div class="md:hidden fixed inset-0 bg-black/50 z-40" @onclick="ToggleNavMenu"></div>
+}
+
+<!-- Mobile Sidebar -->
+<div class="@NavMenuCssClass md:hidden fixed top-14 left-0 bottom-0 w-64 bg-gradient-to-b from-oxford-blue to-oxford-blue-dark shadow-xl z-50 overflow-y-auto">
+    <nav class="flex flex-col">
+        @if (!string.IsNullOrEmpty(userFullName))
+        {
+            <div class="px-3 pt-4 pb-2">
+                <div class="text-center py-4 px-3 cursor-default">
+                    <div class="text-5xl mb-2">👤</div>
+                    <div class="text-tan font-semibold text-lg mb-1">@userFullName</div>
+                    <div class="text-tan-light text-sm">@userEmail</div>
+                </div>
+            </div>
+            <hr class="border-tan/30 mx-4 my-2" />
+        }
+
+        <div class="px-3 pb-2 @(string.IsNullOrEmpty(userFullName) ? "pt-4" : "")">
+            <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                     href="menu"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold"
+                     @onclick="ToggleNavMenu">
+                <i class="bi bi-list-nested mr-3 text-lg"></i> Menu
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="menu">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Menu
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="cart">
-                <span class="bi bi-cart-fill-nav-menu" aria-hidden="true"></span> Cart
+        <div class="px-3 pb-2">
+            <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline relative"
+                     href="cart"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold"
+                     @onclick="ToggleNavMenu">
+                <i class="bi bi-cart-fill mr-3 text-lg"></i> Cart
                 @if (CartService.TotalItems > 0)
                 {
-                    <span class="badge bg-danger ms-2">@CartService.TotalItems</span>
+                    <span class="ml-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">@CartService.TotalItems</span>
                 }
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="orders">
-                <span class="bi bi-box-seam-nav-menu" aria-hidden="true"></span> My Orders
+        <div class="px-3 pb-2">
+            <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                     href="orders"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold"
+                     @onclick="ToggleNavMenu">
+                <i class="bi bi-box-seam mr-3 text-lg"></i> My Orders
             </NavLink>
+        </div>
+
+        <hr class="border-tan/30 mx-4 my-2" />
+
+        <div class="px-3 pb-4">
+            <button class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan w-full text-left bg-transparent border-0 cursor-pointer"
+                    @onclick="HandleLogout">
+                <i class="bi bi-box-arrow-right mr-3 text-lg"></i> Logout
+            </button>
         </div>
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    private string? userFullName;
+    private string? userEmail;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         CartService.OnChange += StateHasChanged;
+        AuthService.OnAuthStateChanged += OnAuthStateChanged;
+
+        await LoadUserInfo();
     }
 
     public void Dispose()
     {
         CartService.OnChange -= StateHasChanged;
+        AuthService.OnAuthStateChanged -= OnAuthStateChanged;
     }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async void OnAuthStateChanged()
+    {
+        await LoadUserInfo();
+        StateHasChanged();
+    }
+
+    private async Task LoadUserInfo()
+    {
+        userFullName = await AuthService.GetUserFullNameAsync();
+        userEmail = await AuthService.GetUserEmailAsync();
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
     }
 }

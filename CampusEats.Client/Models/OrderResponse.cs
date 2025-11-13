@@ -12,5 +12,6 @@ public record OrderResponse(
 public record OrderItemResponse(
     Guid MenuItemId,
     string Name,
-    decimal Price
+    decimal UnitPrice,
+    int Quantity
 );

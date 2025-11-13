@@ -7,32 +7,35 @@
 
 <PageTitle>Menu - CampusEats</PageTitle>
 
-<div class="container mt-4">
-    <h1 class="mb-4">🍽️ CampusEats Menu</h1>
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-oxford-blue mb-8">🍽️ CampusEats Menu</h1>
 
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading menu...</p>
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin text-6xl mb-4">⏳</div>
+            <p class="text-gray-600 text-lg">Loading menu...</p>
         </div>
     }
     else if (error != null)
     {
-        <div class="alert alert-danger">
-            <strong>Error:</strong> @error
+        <div class="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6">
+            <strong class="font-semibold">Error:</strong> @error
         </div>
     }
     else
     {
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Search dietary keywords..." @bind="searchKeyword" @bind:event="oninput" />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div>
+                <input type="text"
+                       class="w-full px-4 py-3 border-2 border-tan-light rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/15 transition-all"
+                       placeholder="Search dietary keywords..."
+                       @bind="searchKeyword"
+                       @bind:event="oninput" />
             </div>
-            <div class="col-md-4">
-                <select class="form-select" @bind="selectedCategory">
+            <div>
+                <select class="w-full px-4 py-3 border-2 border-tan-light rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/15 transition-all bg-white"
+                        @bind="selectedCategory">
                     <option value="">All Categories</option>
                     @foreach (var category in categories)
                     {
@@ -40,40 +43,45 @@
                     }
                 </select>
             </div>
-            <div class="col-md-4">
-                <button class="btn btn-primary" @onclick="LoadMenu">Filter</button>
-                <button class="btn btn-secondary" @onclick="ClearFilters">Clear</button>
+            <div class="flex gap-2">
+                <button class="flex-1 bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-oxford-blue/40 transition-all"
+                        @onclick="LoadMenu">
+                    Filter
+                </button>
+                <button class="flex-1 bg-tan text-oxford-blue px-6 py-3 rounded-lg font-semibold hover:bg-tan-dark hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all"
+                        @onclick="ClearFilters">
+                    Clear
+                </button>
             </div>
         </div>
 
-        <div class="row">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach (var item in menuItems)
             {
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-tan-light">
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" class="w-full h-48 object-cover" alt="@item.Name">
+                    }
+                    else
+                    {
+                        <div class="w-full h-48 bg-tan-light flex items-center justify-center">
+                            <span class="text-gray-400 text-lg">No image</span>
+                        </div>
+                    }
+                    <div class="p-6">
+                        <h5 class="text-xl font-bold text-oxford-blue mb-1">@item.Name</h5>
+                        <p class="text-tan-dark text-sm font-medium mb-3">@item.Category</p>
+                        @if (!string.IsNullOrEmpty(item.Description))
                         {
-                            <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
+                            <p class="text-gray-600 mb-4 line-clamp-2">@item.Description</p>
                         }
-                        else
-                        {
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <span class="text-muted">No image</span>
-                            </div>
-                        }
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Name</h5>
-                            <p class="card-text text-muted small">@item.Category</p>
-                            @if (!string.IsNullOrEmpty(item.Description))
-                            {
-                                <p class="card-text">@item.Description</p>
-                            }
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="h4 mb-0 text-primary">@item.Price.ToString("C")</span>
-                                <button class="btn btn-success" @onclick="() => AddToCart(item)">
-                                    Add to Cart
-                                </button>
-                            </div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-3xl font-bold text-oxford-blue">@item.Price.ToString("C")</span>
+                            <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+                                    @onclick="() => AddToCart(item)">
+                                Add to Cart
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -82,7 +90,7 @@
 
         @if (!menuItems.Any())
         {
-            <div class="alert alert-info">
+            <div class="bg-blue-50 border-2 border-blue-200 text-blue-700 px-6 py-4 rounded-lg text-center">
                 No menu items found. Try different filters.
             </div>
         }

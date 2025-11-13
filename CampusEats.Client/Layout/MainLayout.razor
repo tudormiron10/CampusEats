@@ -1,15 +1,18 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
+<div class="flex flex-col min-h-screen">
+    <!-- Top Navigation -->
+    <div class="sticky top-0 z-50 bg-gradient-to-r from-oxford-blue to-oxford-blue-dark shadow-lg">
         <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <!-- Mobile Sidebar (when menu is open) -->
+    <div class="md:hidden">
+        <!-- Sidebar content is handled in NavMenu.razor -->
+    </div>
 
-        <article class="content px-4">
+    <!-- Main Content -->
+    <main class="flex-1 bg-gray-50">
+        <article>
             @Body
         </article>
     </main>
