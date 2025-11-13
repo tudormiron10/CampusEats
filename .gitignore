@@ -15,14 +15,21 @@
 
 # # Secrete și Configurare Locală #
 # Fișiere de configurare care conțin secrete locale (parole, chei API)
-appsettings.Development.json
-**/wwwroot/appsettings.Development.json
-**/wwwroot/appsettings.Production.json
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.Production.json
+**/appsettings.*.json
+!**/appsettings.json
 secrets.json
 *.secrets.json
 .env
 .env.local
 .env.production
+.env.*.local
+*.pfx
+*.p12
+*.key
+*.pem
 
 # Fișiere de baze de date locale (dacă ați folosi SQLite pentru teste)
 *.db
@@ -39,3 +46,7 @@ ehthumbs.db
 # # Fișiere de log #
 *.log
 logs/
+
+# # Documentation #
+# Claude Code instruction file
+CLAUDE.md
