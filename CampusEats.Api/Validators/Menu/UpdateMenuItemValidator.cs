@@ -1,5 +1,4 @@
-﻿// Validators/Menu/UpdateMenuItemValidator.cs
-using CampusEats.Api.Features.Menu;
+﻿using CampusEats.Api.Features.Menu.Request;
 using FluentValidation;
 
 namespace CampusEats.Api.Validators.Menu;

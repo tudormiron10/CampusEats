@@ -1,9 +1,11 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Menu.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using MediatR;
 
-namespace CampusEats.Api.Features.Menu
+namespace CampusEats.Api.Features.Menu.Handler
 {
-    public class GetMenuHandler
+    public class GetMenuHandler : IRequestHandler<GetMenuRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -12,7 +14,7 @@ namespace CampusEats.Api.Features.Menu
             _context = context;
         }
 
-        public async Task<IResult> Handle(GetMenuRequest request)
+        public async Task<IResult> Handle(GetMenuRequest request, CancellationToken cancellationToken)
         {
             var query = _context.MenuItems.AsNoTracking();
 
@@ -28,7 +30,7 @@ namespace CampusEats.Api.Features.Menu
 
             var menuItems = await query
                 .Select(m => new MenuItemResponse(m.MenuItemId, m.Name, m.Price, m.Category, m.ImageUrl, m.Description))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return Results.Ok(menuItems);
         }

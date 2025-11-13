@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Payments;
+﻿using CampusEats.Api.Features.Payments.Request;
 using FluentValidation;
 
 namespace CampusEats.Api.Validators.Payments;

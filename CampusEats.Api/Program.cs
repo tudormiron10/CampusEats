@@ -3,12 +3,11 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 // Import ALL feature folders
-using CampusEats.Api.Features.Menu;
-using CampusEats.Api.Features.Payments;
 using CampusEats.Api.Features.Kitchen.Request;
+using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
-using CampusEats.Api.Features.Orders.Request;
-using CampusEats.Api.Features.Users;
+using CampusEats.Api.Features.Payments.Request;
+using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using FluentValidation;
 
@@ -38,26 +37,6 @@ builder.Services.AddCors(options =>
 
 // --- Validator Registration ---
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // Scans and registers all validators in this assembly
-
-// --- Handler Registration ---
-
-// Menu
-builder.Services.AddScoped<CreateMenuItemHandler>();
-builder.Services.AddScoped<GetMenuHandler>();
-builder.Services.AddScoped<GetMenuItemByIdHandler>();
-builder.Services.AddScoped<UpdateMenuItemHandler>();
-builder.Services.AddScoped<DeleteMenuItemHandler>();
-
-// Payments
-builder.Services.AddScoped<CreatePaymentHandler>();
-builder.Services.AddScoped<GetPaymentByUserIdHandler>();
-builder.Services.AddScoped<PaymentConfirmationHandler>();
-
-// User
-builder.Services.AddScoped<CreateUserHandler>();
-builder.Services.AddScoped<GetAllUsersHandler>();
-builder.Services.AddScoped<GetUserByIdHandler>();
-builder.Services.AddScoped<UpdateUserHandler>();
 
 var app = builder.Build();
 
@@ -95,61 +74,53 @@ if (app.Environment.IsDevelopment())
 // --- Endpoint Mapping ---
 
 // ====== MENU GROUP ======
+
 // Endpoint for creating a new menu item.
 app.MapPost("/menu", async (
-        CreateMenuItemRequest request,
-        CreateMenuItemHandler handler,
-        IValidator<CreateMenuItemRequest> validator) => // Inject the validator
+        CreateMenuItemRequest request, 
+        [FromServices] IMediator mediator) =>
     {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(request);
+        return await mediator.Send(request);
     })
     .WithTags("Menu");
 
 // Endpoint for retrieving the menu, with optional filtering.
 app.MapGet("/menu", async (
-        [AsParameters] GetMenuRequest request, // [AsParameters] binds parameters from the query
-        GetMenuHandler handler) =>
+        [AsParameters] GetMenuRequest request, 
+        [FromServices] IMediator mediator) =>
     {
-        return await handler.Handle(request);
+        return await mediator.Send(request);
     })
     .WithTags("Menu");
 
 // Endpoint for retrieving a specific menu item by ID.
 app.MapGet("/menu/{menuItemId:guid}", async (
-        Guid menuItemId,
-        GetMenuItemByIdHandler handler) =>
+        Guid menuItemId, 
+        [FromServices] IMediator mediator) =>
     {
-        return await handler.Handle(menuItemId);
+        return await mediator.Send(new GetMenuItemByIdRequest(menuItemId));
     })
     .WithTags("Menu");
 
 // Endpoint for updating a specific menu item.
 app.MapPut("/menu/{menuItemId:guid}", async (
-        Guid menuItemId,
-        UpdateMenuItemRequest request,
-        UpdateMenuItemHandler handler,
-        IValidator<UpdateMenuItemRequest> validator) => // Inject the validator
+        Guid menuItemId, 
+        UpdateMenuItemRequest request, 
+        [FromServices] IMediator mediator) =>
     {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(menuItemId, request);
+        // Use a 'with' expression to create a copy of the request
+        // that includes the ID from the route.
+        var requestWithId = request with { MenuItemId = menuItemId };
+        return await mediator.Send(requestWithId);
     })
     .WithTags("Menu");
 
 // Endpoint for deleting a specific menu item.
 app.MapDelete("/menu/{menuItemId:guid}", async (
-        Guid menuItemId,
-        DeleteMenuItemHandler handler) =>
+        Guid menuItemId, 
+        [FromServices] IMediator mediator) =>
     {
-        return await handler.Handle(menuItemId);
+        return await mediator.Send(new DeleteMenuItemRequest(menuItemId));
     })
     .WithTags("Menu");
 
@@ -185,39 +156,36 @@ app.MapGet("/orders", async ([FromServices] IMediator mediator) =>
 .WithTags("Orders");
 
 // ====== PAYMENTS GROUP ======
+
 // Endpoint for initiating a payment for an order.
 app.MapPost("/payments", async (
         CreatePaymentRequest request,
-        CreatePaymentHandler handler,
-        IValidator<CreatePaymentRequest> validator) => // Inject the validator
-    {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(request);
-    })
-    .WithTags("Payments");
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(request);
+})
+.WithTags("Payments");
 
 // Endpoint for retrieving the payment history for a specific user.
 app.MapGet("/payments/user/{userId:guid}", async (
         Guid userId,
-        GetPaymentByUserIdHandler handler) => // Corrected from GetPaymentByUserIdHandler
-    {
-        return await handler.Handle(userId);
-    })
-    .WithTags("Payments");
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(new GetPaymentByUserIdRequest(userId));
+})
+.WithTags("Payments");
 
 // Endpoint for handling payment confirmations (webhook).
 app.MapPost("/payments/confirmation", async (
         PaymentConfirmationRequest request,
         [FromServices] IMediator mediator) =>
-    await mediator.Send(request)
-)
+    {
+        return await mediator.Send(request);
+    })
 .WithTags("Payments");
 
 // ====== KITCHEN GROUP ======
+
 // Endpoint for kitchen staff to view pending orders.
 app.MapGet("/kitchen/orders", async ([FromServices] IMediator mediator) =>
     await mediator.Send(new GetKitchenOrdersRequest())
@@ -261,48 +229,37 @@ app.MapGet("/kitchen/report", async (
 // Endpoint for creating a new user.
 app.MapPost("/users", async (
         CreateUserRequest request,
-        CreateUserHandler handler,
-        IValidator<CreateUserRequest> validator) => // Inject the validator
-    {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(request);
-    })
-    .WithTags("Users");
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(request);
+})
+.WithTags("Users");
 
 // Endpoint for retrieving all users.
-app.MapGet("/users", async (GetAllUsersHandler handler) =>
-    {
-        return await handler.Handle();
-    })
-    .WithTags("Users");
+app.MapGet("/users", async ([FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(new GetAllUserRequest());
+})
+.WithTags("Users");
 
 // Endpoint for retrieving a specific user by ID.
 app.MapGet("/users/{userId:guid}", async (
         Guid userId,
-        GetUserByIdHandler handler) =>
-    {
-        return await handler.Handle(userId);
-    })
-    .WithTags("Users");
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(new GetUserByIdRequest(userId));
+})
+.WithTags("Users");
 
 // Endpoint for updating a user's information.
 app.MapPut("/users/{userId:guid}", async (
         Guid userId,
         UpdateUserRequest request,
-        UpdateUserHandler handler,
-        IValidator<UpdateUserRequest> validator) => // Inject the validator
-    {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary()); // Return validation errors
-        }
-        return await handler.Handle(userId, request);
-    })
-    .WithTags("Users");
+        [FromServices] IMediator mediator) =>
+{
+    var requestWithId = request with { UserId = userId };
+    return await mediator.Send(requestWithId);
+})
+.WithTags("Users");
 
 app.Run();

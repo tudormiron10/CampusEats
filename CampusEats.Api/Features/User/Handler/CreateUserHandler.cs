@@ -1,12 +1,14 @@
-﻿// Features/Users/CreateUserHandler.cs
-using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Features.User.Request;
+using MediatR;
+using System.Threading;
 
 namespace CampusEats.Api.Features.Users;
 
-public class CreateUserHandler
+public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
 {
     private readonly CampusEatsDbContext _context;
 
@@ -15,23 +17,22 @@ public class CreateUserHandler
         _context = context;
     }
 
-    public async Task<IResult> Handle(CreateUserRequest request)
+    public async Task<IResult> Handle(CreateUserRequest request, CancellationToken cancellationToken)
     {
         var validator = new CreateUserValidator();
-        var validationResult = await validator.ValidateAsync(request);
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
             return Results.BadRequest(validationResult.Errors);
         }
 
-        // Verificăm dacă email-ul există deja
-        var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
+        var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken);
         if (emailExists)
         {
             return Results.Conflict("An account with this email already exists.");
         }
 
-        var user = new User
+        var user = new Infrastructure.Persistence.Entities.User
         {
             UserId = Guid.NewGuid(),
             Name = request.Name,
@@ -41,9 +42,8 @@ public class CreateUserHandler
 
         _context.Users.Add(user);
 
-        int? points = null; // Declarăm 'points' ca un întreg care poate fi null
-
-        // REGULĂ DE BUSINESS: Dacă utilizatorul este Client, creăm contul de loialitate
+        int? points = null;
+        
         if (request.Role == UserRole.Client)
         {
             var loyaltyAccount = new Loyalty
@@ -54,22 +54,20 @@ public class CreateUserHandler
             };
             _context.Loyalties.Add(loyaltyAccount);
             
-            points = 0; // Setăm valoarea variabilei
+            points = 0; 
         }
 
-        await _context.SaveChangesAsync();
-
-        // --- AICI ESTE MODIFICAREA PENTRU DTO-UL DE RĂSPUNS ---
-        // Creăm noul DTO de răspuns
+        await _context.SaveChangesAsync(cancellationToken);
+        
         var response = new UserResponse(
             user.UserId,
             user.Name,
             user.Email,
-            user.Role.ToString(), // Convertim enum în string
-            points // Folosim variabila 'points'
+            user.Role.ToString(), 
+            points 
         );
         
-        // Returnăm 'response' (DTO-ul) în loc de 'user' (Entitatea)
+        
         return Results.Created($"/users/{user.UserId}", response);
     }
 }
