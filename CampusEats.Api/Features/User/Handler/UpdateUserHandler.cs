@@ -1,10 +1,13 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Features.User.Request;
+using MediatR;
+using System.Threading;
 
 namespace CampusEats.Api.Features.Users
 {
-    public class UpdateUserHandler
+    public class UpdateUserHandler : IRequestHandler<UpdateUserRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -13,11 +16,13 @@ namespace CampusEats.Api.Features.Users
             _context = context;
         }
 
-        public async Task<IResult> Handle(Guid userId, UpdateUserRequest request)
+        public async Task<IResult> Handle(UpdateUserRequest request, CancellationToken cancellationToken)
         {
+            var userId = request.UserId;
+
             // 1. Validare
             var validator = new UpdateUserValidator();
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return Results.BadRequest(validationResult.Errors);
@@ -26,7 +31,7 @@ namespace CampusEats.Api.Features.Users
             // 2. Găsim utilizatorul, incluzând datele de loialitate
             var user = await _context.Users
                 .Include(u => u.Loyalty)
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+                .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
 
             if (user == null)
             {
@@ -37,7 +42,7 @@ namespace CampusEats.Api.Features.Users
             if (user.Email != request.Email)
             {
                 var emailExists = await _context.Users
-                    .AnyAsync(u => u.Email == request.Email && u.UserId != userId);
+                    .AnyAsync(u => u.Email == request.Email && u.UserId != userId, cancellationToken);
                 if (emailExists)
                 {
                     return Results.Conflict("An account with this email already exists.");
@@ -49,7 +54,7 @@ namespace CampusEats.Api.Features.Users
             user.Email = request.Email;
             user.Role = request.Role;
             
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             // 5. Creăm și returnăm UserResponse
             var response = new UserResponse(

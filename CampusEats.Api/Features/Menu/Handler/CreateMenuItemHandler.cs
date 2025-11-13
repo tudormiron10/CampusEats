@@ -1,11 +1,12 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Menu.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Validators.Menu;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
 
-namespace CampusEats.Api.Features.Menu
+namespace CampusEats.Api.Features.Menu.Handler
 {
-    public class CreateMenuItemHandler
+    public class CreateMenuItemHandler : IRequestHandler<CreateMenuItemRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -14,7 +15,7 @@ namespace CampusEats.Api.Features.Menu
             _context = context;
         }
 
-        public async Task<IResult> Handle(CreateMenuItemRequest request)
+        public async Task<IResult> Handle(CreateMenuItemRequest request, CancellationToken cancellationToken)
         {
             var validator = new CreateMenuItemValidator();
             var validationResult = await validator.ValidateAsync(request);
@@ -29,8 +30,8 @@ namespace CampusEats.Api.Features.Menu
                 Name = request.Name,
                 Price = request.Price,
                 Category = request.Category,
-                Description = "",
-                ImageUrl = ""
+                Description = request.Description,
+                ImageUrl = request.ImageUrl
             };
 
             _context.MenuItems.Add(menuItem);

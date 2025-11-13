@@ -1,10 +1,12 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Payments.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
+using MediatR;
+using CampusEats.Api.Features.Payments.Response;
 
 namespace CampusEats.Api.Features.Payments
 {
-    public class PaymentConfirmationHandler
+    public class PaymentConfirmationHandler : IRequestHandler<PaymentConfirmationRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -13,7 +15,7 @@ namespace CampusEats.Api.Features.Payments
             _context = context;
         }
 
-        public async Task<IResult> Handle(PaymentConfirmationRequest request)
+        public async Task<IResult> Handle(PaymentConfirmationRequest request, CancellationToken cancellationToken)
         {
             var payment = await _context.Payments.FindAsync(request.PaymentId);
             if (payment == null)
@@ -33,7 +35,7 @@ namespace CampusEats.Api.Features.Payments
 
             payment.Status = request.NewStatus;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var response = new PaymentResponse(
                 payment.PaymentId,

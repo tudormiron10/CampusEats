@@ -1,19 +1,21 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Features.User.Request;
+using MediatR;
 
 namespace CampusEats.Api.Features.Users
 {
-    public class GetUserByIdHandler
+    public class GetUserByIdHandler : IRequestHandler<GetUserByIdRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
         public GetUserByIdHandler(CampusEatsDbContext context) { _context = context; }
 
-        public async Task<IResult> Handle(Guid userId)
+        public async Task<IResult> Handle(GetUserByIdRequest request, CancellationToken cancellationToken)
         {
             var user = await _context.Users
                 .Include(u => u.Loyalty)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+                .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken);
 
             if (user == null)
             {

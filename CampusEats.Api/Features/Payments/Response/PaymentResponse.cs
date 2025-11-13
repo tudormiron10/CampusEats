@@ -1,9 +1,8 @@
-﻿namespace CampusEats.Api.Features.Payments;
+﻿namespace CampusEats.Api.Features.Payments.Response;
 
-// DTO-ul "plat" pentru răspunsurile API-ului de plăți
 public record PaymentResponse(
     Guid PaymentId,
-    Guid OrderId, // Doar ID-ul, nu toată entitatea
+    Guid OrderId,
     decimal Amount,
-    string Status // Trimitem statusul ca string
+    string Status 
 );

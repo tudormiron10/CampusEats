@@ -1,14 +1,17 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Features.User.Request;
+using MediatR;
+using System.Threading;
 
 namespace CampusEats.Api.Features.Users
 {
-    public class GetAllUsersHandler
+    public class GetAllUsersHandler : IRequestHandler<GetAllUserRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
         public GetAllUsersHandler(CampusEatsDbContext context) { _context = context; }
 
-        public async Task<IResult> Handle()
+        public async Task<IResult> Handle(GetAllUserRequest request, CancellationToken cancellationToken)
         {
             var usersList = await _context.Users
                 .Include(u => u.Loyalty)
@@ -20,7 +23,7 @@ namespace CampusEats.Api.Features.Users
                     user.Role.ToString(),
                     user.Loyalty != null ? (int?)user.Loyalty.Points : null
                 ))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return Results.Ok(usersList);
         }

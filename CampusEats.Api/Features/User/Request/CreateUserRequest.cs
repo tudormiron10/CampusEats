@@ -1,6 +1,6 @@
-﻿// Features/Users/CreateUserRequest.cs
-using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+using MediatR;
 
-namespace CampusEats.Api.Features.Users;
+namespace CampusEats.Api.Features.User.Request;
 
-public record CreateUserRequest(string Name, string Email, UserRole Role);
+public record CreateUserRequest(string Name, string Email, UserRole Role) : IRequest<IResult>;

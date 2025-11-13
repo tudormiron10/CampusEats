@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Orders.Request;
+﻿using CampusEats.Api.Features.Order.Request;
 using FluentValidation;
 
 namespace CampusEats.Api.Validators.Orders;

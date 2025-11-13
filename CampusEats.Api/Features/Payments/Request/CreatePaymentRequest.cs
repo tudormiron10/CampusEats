@@ -1,5 +1,4 @@
-﻿// Features/Payments/CreatePaymentRequest.cs
-namespace CampusEats.Api.Features.Payments;
+﻿using MediatR;
 
-// Pentru a iniția o plată, avem nevoie doar de ID-ul comenzii
-public record CreatePaymentRequest(Guid OrderId);
+namespace CampusEats.Api.Features.Payments.Request;
+public record CreatePaymentRequest(Guid OrderId) : IRequest<IResult>;

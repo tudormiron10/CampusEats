@@ -1,4 +1,11 @@
-﻿namespace CampusEats.Api.Features.Menu;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 
-// Acesta este DTO-ul (Request-ul) - conține doar date
-public record CreateMenuItemRequest(string Name, decimal Price, string Category);
+namespace CampusEats.Api.Features.Menu.Request;
+
+public record CreateMenuItemRequest(
+    string Name,
+    decimal Price, 
+    string Category, 
+    string Description, 
+    string ImageUrl) : IRequest<IResult>;

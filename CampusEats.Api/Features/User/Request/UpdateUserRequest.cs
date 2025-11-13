@@ -1,7 +1,6 @@
-﻿// Features/Users/UpdateUserRequest.cs
-using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+using MediatR;
 
-namespace CampusEats.Api.Features.Users;
+namespace CampusEats.Api.Features.User.Request;
 
-// Vom permite actualizarea numelui, email-ului și rolului
-public record UpdateUserRequest(string Name, string Email, UserRole Role);
+public record UpdateUserRequest(Guid UserId, string Name, string Email, UserRole Role) : IRequest<IResult>;

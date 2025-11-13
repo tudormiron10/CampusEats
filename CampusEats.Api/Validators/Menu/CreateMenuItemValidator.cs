@@ -1,4 +1,5 @@
-﻿using CampusEats.Api.Features.Menu; // We will need the Request from here
+﻿using CampusEats.Api.Features.Menu;
+using CampusEats.Api.Features.Menu.Request; // We will need the Request from here
 using FluentValidation;
 
 namespace CampusEats.Api.Validators.Menu;

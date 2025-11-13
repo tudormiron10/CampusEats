@@ -1,9 +1,12 @@
-﻿// Features/Menu/UpdateMenuItemRequest.cs
-namespace CampusEats.Api.Features.Menu;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http;
+
+namespace CampusEats.Api.Features.Menu.Request;
 
 public record UpdateMenuItemRequest(
+    Guid MenuItemId,
     string Name, 
     decimal Price, 
     string Category, 
     string? ImageUrl, 
-    string? Description);
+    string? Description) : IRequest<IResult>;

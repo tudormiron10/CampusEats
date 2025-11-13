@@ -1,9 +1,12 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Features.Payments.Request;
+using MediatR;
+using CampusEats.Api.Features.Payments.Response;
 
 namespace CampusEats.Api.Features.Payments
 {
-    public class GetPaymentByUserIdHandler
+    public class GetPaymentByUserIdHandler : IRequestHandler<GetPaymentByUserIdRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -12,9 +15,9 @@ namespace CampusEats.Api.Features.Payments
             _context = context;
         }
 
-        public async Task<IResult> Handle(Guid userId)
+        public async Task<IResult> Handle(GetPaymentByUserIdRequest request, CancellationToken cancellationToken)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
+            var userExists = await _context.Users.AnyAsync(u => u.UserId == request.UserId, cancellationToken);
             if (!userExists)
             {
                 return Results.NotFound("User not found.");
@@ -23,9 +26,9 @@ namespace CampusEats.Api.Features.Payments
             var payments = await _context.Payments
                 .AsNoTracking()
                 .Include(p => p.Order)
-                .Where(p => p.Order.UserId == userId)
+                .Where(p => p.Order.UserId == request.UserId)
                 .Select(p => new PaymentResponse(p.PaymentId, p.OrderId, p.Amount, p.Status.ToString()))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return Results.Ok(payments);
         }

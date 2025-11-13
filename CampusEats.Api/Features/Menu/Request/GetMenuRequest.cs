@@ -1,10 +1,9 @@
-﻿// Features/Menu/GetMenuRequest.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using Microsoft.AspNetCore.Http;
 
-namespace CampusEats.Api.Features.Menu;
+namespace CampusEats.Api.Features.Menu.Request;
 
-// Folosim [FromQuery] pentru a lega parametrii din URL
-// ex: GET /menu?Category=Supe
 public record GetMenuRequest(
     [FromQuery] string? Category, 
-    [FromQuery] string? DietaryKeyword); // Pentru filtrarea alergenilor/restricțiilor
+    [FromQuery] string? DietaryKeyword) : IRequest<IResult>;

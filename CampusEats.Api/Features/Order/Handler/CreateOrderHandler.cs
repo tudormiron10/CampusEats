@@ -5,7 +5,7 @@ using CampusEats.Api.Validators.Orders;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
 
-using CampusEats.Api.Features.Orders.Request;
+using CampusEats.Api.Features.Order.Request;
 
 namespace CampusEats.Api.Features.Orders
 {

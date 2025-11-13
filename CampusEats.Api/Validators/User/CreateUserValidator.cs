@@ -1,5 +1,6 @@
 ﻿// Validators/Users/CreateUserValidator.cs
-using CampusEats.Api.Features.Users;
+
+using CampusEats.Api.Features.User.Request;
 using FluentValidation;
 
 namespace CampusEats.Api.Validators.Users;

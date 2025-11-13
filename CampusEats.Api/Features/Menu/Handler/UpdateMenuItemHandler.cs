@@ -1,9 +1,11 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Menu.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Validators.Menu;
+using MediatR;
 
 namespace CampusEats.Api.Features.Menu
 {
-    public class UpdateMenuItemHandler
+    public class UpdateMenuItemHandler : IRequestHandler<UpdateMenuItemRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -12,7 +14,7 @@ namespace CampusEats.Api.Features.Menu
             _context = context;
         }
 
-        public async Task<IResult> Handle(Guid menuItemId, UpdateMenuItemRequest request)
+        public async Task<IResult> Handle(UpdateMenuItemRequest request, CancellationToken cancellationToken)
         {
             var validator = new UpdateMenuItemValidator();
             var validationResult = await validator.ValidateAsync(request);
@@ -21,7 +23,7 @@ namespace CampusEats.Api.Features.Menu
                 return Results.BadRequest(validationResult.Errors);
             }
 
-            var item = await _context.MenuItems.FindAsync(menuItemId);
+            var item = await _context.MenuItems.FindAsync(request.MenuItemId);
             if (item == null)
             {
                 return Results.NotFound("Menu item not found.");
