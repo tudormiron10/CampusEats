@@ -18,5 +18,7 @@ public class CreateUserValidator : AbstractValidator<CreateUserRequest>
             .EmailAddress().WithMessage("Email address is not valid.");
 
         RuleFor(x => x.Role).IsInEnum().WithMessage("The specified role is not valid.");
+        
+        RuleFor(x => x.Password).NotEmpty().MinimumLength(8);
     }
 }

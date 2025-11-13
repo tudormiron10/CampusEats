@@ -262,4 +262,13 @@ app.MapPut("/users/{userId:guid}", async (
 })
 .WithTags("Users");
 
+// Endpoint for login
+app.MapPost("/users/login", async (
+        LoginRequest request, 
+        [FromServices] IMediator mediator) =>
+    {
+        return await mediator.Send(request);
+    })
+    .WithTags("Users");
+
 app.Run();

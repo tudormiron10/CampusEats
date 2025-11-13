@@ -1,6 +1,7 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
+using CampusEats.Api.Features.User.Response;
 using MediatR;
 
 namespace CampusEats.Api.Features.Users

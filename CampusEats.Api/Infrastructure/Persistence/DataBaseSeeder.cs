@@ -1,7 +1,6 @@
-﻿// Infrastructure/Persistence/DataSeeder.cs
-using Bogus;
+﻿using Bogus;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography; 
 
 namespace CampusEats.Api.Infrastructure.Persistence;
 
@@ -12,7 +11,7 @@ public static class DataSeeder
         using var scope = app.ApplicationServices.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CampusEatsDbContext>();
 
-        context.Database.EnsureCreated();
+        // context.Database.EnsureCreated(); // <-- 2. ELIMINAT (foarte important)
 
         // Verificăm dacă baza de date este goală
         if (context.Users.Any())
@@ -23,13 +22,18 @@ public static class DataSeeder
         // Folosim localizarea "ro" pentru date în română
         var faker = new Faker("ro");
 
+        // --- PREGĂTIREA PAROLEI IMPLICITE ---
+        CreatePasswordHash("password123", out byte[] defaultHash, out byte[] defaultSalt);
+
         // --- 1. Utilizatori Statici ---
         var adminUser = new User
         {
             UserId = Guid.Parse("a0000000-0000-0000-0000-000000000001"), // ID static pentru testare
             Name = "Admin",
             Email = "admin@campuseats.com",
-            Role = UserRole.Admin
+            Role = UserRole.Admin,
+            PasswordHash = defaultHash, // <-- 3. ADĂUGAT
+            PasswordSalt = defaultSalt  // <-- 3. ADĂUGAT
         };
         
         // --- 2. Articole de Meniu (Bogus) ---
@@ -49,7 +53,9 @@ public static class DataSeeder
             .RuleFor(u => u.UserId, f => Guid.NewGuid())
             .RuleFor(u => u.Name, f => f.Name.FullName())
             .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Name))
-            .RuleFor(u => u.Role, UserRole.Client);
+            .RuleFor(u => u.Role, UserRole.Client)
+            .RuleFor(u => u.PasswordHash, f => defaultHash) // <-- 3. ADĂUGAT
+            .RuleFor(u => u.PasswordSalt, f => defaultSalt); // <-- 3. ADĂUGAT
         
         var fakeClients = clientUserFaker.Generate(4);
 
@@ -134,5 +140,15 @@ public static class DataSeeder
         context.Payments.AddRange(fakePayments);
 
         context.SaveChanges();
+    }
+    
+    // --- 4. ADĂUGAT: METODA AJUTĂTOARE DE HASHING ---
+    private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    {
+        using (var hmac = new HMACSHA512())
+        {
+            passwordSalt = hmac.Key;
+            passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+        }
     }
 }

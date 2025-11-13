@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
 using MediatR;
-using System.Threading;
+using CampusEats.Api.Features.User.Response;
 
 namespace CampusEats.Api.Features.Users
 {

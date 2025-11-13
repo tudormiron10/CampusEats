@@ -3,7 +3,7 @@ using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
 using MediatR;
-using System.Threading;
+using CampusEats.Api.Features.User.Response;
 
 namespace CampusEats.Api.Features.Users
 {
@@ -49,14 +49,12 @@ namespace CampusEats.Api.Features.Users
                 }
             }
 
-            // 4. Aplicăm actualizările
             user.Name = request.Name;
             user.Email = request.Email;
             user.Role = request.Role;
             
             await _context.SaveChangesAsync(cancellationToken);
 
-            // 5. Creăm și returnăm UserResponse
             var response = new UserResponse(
                 user.UserId,
                 user.Name,

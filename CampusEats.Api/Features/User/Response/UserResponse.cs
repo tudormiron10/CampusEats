@@ -1,6 +1,5 @@
-﻿namespace CampusEats.Api.Features.Users;
+﻿namespace CampusEats.Api.Features.User.Response;
 
-// Acesta este DTO-ul pe care îl vom returna din API.
 public record UserResponse(
     Guid UserId,
     string Name,
