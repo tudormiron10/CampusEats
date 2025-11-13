@@ -2,11 +2,14 @@
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
-using CampusEats.Api.Features.User.Request;
+using CampusEats.Api.Features.User.Request; 
+using CampusEats.Api.Features.User.Response; 
 using MediatR;
-using System.Threading;
+using System.Security.Cryptography;
+using FluentValidation; 
+using Microsoft.AspNetCore.Http; 
 
-namespace CampusEats.Api.Features.Users;
+namespace CampusEats.Api.Features.Users; // Sau .User
 
 public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
 {
@@ -20,7 +23,8 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
     public async Task<IResult> Handle(CreateUserRequest request, CancellationToken cancellationToken)
     {
         var validator = new CreateUserValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        
+        var validationResult = await validator.ValidateAsync(request, cancellationToken); 
         if (!validationResult.IsValid)
         {
             return Results.BadRequest(validationResult.Errors);
@@ -32,12 +36,16 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
             return Results.Conflict("An account with this email already exists.");
         }
 
+        CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
         var user = new Infrastructure.Persistence.Entities.User
         {
             UserId = Guid.NewGuid(),
             Name = request.Name,
             Email = request.Email,
-            Role = request.Role
+            Role = request.Role,
+            PasswordHash = passwordHash, 
+            PasswordSalt = passwordSalt  
         };
 
         _context.Users.Add(user);
@@ -50,7 +58,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = user.UserId,
-                Points = 0 // Începe cu 0 puncte
+                Points = 0 
             };
             _context.Loyalties.Add(loyaltyAccount);
             
@@ -69,5 +77,18 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
         
         
         return Results.Created($"/users/{user.UserId}", response);
+    }
+    
+    
+    private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    {
+        // Folosim HMACSHA512 pentru hashing. "using" asigură eliberarea resurselor.
+        using (var hmac = new HMACSHA512())
+        {
+            // "Salt"-ul este cheia generată aleatoriu de HMAC
+            passwordSalt = hmac.Key;
+            // "Hash"-ul este rezultatul aplicării algoritmului pe parolă
+            passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+        }
     }
 }

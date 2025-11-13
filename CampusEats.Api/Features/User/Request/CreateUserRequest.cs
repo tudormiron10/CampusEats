@@ -3,4 +3,4 @@ using MediatR;
 
 namespace CampusEats.Api.Features.User.Request;
 
-public record CreateUserRequest(string Name, string Email, UserRole Role) : IRequest<IResult>;
+public record CreateUserRequest(string Name, string Email, UserRole Role, string Password) : IRequest<IResult>;
