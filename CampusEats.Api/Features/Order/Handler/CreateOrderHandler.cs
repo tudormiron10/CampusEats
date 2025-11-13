@@ -1,13 +1,15 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using MediatR;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Validators.Orders;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Collections.Generic;
+using CampusEats.Api.Features.Orders.Response;
+
+using CampusEats.Api.Features.Orders.Request;
 
 namespace CampusEats.Api.Features.Orders
 {
-    public class CreateOrderHandler
+    public class CreateOrderHandler : IRequestHandler<CreateOrderRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -16,16 +18,16 @@ namespace CampusEats.Api.Features.Orders
             _context = context;
         }
 
-        public async Task<IResult> Handle(CreateOrderRequest request)
+        public async Task<IResult> Handle(CreateOrderRequest request, CancellationToken cancellationToken)
         {
             var validator = new CreateOrderValidator();
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return Results.BadRequest(validationResult.Errors);
             }
 
-            var user = await _context.Users.FindAsync(request.UserId);
+            var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
             {
                 return Results.NotFound("User not found.");
@@ -36,7 +38,7 @@ namespace CampusEats.Api.Features.Orders
 
             var menuItems = await _context.MenuItems
                 .Where(mi => distinctIds.Contains(mi.MenuItemId))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             if (menuItems.Count != distinctIds.Count)
             {
@@ -68,7 +70,7 @@ namespace CampusEats.Api.Features.Orders
             };
 
             _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var response = new DetailedOrderResponse(
                 order.OrderId,

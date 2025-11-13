@@ -1,10 +1,12 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Order.Request;
+using CampusEats.Api.Infrastructure.Persistence;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using CampusEats.Api.Features.Orders.Response;
 
 namespace CampusEats.Api.Features.Orders
 {
-    public class GetOrderByIdHandler
+    public class GetOrderByIdHandler : IRequestHandler<GetOrderByIdRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -13,8 +15,10 @@ namespace CampusEats.Api.Features.Orders
             _context = context;
         }
 
-        public async Task<IResult> Handle(Guid orderId)
+        public async Task<IResult> Handle(GetOrderByIdRequest request, CancellationToken cancellationToken)
         {
+            var orderId = request.OrderId;
+
             var response = await _context.Orders
                 .AsNoTracking()
                 .Include(o => o.Items)
@@ -32,7 +36,7 @@ namespace CampusEats.Api.Features.Orders
                         oi.UnitPrice,
                         oi.Quantity)).ToList()
                 ))
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (response == null)
             {

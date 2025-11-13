@@ -1,4 +1,4 @@
-﻿namespace CampusEats.Api.Features.Orders;
+﻿namespace CampusEats.Api.Features.Orders.Response;
 
 public record DetailedOrderResponse(
     Guid OrderId,

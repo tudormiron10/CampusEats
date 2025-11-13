@@ -1,22 +1,25 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using MediatR;
+using CampusEats.Api.Features.Kitchen.Request;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
-using CampusEats.Api.Features.Orders;
-using System.Linq;
+using CampusEats.Api.Features.Orders.Response;
 
 namespace CampusEats.Api.Features.Kitchen
 {
-    public class CompleteOrderHandler
+    public class CompleteOrderHandler : IRequestHandler<CompleteOrderRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
         public CompleteOrderHandler(CampusEatsDbContext context) { _context = context; }
 
-        public async Task<IResult> Handle(Guid orderId)
+        public async Task<IResult> Handle(CompleteOrderRequest request, CancellationToken cancellationToken)
         {
+            var orderId = request.OrderId;
+
             var order = await _context.Orders
                 .Include(o => o.Items)
                     .ThenInclude(oi => oi.MenuItem)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+                .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
 
             if (order == null) return Results.NotFound("Order not found.");
 
@@ -26,7 +29,7 @@ namespace CampusEats.Api.Features.Kitchen
             }
 
             order.Status = OrderStatus.Completed;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             var response = new DetailedOrderResponse(
                 order.OrderId,

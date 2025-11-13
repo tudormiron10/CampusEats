@@ -1,9 +1,13 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Features.Order.Request;
+using CampusEats.Api.Features.Orders.Response;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using CampusEats.Api.Infrastructure.Persistence;
 
-namespace CampusEats.Api.Features.Orders
+namespace CampusEats.Api.Features.Order.Handler
 {
-    public class GetAllOrdersHandler
+    
+    public class GetAllOrdersHandler : IRequestHandler<GetAllOrdersRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
 
@@ -12,7 +16,7 @@ namespace CampusEats.Api.Features.Orders
             _context = context;
         }
 
-        public async Task<IResult> Handle()
+        public async Task<IResult> Handle(GetAllOrdersRequest request, CancellationToken cancellationToken)
         {
             var orders = await _context.Orders
                 .AsNoTracking()
@@ -23,7 +27,7 @@ namespace CampusEats.Api.Features.Orders
                     o.TotalAmount,
                     o.OrderDate
                 ))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return Results.Ok(orders);
         }

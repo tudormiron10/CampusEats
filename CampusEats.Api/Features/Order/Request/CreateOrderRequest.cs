@@ -1,4 +1,6 @@
-﻿namespace CampusEats.Api.Features.Orders;
+﻿using MediatR;
 
-// DTO-ul pentru plasarea unei comenzi
-public record CreateOrderRequest(Guid UserId, List<Guid> MenuItemIds);
+namespace CampusEats.Api.Features.Orders.Request
+{ 
+    public record CreateOrderRequest(Guid UserId, List<Guid> MenuItemIds) : IRequest<IResult>;
+}
