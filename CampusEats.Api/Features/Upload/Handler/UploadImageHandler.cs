@@ -1,8 +1,10 @@
+using CampusEats.Api.Features.Upload.Request;
+using CampusEats.Api.Features.Upload.Response;
 using MediatR;
 
 namespace CampusEats.Api.Features.Upload.Handler;
 
-public class UploadImageHandler
+public class UploadImageHandler : IRequestHandler<UploadImageRequest, IResult>
 {
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<UploadImageHandler> _logger;
@@ -13,31 +15,14 @@ public class UploadImageHandler
         _logger = logger;
     }
 
-    public async Task<IResult> Handle(IFormFile file)
+    public async Task<IResult> Handle(UploadImageRequest request, CancellationToken cancellationToken)
     {
-        if (file == null || file.Length == 0)
-        {
-            return Results.BadRequest(new { message = "No file uploaded" });
-        }
-
-        // Validate file type
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-        if (!allowedExtensions.Contains(extension))
-        {
-            return Results.BadRequest(new { message = "Invalid file type. Only images are allowed." });
-        }
-
-        // Validate file size (max 5MB)
-        if (file.Length > 5 * 1024 * 1024)
-        {
-            return Results.BadRequest(new { message = "File size must not exceed 5MB" });
-        }
-
         try
         {
-            // Generate unique filename
+            var file = request.File;
+
+            // Generate unique filename with original extension
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             var fileName = $"{Guid.NewGuid()}{extension}";
             var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "menu");
 
@@ -49,12 +34,14 @@ public class UploadImageHandler
             // Save file
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
             // Return relative path
             var relativePath = $"/images/menu/{fileName}";
-            return Results.Ok(new { path = relativePath });
+            var response = new UploadImageResponse(relativePath);
+
+            return Results.Ok(response);
         }
         catch (Exception ex)
         {

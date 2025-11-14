@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 // Import ALL feature folders
 using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Features.Categories.Handler;
+using CampusEats.Api.Features.Upload.Request;
 using CampusEats.Api.Features.Upload.Handler;
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Features.Menu.Request;
@@ -47,9 +48,6 @@ builder.Services.AddCors(options =>
 
 // --- Validator Registration ---
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // Scans and registers all validators in this assembly
-
-// --- Upload Handler Registration ---
-builder.Services.AddScoped<UploadImageHandler>();
 
 var app = builder.Build();
 
@@ -180,9 +178,20 @@ app.MapDelete("/categories/{categoryId:guid}", async (
 // Endpoint for uploading images.
 app.MapPost("/upload/image", async (
         IFormFile file,
-        [FromServices] UploadImageHandler handler) =>
-    await handler.Handle(file)
-)
+        [FromServices] IValidator<UploadImageRequest> validator,
+        [FromServices] IMediator mediator,
+        CancellationToken ct) =>
+{
+    var request = new UploadImageRequest(file);
+
+    var validationResult = await validator.ValidateAsync(request, ct);
+    if (!validationResult.IsValid)
+    {
+        return Results.ValidationProblem(validationResult.ToDictionary());
+    }
+
+    return await mediator.Send(request, ct);
+})
 .WithTags("Upload")
 .DisableAntiforgery();
 
