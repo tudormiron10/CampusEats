@@ -81,6 +81,10 @@ yarn.lock
 # Generated from Styles/tailwind.css - rebuild with: npm run css:build
 **/wwwroot/css/tailwind.css
 
+# # Uploaded Images #
+# Ignore uploaded images in API wwwroot
+**/wwwroot/images/
+
 # # Blazor WebAssembly Cache #
 **/.config/
 **/.local/

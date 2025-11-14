@@ -31,7 +31,10 @@ namespace CampusEats.Api.Features.Menu.Handler
                 Price = request.Price,
                 Category = request.Category,
                 Description = request.Description,
-                ImageUrl = request.ImageUrl
+                ImagePath = request.ImagePath,
+                DietaryTags = request.DietaryTags,
+                IsAvailable = request.IsAvailable,
+                SortOrder = request.SortOrder
             };
 
             _context.MenuItems.Add(menuItem);
@@ -42,8 +45,11 @@ namespace CampusEats.Api.Features.Menu.Handler
                 menuItem.Name,
                 menuItem.Price,
                 menuItem.Category,
-                menuItem.ImageUrl,
-                menuItem.Description
+                menuItem.ImagePath,
+                menuItem.Description,
+                menuItem.DietaryTags,
+                menuItem.IsAvailable,
+                menuItem.SortOrder
             );
 
             return Results.Created($"/menu/{menuItem.MenuItemId}", response);

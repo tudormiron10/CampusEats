@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
 // Import ALL feature folders
+using CampusEats.Api.Features.Categories.Request;
+using CampusEats.Api.Features.Categories.Handler;
+using CampusEats.Api.Features.Upload.Handler;
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
@@ -45,6 +48,9 @@ builder.Services.AddCors(options =>
 // --- Validator Registration ---
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(); // Scans and registers all validators in this assembly
 
+// --- Upload Handler Registration ---
+builder.Services.AddScoped<UploadImageHandler>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -57,6 +63,9 @@ app.UseHttpsRedirection();
 
 // Enable CORS
 app.UseCors();
+
+// Enable static files for serving uploaded images
+app.UseStaticFiles();
 
 // --- SEEDER CODE BLOCK ---
 // Run the seeder only in the Development environment
@@ -124,12 +133,58 @@ app.MapPut("/menu/{menuItemId:guid}", async (
 
 // Endpoint for deleting a specific menu item.
 app.MapDelete("/menu/{menuItemId:guid}", async (
-        Guid menuItemId, 
+        Guid menuItemId,
         [FromServices] IMediator mediator) =>
     {
         return await mediator.Send(new DeleteMenuItemRequest(menuItemId));
     })
     .WithTags("Menu");
+
+// ====== CATEGORIES GROUP ======
+
+// Endpoint for retrieving all categories.
+app.MapGet("/categories", async ([FromServices] IMediator mediator) =>
+    await mediator.Send(new GetCategoriesRequest())
+)
+.WithTags("Categories");
+
+// Endpoint for creating a new category.
+app.MapPost("/categories", async (
+        CreateCategoryRequest request,
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(request)
+)
+.WithTags("Categories");
+
+// Endpoint for updating a category.
+app.MapPut("/categories/{categoryId:guid}", async (
+        Guid categoryId,
+        UpdateCategoryRequest request,
+        [FromServices] IMediator mediator) =>
+{
+    var requestWithId = request with { CategoryId = categoryId };
+    return await mediator.Send(requestWithId);
+})
+.WithTags("Categories");
+
+// Endpoint for deleting a category.
+app.MapDelete("/categories/{categoryId:guid}", async (
+        Guid categoryId,
+        [FromServices] IMediator mediator) =>
+    await mediator.Send(new DeleteCategoryRequest(categoryId))
+)
+.WithTags("Categories");
+
+// ====== UPLOAD GROUP ======
+
+// Endpoint for uploading images.
+app.MapPost("/upload/image", async (
+        IFormFile file,
+        [FromServices] UploadImageHandler handler) =>
+    await handler.Handle(file)
+)
+.WithTags("Upload")
+.DisableAntiforgery();
 
 // ====== ORDERS GROUP ======
 // Endpoint for creating a new order.

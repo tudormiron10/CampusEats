@@ -18,7 +18,16 @@ namespace CampusEats.Api.Features.Menu.Handler
         {
             var response = await _context.MenuItems
                 .Where(m => m.MenuItemId == request.MenuItemId)
-                .Select(m => new MenuItemResponse(m.MenuItemId, m.Name, m.Price, m.Category, m.ImageUrl, m.Description))
+                .Select(m => new MenuItemResponse(
+                    m.MenuItemId,
+                    m.Name,
+                    m.Price,
+                    m.Category,
+                    m.ImagePath,
+                    m.Description,
+                    m.DietaryTags,
+                    m.IsAvailable,
+                    m.SortOrder))
                 .FirstOrDefaultAsync();
 
             return response != null ? Results.Ok(response) : Results.NotFound("Menu item not found.");

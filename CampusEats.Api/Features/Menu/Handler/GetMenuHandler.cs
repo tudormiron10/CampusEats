@@ -18,6 +18,9 @@ namespace CampusEats.Api.Features.Menu.Handler
         {
             var query = _context.MenuItems.AsNoTracking();
 
+            // Filter by availability - only show available items
+            query = query.Where(mi => mi.IsAvailable);
+
             if (!string.IsNullOrEmpty(request.Category))
             {
                 query = query.Where(mi => mi.Category == request.Category);
@@ -25,11 +28,26 @@ namespace CampusEats.Api.Features.Menu.Handler
 
             if (!string.IsNullOrEmpty(request.DietaryKeyword))
             {
-                query = query.Where(mi => EF.Functions.ILike(mi.Description, $"%{request.DietaryKeyword}%"));
+                // Search in both description and dietary tags
+                query = query.Where(mi =>
+                    EF.Functions.ILike(mi.Description, $"%{request.DietaryKeyword}%") ||
+                    (mi.DietaryTags != null && EF.Functions.ILike(mi.DietaryTags, $"%{request.DietaryKeyword}%")));
             }
 
             var menuItems = await query
-                .Select(m => new MenuItemResponse(m.MenuItemId, m.Name, m.Price, m.Category, m.ImageUrl, m.Description))
+                .OrderBy(m => m.Category)
+                .ThenBy(m => m.SortOrder)
+                .ThenBy(m => m.Name)
+                .Select(m => new MenuItemResponse(
+                    m.MenuItemId,
+                    m.Name,
+                    m.Price,
+                    m.Category,
+                    m.ImagePath,
+                    m.Description,
+                    m.DietaryTags,
+                    m.IsAvailable,
+                    m.SortOrder))
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(menuItems);

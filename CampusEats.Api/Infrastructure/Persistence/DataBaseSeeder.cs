@@ -38,13 +38,18 @@ public static class DataSeeder
         
         // --- 2. Articole de Meniu (Bogus) ---
         var menuCategories = new[] { "Supe", "Salate", "Fel Principal", "Desert", "Băuturi" };
+        var dietaryOptions = new[] { "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut-Free", "" };
+
         var menuItemFaker = new Faker<MenuItem>("ro")
             .RuleFor(m => m.MenuItemId, f => Guid.NewGuid())
             .RuleFor(m => m.Name, f => f.Commerce.ProductName())
             .RuleFor(m => m.Price, f => f.Random.Decimal(10, 70))
             .RuleFor(m => m.Category, f => f.PickRandom(menuCategories))
             .RuleFor(m => m.Description, f => f.Lorem.Sentence(5))
-            .RuleFor(m => m.ImageUrl, f => f.Image.PicsumUrl());
+            .RuleFor(m => m.ImagePath, f => f.Image.PicsumUrl())
+            .RuleFor(m => m.DietaryTags, f => f.PickRandom(dietaryOptions))
+            .RuleFor(m => m.IsAvailable, f => true)
+            .RuleFor(m => m.SortOrder, f => f.Random.Int(0, 100));
 
         var fakeMenuItems = menuItemFaker.Generate(20);
 
@@ -131,7 +136,18 @@ public static class DataSeeder
             }
         }
 
+        // --- 6. Categorii (Sample Categories) ---
+        var categories = new List<Category>
+        {
+            new Category { CategoryId = Guid.NewGuid(), Name = "Supe", Icon = "🍲", SortOrder = 1 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Salate", Icon = "🥗", SortOrder = 2 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Fel Principal", Icon = "🍖", SortOrder = 3 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Desert", Icon = "🍰", SortOrder = 4 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Băuturi", Icon = "🥤", SortOrder = 5 }
+        };
+
         // --- Adăugarea în Baza de Date ---
+        context.Categories.AddRange(categories);
         context.Users.Add(adminUser);
         context.Users.AddRange(fakeClients);
         context.Loyalties.AddRange(fakeLoyalties);

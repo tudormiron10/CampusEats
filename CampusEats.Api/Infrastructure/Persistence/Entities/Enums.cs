@@ -5,4 +5,4 @@ public enum OrderStatus { Pending, InPreparation, Ready, Completed, Cancelled }
 //
 public enum PaymentStatus { Initiated, Successful, Failed }
 
-public enum UserRole { Admin, Client, Kitchen}
+public enum UserRole { Admin, Client, Manager }

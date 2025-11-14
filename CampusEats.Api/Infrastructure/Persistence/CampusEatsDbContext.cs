@@ -14,6 +14,7 @@ public class CampusEatsDbContext : DbContext
     public DbSet<MenuItem> MenuItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Category> Categories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

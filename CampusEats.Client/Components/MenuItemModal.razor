@@ -1,0 +1,385 @@
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject MenuService MenuService
+@inject CategoryService CategoryService
+
+@if (isVisible)
+{
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" @onclick="CloseModal">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in" @onclick:stopPropagation="true">
+            <div class="bg-gradient-to-r from-oxford-blue to-oxford-blue-dark px-6 py-5 flex justify-between items-center border-b-4 border-tan/30">
+                <h2 class="text-2xl font-bold text-white">
+                    @(editingItem == null ? "Add Menu Item" : "Edit Menu Item")
+                </h2>
+                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">×</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 bg-gray-50/30">
+                @if (errorMessage != null)
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-5 shadow-sm">
+                        <span class="font-medium">@errorMessage</span>
+                    </div>
+                }
+
+                <div class="space-y-5">
+                    <!-- Name -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text"
+                               class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                               @bind="name"
+                               placeholder="Enter item name" />
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Category <span class="text-red-500">*</span>
+                        </label>
+                        <select class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                                @bind="category">
+                            <option value="">Select a category</option>
+                            @foreach (var cat in categories)
+                            {
+                                <option value="@cat.Name">@cat.Icon @cat.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Price and Sort Order -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                Price <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                                <input type="number"
+                                       step="0.01"
+                                       class="w-full pl-8 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                                       @bind="price"
+                                       placeholder="0.00" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Sort Order</label>
+                            <input type="number"
+                                   class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                                   @bind="sortOrder"
+                                   placeholder="0" />
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all resize-none shadow-sm"
+                                  rows="3"
+                                  @bind="description"
+                                  placeholder="Enter item description"></textarea>
+                    </div>
+
+                    <!-- Dietary Tags -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Dietary Tags
+                            <span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+                        </label>
+                        <input type="text"
+                               class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                               @bind="dietaryTags"
+                               placeholder="e.g., Vegetarian, Vegan, Gluten-Free (comma separated)" />
+                        <p class="text-xs text-gray-500 mt-2">
+                            Separate multiple tags with commas
+                        </p>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Image
+                            <span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+                        </label>
+                        <div class="space-y-3">
+                            @if (!string.IsNullOrEmpty(imagePath))
+                            {
+                                <div class="relative w-full h-52 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden border border-gray-300 group shadow-sm">
+                                    <img src="@GetImageUrl(imagePath)" class="w-full h-full object-cover" alt="Preview" />
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all"></div>
+                                    <button type="button" class="absolute top-3 right-3 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 shadow-lg transition-all opacity-0 group-hover:opacity-100"
+                                            @onclick="ClearImage">
+                                        Remove
+                                    </button>
+                                </div>
+                            }
+                            <div class="relative bg-white border-2 border-dashed border-gray-300 rounded-xl hover:border-oxford-blue transition-colors">
+                                <InputFile OnChange="HandleImageUpload"
+                                           accept="image/*"
+                                           class="block w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-oxford-blue file:text-white hover:file:bg-oxford-blue-dark file:cursor-pointer file:transition-colors cursor-pointer p-4" />
+                            </div>
+                            @if (isUploading)
+                            {
+                                <div class="flex items-center gap-2 text-oxford-blue bg-oxford-blue/5 px-4 py-3 rounded-lg">
+                                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium">Uploading image...</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Is Available -->
+                    <div class="flex items-center p-4 bg-white border border-green-200 rounded-lg shadow-sm">
+                        <input type="checkbox"
+                               id="isAvailable"
+                               class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
+                               @bind="isAvailable" />
+                        <label for="isAvailable" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                            Item is available for sale
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-between items-center">
+                <p class="text-xs text-gray-500">
+                    <span class="text-red-500">*</span> Required fields
+                </p>
+                <div class="flex gap-3">
+                    <button class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all"
+                            @onclick="CloseModal"
+                            disabled="@isSaving">
+                        Cancel
+                    </button>
+                    <button class="px-8 py-2.5 bg-gradient-to-r from-oxford-blue to-oxford-blue-dark text-white rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                            @onclick="SaveMenuItem"
+                            disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Saving...</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Save</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public MenuItemResponse? EditingItem { get; set; }
+
+    private bool isVisible = false;
+    private bool isSaving = false;
+    private bool isUploading = false;
+    private string? errorMessage;
+    private MenuItemResponse? editingItem;
+
+    private List<CategoryResponse> categories = new();
+    private string name = "";
+    private string category = "";
+    private decimal price = 0;
+    private string description = "";
+    private string? dietaryTags = "";
+    private string? imagePath = "";
+    private int sortOrder = 0;
+    private bool isAvailable = true;
+
+    public async Task OpenAsync(MenuItemResponse? item)
+    {
+        editingItem = item;
+        errorMessage = null;
+
+        // Load categories
+        try
+        {
+            categories = await CategoryService.GetCategoriesAsync() ?? new List<CategoryResponse>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load categories: {ex.Message}";
+            categories = new List<CategoryResponse>();
+        }
+
+        if (item != null)
+        {
+            // Edit mode
+            name = item.Name;
+            category = item.Category;
+            price = item.Price;
+            description = item.Description;
+            dietaryTags = item.DietaryTags;
+            imagePath = item.ImagePath;
+            sortOrder = item.SortOrder;
+            isAvailable = item.IsAvailable;
+        }
+        else
+        {
+            // Create mode
+            name = "";
+            category = "";
+            price = 0;
+            description = "";
+            dietaryTags = "";
+            imagePath = "";
+            sortOrder = 0;
+            isAvailable = true;
+        }
+
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        isVisible = false;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            isUploading = true;
+            errorMessage = null;
+
+            var file = e.File;
+            if (file.Size > 5 * 1024 * 1024) // 5MB limit
+            {
+                errorMessage = "File size must not exceed 5MB";
+                return;
+            }
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var uploadedPath = await MenuService.UploadImageAsync(stream, file.Name);
+
+            if (uploadedPath != null)
+            {
+                imagePath = uploadedPath;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to upload image: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearImage()
+    {
+        imagePath = null;
+    }
+
+    private string GetImageUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return "";
+
+        if (path.StartsWith("http"))
+            return path;
+
+        // Use the configured API base URL instead of hardcoding
+        return $"http://localhost:5233{path}";
+    }
+
+    private async Task SaveMenuItem()
+    {
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+
+            // Validate
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                errorMessage = "Name is required";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                errorMessage = "Category is required";
+                return;
+            }
+
+            if (price <= 0)
+            {
+                errorMessage = "Price must be greater than 0";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                errorMessage = "Description is required";
+                return;
+            }
+
+            if (editingItem != null)
+            {
+                // Update existing item
+                var updateRequest = new UpdateMenuItemRequest(
+                    name,
+                    price,
+                    category,
+                    imagePath,
+                    description,
+                    dietaryTags,
+                    isAvailable,
+                    sortOrder
+                );
+
+                await MenuService.UpdateMenuItemAsync(editingItem.MenuItemId, updateRequest);
+            }
+            else
+            {
+                // Create new item
+                var createRequest = new CreateMenuItemRequest(
+                    name,
+                    price,
+                    category,
+                    description,
+                    imagePath,
+                    dietaryTags,
+                    isAvailable,
+                    sortOrder
+                );
+
+                await MenuService.CreateMenuItemAsync(createRequest);
+            }
+
+            await OnSaved.InvokeAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save menu item: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

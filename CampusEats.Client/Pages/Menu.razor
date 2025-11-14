@@ -1,19 +1,34 @@
 @page "/menu"
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
+@using CampusEats.Client.Components
 @inject MenuService MenuService
+@inject CategoryService CategoryService
 @inject CartService CartService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Menu - CampusEats</PageTitle>
 
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold text-oxford-blue mb-8">🍽️ CampusEats Menu</h1>
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-oxford-blue">CampusEats Menu</h1>
+        @if (isManager)
+        {
+            <button class="bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all"
+                    @onclick="() => OpenMenuItemModal(null)">
+                + Add Menu Item
+            </button>
+        }
+    </div>
 
     @if (isLoading)
     {
         <div class="text-center py-12">
-            <div class="inline-block animate-spin text-6xl mb-4">⏳</div>
+            <svg class="animate-spin h-16 w-16 mx-auto mb-4 text-oxford-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             <p class="text-gray-600 text-lg">Loading menu...</p>
         </div>
     }
@@ -25,43 +40,98 @@
     }
     else
     {
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div>
-                <input type="text"
-                       class="w-full px-4 py-3 border-2 border-tan-light rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/15 transition-all"
-                       placeholder="Search dietary keywords..."
-                       @bind="searchKeyword"
-                       @bind:event="oninput" />
-            </div>
-            <div>
-                <select class="w-full px-4 py-3 border-2 border-tan-light rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/15 transition-all bg-white"
-                        @bind="selectedCategory">
-                    <option value="">All Categories</option>
-                    @foreach (var category in categories)
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </select>
-            </div>
-            <div class="flex gap-2">
-                <button class="flex-1 bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-oxford-blue/40 transition-all"
-                        @onclick="LoadMenu">
-                    Filter
+        <!-- Category Tabs -->
+        <div class="mb-6 border-b-2 border-tan-light overflow-x-auto">
+            <div class="flex gap-2 min-w-max">
+                <button class="px-6 py-3 font-semibold transition-all @(selectedCategory == "" ? "border-b-4 border-oxford-blue text-oxford-blue" : "text-gray-600 hover:text-oxford-blue")"
+                        @onclick='() => SelectCategory("")'>
+                    All Items
                 </button>
-                <button class="flex-1 bg-tan text-oxford-blue px-6 py-3 rounded-lg font-semibold hover:bg-tan-dark hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all"
-                        @onclick="ClearFilters">
-                    Clear
-                </button>
+                @foreach (var category in categories)
+                {
+                    <button class="px-6 py-3 font-semibold transition-all whitespace-nowrap @(selectedCategory == category.Name ? "border-b-4 border-oxford-blue text-oxford-blue" : "text-gray-600 hover:text-oxford-blue")"
+                            @onclick="() => SelectCategory(category.Name)">
+                        @category.Icon @category.Name
+                    </button>
+                }
+                @if (isManager)
+                {
+                    <button class="px-6 py-3 text-gray-400 hover:text-oxford-blue transition-colors"
+                            @onclick="OpenCategoryModal">
+                        + Manage Categories
+                    </button>
+                }
             </div>
         </div>
 
+        <!-- Advanced Filters -->
+        <div class="mb-6">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+
+                <!-- Toggle -->
+                <button class="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+                        @onclick="() => showFilters = !showFilters">
+                    <span class="text-sm font-semibold text-gray-800">Advanced Filters</span>
+                    <span class="text-xs text-gray-500 transition-transform duration-200
+                                @(showFilters ? "rotate-180" : "")">▼</span>
+                </button>
+
+                @if (showFilters)
+                {
+                    <div class="border-t border-gray-200 bg-gray-50/30 px-5 py-4">
+
+                        <!-- FIXED GRID -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                            <!-- Search -->
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-700 mb-1.5">Search</label>
+                                <input type="text"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md
+                                            focus:border-oxford-blue focus:ring-oxford-blue/20 focus:ring-1"
+                                    placeholder="Search menu items..."
+                                    @bind="searchKeyword"
+                                    @bind:event="oninput"
+                                    @onkeyup="OnSearchInput" />
+                            </div>
+
+                            <!-- Dietary Restrictions -->
+                            <div class="flex flex-col">
+                                <label class="text-xs font-medium text-gray-700 mb-1.5">Dietary Restrictions</label>
+                                <select class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md
+                                            focus:border-oxford-blue focus:ring-oxford-blue/20 focus:ring-1"
+                                        @bind="selectedDietaryTag"
+                                        @bind:after="ApplyFilters">
+                                    <option value="">All Items</option>
+                                    @foreach (var tag in dietaryTags)
+                                    {
+                                        <option value="@tag">@tag</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Clear Button (now correct size & aligned) -->
+                            <div class="flex flex-col justify-end">
+                                <button class="w-full px-4 py-2 text-sm font-medium rounded-md bg-oxford-blue text-white hover:bg-oxford-blue-dark transition"
+                                        @onclick="ClearFilters">
+                                    Clear Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+
+        <!-- Menu Items Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach (var item in menuItems)
+            @foreach (var item in filteredItems)
             {
-                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-tan-light">
-                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-tan-light relative">
+                    @if (!string.IsNullOrEmpty(item.ImagePath))
                     {
-                        <img src="@item.ImageUrl" class="w-full h-48 object-cover" alt="@item.Name">
+                        <img src="@GetImageUrl(item.ImagePath)" class="w-full h-48 object-cover" alt="@item.Name">
                     }
                     else
                     {
@@ -69,13 +139,47 @@
                             <span class="text-gray-400 text-lg">No image</span>
                         </div>
                     }
+
                     <div class="p-6">
-                        <h5 class="text-xl font-bold text-oxford-blue mb-1">@item.Name</h5>
-                        <p class="text-tan-dark text-sm font-medium mb-3">@item.Category</p>
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <h5 class="text-xl font-bold text-oxford-blue mb-1">@item.Name</h5>
+                                <p class="text-tan-dark text-sm font-medium mb-2">@item.Category</p>
+                            </div>
+                            @if (isManager)
+                            {
+                                <div class="flex items-center gap-3 ml-2">
+                                    <button class="inline-flex items-center px-4 py-1.5 text-sm font-semibold rounded-full border border-oxford-blue/30 text-oxford-blue bg-oxford-blue/5 hover:bg-oxford-blue/10 shadow-sm"
+                                            @onclick="() => OpenMenuItemModal(item)"
+                                            title="Edit">
+                                        Edit
+                                    </button>
+                                    <button class="inline-flex items-center px-4 py-1.5 text-sm font-semibold rounded-full border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 shadow-sm"
+                                            @onclick="() => OpenDeleteDialog(item)"
+                                            title="Delete">
+                                        Delete
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(item.DietaryTags))
+                        {
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                @foreach (var tag in item.DietaryTags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                        @tag.Trim()
+                                    </span>
+                                }
+                            </div>
+                        }
+
                         @if (!string.IsNullOrEmpty(item.Description))
                         {
                             <p class="text-gray-600 mb-4 line-clamp-2">@item.Description</p>
                         }
+
                         <div class="flex justify-between items-center mt-4">
                             <span class="text-3xl font-bold text-oxford-blue">@item.Price.ToString("C")</span>
                             <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
@@ -88,7 +192,7 @@
             }
         </div>
 
-        @if (!menuItems.Any())
+        @if (!filteredItems.Any())
         {
             <div class="bg-blue-50 border-2 border-blue-200 text-blue-700 px-6 py-4 rounded-lg text-center">
                 No menu items found. Try different filters.
@@ -97,17 +201,78 @@
     }
 </div>
 
+<!-- Floating Action Button (Mobile) -->
+@if (isManager && !isLoading)
+{
+    <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-oxford-blue text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-2xl"
+            @onclick="() => OpenMenuItemModal(null)">
+        +
+    </button>
+}
+
+<!-- Modals -->
+<MenuItemModal @ref="menuItemModal" OnSaved="OnMenuItemSaved" />
+<DeleteConfirmDialog @ref="deleteDialog" OnDeleted="OnMenuItemDeleted" />
+<CategoryManagementModal @ref="categoryModal" OnChanged="OnCategoriesChanged" />
+
 @code {
     private List<MenuItemResponse> menuItems = new();
-    private List<string> categories = new();
+    private List<MenuItemResponse> filteredItems = new();
+    private List<CategoryResponse> categories = new();
+    private List<string> dietaryTags = new();
     private bool isLoading = true;
+    private bool showFilters = false;
+    private bool isManager = false;
     private string? error;
     private string searchKeyword = "";
     private string selectedCategory = "";
+    private string selectedDietaryTag = "";
+
+    // Modal references
+    private MenuItemModal menuItemModal = default!;
+    private DeleteConfirmDialog deleteDialog = default!;
+    private CategoryManagementModal categoryModal = default!;
 
     protected override async Task OnInitializedAsync()
     {
+        await CheckManagerRole();
+        await LoadCategories();
         await LoadMenu();
+    }
+
+    private async Task CheckManagerRole()
+    {
+        var role = await AuthService.GetUserRoleAsync();
+        isManager = role == "Manager";
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            var allCategories = await CategoryService.GetCategoriesAsync();
+
+            // Only show categories that have menu items
+            var categoriesWithItems = new List<CategoryResponse>();
+            foreach (var category in allCategories)
+            {
+                var itemsInCategory = menuItems.Count > 0
+                    ? menuItems.Any(i => i.Category == category.Name)
+                    : true; // Load all categories initially
+
+                if (itemsInCategory || isManager)
+                {
+                    categoriesWithItems.Add(category);
+                }
+            }
+
+            categories = categoriesWithItems;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load categories: {ex.Message}");
+            categories = new List<CategoryResponse>();
+        }
     }
 
     private async Task LoadMenu()
@@ -117,19 +282,21 @@
             isLoading = true;
             error = null;
 
-            var allItems = await MenuService.GetMenuAsync(
-                string.IsNullOrEmpty(selectedCategory) ? null : selectedCategory,
-                string.IsNullOrEmpty(searchKeyword) ? null : searchKeyword
-            );
+            menuItems = await MenuService.GetMenuAsync();
 
-            menuItems = allItems;
-
-            // Extract unique categories
-            categories = allItems
-                .Select(i => i.Category)
+            // Extract unique dietary tags
+            dietaryTags = menuItems
+                .Where(i => !string.IsNullOrEmpty(i.DietaryTags))
+                .SelectMany(i => i.DietaryTags!.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(t => t.Trim())
                 .Distinct()
-                .OrderBy(c => c)
+                .OrderBy(t => t)
                 .ToList();
+
+            // Reload categories to filter empty ones
+            await LoadCategories();
+
+            ApplyFiltersLocal();
         }
         catch (Exception ex)
         {
@@ -141,15 +308,105 @@
         }
     }
 
-    private async Task ClearFilters()
+    private void SelectCategory(string category)
+    {
+        selectedCategory = category;
+        ApplyFiltersLocal();
+    }
+
+    private void OnSearchInput()
+    {
+        ApplyFiltersLocal();
+    }
+
+    private void ApplyFilters()
+    {
+        ApplyFiltersLocal();
+    }
+
+    private void ApplyFiltersLocal()
+    {
+        filteredItems = menuItems;
+
+        // Filter by category
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            filteredItems = filteredItems.Where(i => i.Category == selectedCategory).ToList();
+        }
+
+        // Filter by search keyword
+        if (!string.IsNullOrEmpty(searchKeyword))
+        {
+            filteredItems = filteredItems.Where(i =>
+                i.Name.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                (i.Description != null && i.Description.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+
+        // Filter by dietary tag
+        if (!string.IsNullOrEmpty(selectedDietaryTag))
+        {
+            filteredItems = filteredItems.Where(i =>
+                i.DietaryTags != null && i.DietaryTags.Contains(selectedDietaryTag, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    private void ClearFilters()
     {
         searchKeyword = "";
         selectedCategory = "";
-        await LoadMenu();
+        selectedDietaryTag = "";
+        ApplyFiltersLocal();
     }
 
     private void AddToCart(MenuItemResponse item)
     {
         CartService.AddItem(item);
+    }
+
+    private string GetImageUrl(string? imagePath)
+    {
+        if (string.IsNullOrEmpty(imagePath))
+            return "";
+
+        // If it's already a full URL, return it
+        if (imagePath.StartsWith("http"))
+            return imagePath;
+
+        // Otherwise, prepend the API base URL
+        return $"http://localhost:5233{imagePath}";
+    }
+
+    private async Task OpenMenuItemModal(MenuItemResponse? item)
+    {
+        await menuItemModal.OpenAsync(item);
+    }
+
+    private void OpenDeleteDialog(MenuItemResponse item)
+    {
+        deleteDialog.Open(item);
+    }
+
+    private async Task OpenCategoryModal()
+    {
+        await categoryModal.OpenAsync();
+    }
+
+    private async Task OnMenuItemSaved()
+    {
+        await LoadMenu();
+    }
+
+    private async Task OnMenuItemDeleted()
+    {
+        await LoadMenu();
+    }
+
+    private async Task OnCategoriesChanged()
+    {
+        await LoadCategories();
     }
 }

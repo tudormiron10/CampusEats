@@ -5,8 +5,11 @@ namespace CampusEats.Api.Features.Menu.Request;
 
 public record UpdateMenuItemRequest(
     Guid MenuItemId,
-    string Name, 
-    decimal Price, 
-    string Category, 
-    string? ImageUrl, 
-    string? Description) : IRequest<IResult>;
+    string Name,
+    decimal Price,
+    string Category,
+    string? ImagePath,
+    string? Description,
+    string? DietaryTags,
+    bool IsAvailable,
+    int SortOrder) : IRequest<IResult>;
