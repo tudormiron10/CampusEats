@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusEats.Api", "CampusEat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusEats.Client", "CampusEats.Client\CampusEats.Client.csproj", "{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CampusEats.Api.Tests", "CampusEats.Api.Tests\CampusEats.Api.Tests.csproj", "{14436847-85B2-4AFD-B95F-7351A6A4ECE9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C471F41-FFD0-4D0D-8B53-7446BE222C0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14436847-85B2-4AFD-B95F-7351A6A4ECE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14436847-85B2-4AFD-B95F-7351A6A4ECE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14436847-85B2-4AFD-B95F-7351A6A4ECE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14436847-85B2-4AFD-B95F-7351A6A4ECE9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

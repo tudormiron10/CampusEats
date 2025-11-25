@@ -13,16 +13,18 @@ public class UploadImageValidator : AbstractValidator<UploadImageRequest>
         RuleFor(x => x.File)
             .NotNull()
             .WithMessage("No file uploaded");
+        When(x => x.File != null, () =>
+        {
+            RuleFor(x => x.File.Length)
+                .GreaterThan(0)
+                .WithMessage("File is empty")
+                .LessThanOrEqualTo(MaxFileSize)
+                .WithMessage("File size must not exceed 5MB");
 
-        RuleFor(x => x.File.Length)
-            .GreaterThan(0)
-            .WithMessage("File is empty")
-            .LessThanOrEqualTo(MaxFileSize)
-            .WithMessage("File size must not exceed 5MB");
-
-        RuleFor(x => x.File.FileName)
-            .Must(HasValidExtension)
-            .WithMessage("Invalid file type. Only images (jpg, jpeg, png, gif, webp) are allowed");
+            RuleFor(x => x.File.FileName)
+                .Must(HasValidExtension)
+                .WithMessage("Invalid file type. Only images (jpg, jpeg, png, gif, webp) are allowed");
+        });
     }
 
     private static bool HasValidExtension(string fileName)

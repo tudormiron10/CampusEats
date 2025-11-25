@@ -7,6 +7,9 @@ public class UpdateMenuItemValidator : AbstractValidator<UpdateMenuItemRequest>
 {
     public UpdateMenuItemValidator()
     {
+        RuleFor(x => x.MenuItemId)
+            .NotEmpty().WithMessage("Menu Item ID is required.");
+        
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Product name is required.")
             .MaximumLength(100).WithMessage("Product name cannot exceed 100 characters.");
