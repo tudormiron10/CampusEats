@@ -83,7 +83,7 @@ yarn.lock
 
 # # Uploaded Images #
 # Ignore uploaded images in API wwwroot
-**/wwwroot/images/
+CampusEats.Api/wwwroot/images/**/*
 
 # # Blazor WebAssembly Cache #
 **/.config/
@@ -91,3 +91,4 @@ yarn.lock
 
 # # Documentation #
 CLAUDE.md
+.github/
