@@ -11,6 +11,7 @@ using CampusEats.Api.Features.Upload.Handler;
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
+using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -226,6 +227,14 @@ app.MapGet("/orders", async ([FromServices] IMediator mediator) =>
 )
 .WithTags("Orders");
 
+// Endpoint for retrieving all orders for a specific user.
+app.MapGet("/orders/user/{userId:guid}", async (
+            Guid userId,
+            [FromServices] IMediator mediator) =>
+        await mediator.Send(new GetAllOrdersByUserIdRequest(userId))
+    )
+    .WithTags("Orders");
+
 // ====== PAYMENTS GROUP ======
 
 // Endpoint for initiating a payment for an order.
@@ -257,7 +266,7 @@ app.MapPost("/payments/confirmation", async (
 
 // ====== KITCHEN GROUP ======
 
-// Endpoint for kitchen staff to view pending orders.
+// Endpoint for kitchen staff to view active orders.
 app.MapGet("/kitchen/orders", async ([FromServices] IMediator mediator) =>
     await mediator.Send(new GetKitchenOrdersRequest())
 )
