@@ -15,9 +15,10 @@ namespace CampusEats.Api.Features.Kitchen
         public async Task<IResult> Handle(GetKitchenOrdersRequest request, CancellationToken cancellationToken)
         {
             var activeOrders = await _context.Orders
-                .Where(o => o.Status == OrderStatus.Pending || 
-                            o.Status == OrderStatus.InPreparation || 
-                            o.Status == OrderStatus.Ready)
+                .Where(o => o.Status == OrderStatus.Pending ||
+                            o.Status == OrderStatus.InPreparation ||
+                            o.Status == OrderStatus.Ready ||
+                            o.Status == OrderStatus.Completed)
                 .AsNoTracking()
                 .Select(o => new KitchenOrderResponse(
                     o.OrderId,

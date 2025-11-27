@@ -1,0 +1,431 @@
+@page "/kitchen"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject KitchenService KitchenService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Kitchen - CampusEats</PageTitle>
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-oxford-blue rounded-xl">
+                    <svg class="w-8 h-8 text-tan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">Kitchen Dashboard</h1>
+                    <p class="text-slate-500">Manage and track incoming orders</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        @if (!isLoading && error == null)
+        {
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-amber-100 rounded-lg">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Pending")</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wide">Pending</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("InPreparation")</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wide">Preparing</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-100 rounded-lg">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Ready")</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wide">Ready</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-slate-100 rounded-lg">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Completed")</p>
+                            <p class="text-xs text-slate-500 uppercase tracking-wide">Completed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Section Tabs & Filters -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
+                <div class="flex gap-2">
+                    <button class="@(activeSection == "orders" ? "bg-oxford-blue text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-5 py-2.5 rounded-lg font-medium transition-all duration-200"
+                            @onclick="SetOrdersSection">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            Orders
+                        </span>
+                    </button>
+                    <button class="bg-slate-50 text-slate-400 px-5 py-2.5 rounded-lg font-medium cursor-not-allowed border border-dashed border-slate-300" disabled>
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            Reports
+                            <span class="text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Soon</span>
+                        </span>
+                    </button>
+                </div>
+
+                @if (activeSection == "orders")
+                {
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <div class="relative">
+                            <input type="checkbox"
+                                   class="sr-only peer"
+                                   @bind="showCompleted"
+                                   @bind:after="LoadOrders" />
+                            <div class="w-10 h-6 bg-slate-200 rounded-full peer peer-checked:bg-oxford-blue transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+                        </div>
+                        <span class="text-sm text-slate-600">Show completed</span>
+                    </label>
+                }
+            </div>
+        </div>
+
+        @if (activeSection == "orders")
+        {
+            @if (isLoading)
+            {
+                <div class="flex flex-col items-center justify-center py-16">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                        <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                    </div>
+                    <p class="mt-4 text-slate-500 font-medium">Loading orders...</p>
+                </div>
+            }
+            else if (error != null)
+            {
+                <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+                    <div class="p-2 bg-red-100 rounded-lg shrink-0">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-red-800">Error loading orders</h3>
+                        <p class="text-red-600 text-sm mt-1">@error</p>
+                    </div>
+                </div>
+            }
+            else if (!filteredOrders.Any())
+            {
+                <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-1">No orders to display</h3>
+                    <p class="text-slate-500">@(showCompleted ? "There are no orders in the system." : "All caught up! No active orders at the moment.")</p>
+                </div>
+            }
+            else
+            {
+                <div class="grid gap-4">
+                    @foreach (var order in filteredOrders)
+                    {
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200 @(order.Status == "Completed" ? "opacity-75" : "")">
+                            <!-- Order Header -->
+                            <div class="@GetStatusHeaderClass(order.Status) px-6 py-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="@GetStatusIconBgClass(order.Status) p-3 rounded-xl">
+                                            @((MarkupString)GetStatusIcon(order.Status))
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-3">
+                                                <h3 class="text-xl font-bold text-slate-800">Order #@GetOrderNumber(order.Id)</h3>
+                                                <span class="@GetStatusBadgeClass(order.Status) px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                                                    @FormatStatus(order.Status)
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-1 text-slate-500 text-sm">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                @order.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy 'at' HH:mm")
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <div class="text-right">
+                                            <p class="text-xs text-slate-500 uppercase tracking-wide">Total</p>
+                                            <p class="text-2xl font-bold text-slate-800">@GetOrderTotal(order).ToString("C")</p>
+                                        </div>
+                                        @switch (order.Status)
+                                        {
+                                            case "Pending":
+                                                <button class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                        @onclick="@(() => PrepareOrder(order.Id))"
+                                                        disabled="@(processingOrderId == order.Id)">
+                                                    @if (processingOrderId == order.Id)
+                                                    {
+                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                                                        </svg>
+                                                        <span>Start Preparing</span>
+                                                    }
+                                                </button>
+                                                break;
+                                            case "InPreparation":
+                                                <button class="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                        @onclick="@(() => ReadyOrder(order.Id))"
+                                                        disabled="@(processingOrderId == order.Id)">
+                                                    @if (processingOrderId == order.Id)
+                                                    {
+                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <span>Mark Ready</span>
+                                                    }
+                                                </button>
+                                                break;
+                                            case "Ready":
+                                                <button class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                        @onclick="@(() => CompleteOrder(order.Id))"
+                                                        disabled="@(processingOrderId == order.Id)">
+                                                    @if (processingOrderId == order.Id)
+                                                    {
+                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                        <span>Processing...</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        <span>Complete</span>
+                                                    }
+                                                </button>
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div class="px-6 py-4 bg-slate-50/50">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                    <h4 class="font-semibold text-slate-700 text-sm uppercase tracking-wide">Order Items</h4>
+                                    <span class="text-xs text-slate-400">(@order.Items.Count @(order.Items.Count == 1 ? "item" : "items"))</span>
+                                </div>
+                                <div class="grid gap-2">
+                                    @foreach (var item in order.Items)
+                                    {
+                                        <div class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-slate-100">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-8 h-8 bg-oxford-blue/10 text-oxford-blue rounded-lg flex items-center justify-center font-bold text-sm">
+                                                    @item.Quantity
+                                                </span>
+                                                <span class="font-medium text-slate-700">@item.Name</span>
+                                            </div>
+                                            <span class="font-semibold text-slate-800">@((item.UnitPrice * item.Quantity).ToString("C"))</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private string activeSection = "orders";
+    private List<KitchenOrderResponse> orders = new();
+    private bool showCompleted = false;
+    private bool isLoading = true;
+    private string? error;
+    private Guid? processingOrderId;
+
+    private IEnumerable<KitchenOrderResponse> filteredOrders =>
+        orders
+            .Where(o => showCompleted || o.Status != "Completed")
+            .OrderByDescending(o => o.CreatedAt);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await AuthService.GetUserRoleAsync();
+        if (role != "Admin" && role != "Manager")
+        {
+            Navigation.NavigateTo("/menu");
+            return;
+        }
+
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+            orders = await KitchenService.GetKitchenOrdersAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            Navigation.NavigateTo("/menu");
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load orders: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PrepareOrder(Guid orderId)
+    {
+        await UpdateOrderStatus(orderId, () => KitchenService.PrepareOrderAsync(orderId));
+    }
+
+    private async Task ReadyOrder(Guid orderId)
+    {
+        await UpdateOrderStatus(orderId, () => KitchenService.ReadyOrderAsync(orderId));
+    }
+
+    private async Task CompleteOrder(Guid orderId)
+    {
+        await UpdateOrderStatus(orderId, () => KitchenService.CompleteOrderAsync(orderId));
+    }
+
+    private async Task UpdateOrderStatus(Guid orderId, Func<Task> action)
+    {
+        try
+        {
+            processingOrderId = orderId;
+            await action();
+            await LoadOrders();
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to update order: {ex.Message}";
+        }
+        finally
+        {
+            processingOrderId = null;
+        }
+    }
+
+    private int GetStatusCount(string status) => orders.Count(o => o.Status == status);
+
+    private string GetStatusBadgeClass(string status) => status switch
+    {
+        "Pending" => "bg-amber-100 text-amber-700 border border-amber-200",
+        "InPreparation" => "bg-blue-100 text-blue-700 border border-blue-200",
+        "Ready" => "bg-emerald-100 text-emerald-700 border border-emerald-200",
+        "Completed" => "bg-slate-100 text-slate-600 border border-slate-200",
+        "Cancelled" => "bg-red-100 text-red-700 border border-red-200",
+        _ => "bg-slate-100 text-slate-600 border border-slate-200"
+    };
+
+    private string GetStatusHeaderClass(string status) => status switch
+    {
+        "Pending" => "bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100",
+        "InPreparation" => "bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100",
+        "Ready" => "bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100",
+        "Completed" => "bg-slate-50 border-b border-slate-100",
+        _ => "bg-slate-50 border-b border-slate-100"
+    };
+
+    private string GetStatusIconBgClass(string status) => status switch
+    {
+        "Pending" => "bg-amber-100",
+        "InPreparation" => "bg-blue-100",
+        "Ready" => "bg-emerald-100",
+        "Completed" => "bg-slate-200",
+        _ => "bg-slate-200"
+    };
+
+    private string GetStatusIcon(string status) => status switch
+    {
+        "Pending" => "<svg class=\"w-6 h-6 text-amber-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>",
+        "InPreparation" => "<svg class=\"w-6 h-6 text-blue-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z\"></path></svg>",
+        "Ready" => "<svg class=\"w-6 h-6 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>",
+        "Completed" => "<svg class=\"w-6 h-6 text-slate-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 13l4 4L19 7\"></path></svg>",
+        _ => "<svg class=\"w-6 h-6 text-slate-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>"
+    };
+
+    private string GetOrderNumber(Guid orderId) => Math.Abs(orderId.GetHashCode() % 1000000).ToString("D6");
+
+    private string FormatStatus(string status) => System.Text.RegularExpressions.Regex.Replace(status, "([a-z])([A-Z])", "$1 $2");
+
+    private decimal GetOrderTotal(KitchenOrderResponse order) => order.Items.Sum(i => i.UnitPrice * i.Quantity);
+
+    private void SetOrdersSection() => activeSection = "orders";
+}

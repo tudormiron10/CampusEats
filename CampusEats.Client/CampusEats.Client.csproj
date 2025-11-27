@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.21" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Build Tailwind CSS before .NET build -->
+  <Target Name="BuildTailwind" BeforeTargets="Build">
+    <Exec Command="npm run css:build" WorkingDirectory="$(ProjectDir)" />
+  </Target>
+
 </Project>

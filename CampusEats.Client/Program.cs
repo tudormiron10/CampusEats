@@ -31,6 +31,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MenuService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<KitchenService>();
 builder.Services.AddSingleton<CartService>();
 
 await builder.Build().RunAsync();

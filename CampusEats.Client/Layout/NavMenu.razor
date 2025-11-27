@@ -30,6 +30,14 @@
                  ActiveClass="bg-tan text-oxford-blue font-semibold">
             My Orders
         </NavLink>
+        @if (IsStaff)
+        {
+            <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                     href="kitchen"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold">
+                Kitchen
+            </NavLink>
+        }
 
         @if (!string.IsNullOrEmpty(userFullName))
         {
@@ -107,6 +115,17 @@
                 <i class="bi bi-box-seam mr-3 text-lg"></i> My Orders
             </NavLink>
         </div>
+        @if (IsStaff)
+        {
+            <div class="px-3 pb-2">
+                <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                         href="kitchen"
+                         ActiveClass="bg-tan text-oxford-blue font-semibold"
+                         @onclick="ToggleNavMenu">
+                    <i class="bi bi-fire mr-3 text-lg"></i> Kitchen
+                </NavLink>
+            </div>
+        }
 
         <hr class="border-tan/30 mx-4 my-2" />
 
@@ -123,8 +142,10 @@
     private bool collapseNavMenu = true;
     private string? userFullName;
     private string? userEmail;
+    private string? userRole;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private bool IsStaff => userRole == "Admin" || userRole == "Manager";
 
     protected override async Task OnInitializedAsync()
     {
@@ -155,6 +176,7 @@
     {
         userFullName = await AuthService.GetUserFullNameAsync();
         userEmail = await AuthService.GetUserEmailAsync();
+        userRole = await AuthService.GetUserRoleAsync();
     }
 
     private async Task HandleLogout()
