@@ -1,5 +1,6 @@
 ﻿using CampusEats.Api.Features.Order.Request;
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
@@ -39,9 +40,7 @@ namespace CampusEats.Api.Features.Orders
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (response == null)
-            {
-                return Results.NotFound("Order not found.");
-            }
+                return ApiErrors.OrderNotFound();
 
             return Results.Ok(response);
         }

@@ -1,6 +1,7 @@
 ﻿using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Menu;
 using MediatR;
 
@@ -20,9 +21,7 @@ namespace CampusEats.Api.Features.Menu.Handler
             var validator = new CreateMenuItemValidator();
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)
-            {
-                return Results.BadRequest(validationResult.Errors);
-            }
+                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
             var menuItem = new MenuItem
             {

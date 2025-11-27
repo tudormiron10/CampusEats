@@ -1,6 +1,7 @@
 using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Features.Categories.Response;
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,9 +22,7 @@ public class UpdateCategoryHandler : IRequestHandler<UpdateCategoryRequest, IRes
             .FirstOrDefaultAsync(c => c.CategoryId == request.CategoryId, cancellationToken);
 
         if (category == null)
-        {
-            return Results.NotFound(new { message = "Category not found" });
-        }
+            return ApiErrors.CategoryNotFound();
 
         category.Name = request.Name;
         category.Icon = request.Icon;

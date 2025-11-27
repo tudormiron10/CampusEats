@@ -1,5 +1,6 @@
 ﻿using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Menu;
 using MediatR;
 
@@ -19,15 +20,11 @@ namespace CampusEats.Api.Features.Menu
             var validator = new UpdateMenuItemValidator();
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)
-            {
-                return Results.BadRequest(validationResult.Errors);
-            }
+                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
             var item = await _context.MenuItems.FindAsync(request.MenuItemId);
             if (item == null)
-            {
-                return Results.NotFound("Menu item not found.");
-            }
+                return ApiErrors.MenuItemNotFound();
 
             item.Name = request.Name;
             item.Price = request.Price;

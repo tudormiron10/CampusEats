@@ -1,4 +1,5 @@
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,9 +20,7 @@ public class DeleteCategoryHandler : IRequestHandler<DeleteCategoryRequest, IRes
             .FirstOrDefaultAsync(c => c.CategoryId == request.CategoryId, cancellationToken);
 
         if (category == null)
-        {
-            return Results.NotFound(new { message = "Category not found" });
-        }
+            return ApiErrors.CategoryNotFound();
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync(cancellationToken);

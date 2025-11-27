@@ -1,4 +1,5 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using CampusEats.Api.Features.Menu.Request;
@@ -30,7 +31,7 @@ namespace CampusEats.Api.Features.Menu.Handler
                     m.SortOrder))
                 .FirstOrDefaultAsync();
 
-            return response != null ? Results.Ok(response) : Results.NotFound("Menu item not found.");
+            return response != null ? Results.Ok(response) : ApiErrors.MenuItemNotFound();
         }
     }
 }

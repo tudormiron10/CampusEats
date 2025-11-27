@@ -2,6 +2,7 @@
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
 
@@ -26,14 +27,10 @@ namespace CampusEats.Api.Features.Kitchen
                 .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
 
             if (order == null)
-            {
-                return Results.NotFound("Order not found.");
-            }
+                return ApiErrors.OrderNotFound();
 
             if (order.Status != OrderStatus.InPreparation)
-            {
-                return Results.BadRequest("Only orders 'In Preparation' can be marked as ready.");
-            }
+                return ApiErrors.InvalidOperation("Only orders 'In Preparation' can be marked as ready.");
 
             order.Status = OrderStatus.Ready;
 

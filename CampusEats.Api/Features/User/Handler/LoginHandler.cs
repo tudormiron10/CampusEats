@@ -1,13 +1,14 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
 using System.Security.Cryptography;
-using System.Security.Claims; 
-using System.Text; 
-using Microsoft.IdentityModel.Tokens; 
-using System.IdentityModel.Tokens.Jwt; 
+using System.Security.Claims;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using CampusEats.Api.Validators.User;
 
 namespace CampusEats.Api.Features.User.Handler;
@@ -28,16 +29,12 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
         var validator = new LoginValidator();
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
-        {
-            return Results.BadRequest(validationResult.Errors);
-        }
-        
+            return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user == null || !VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-        {
-            return Results.Unauthorized();
-        }
+            return ApiErrors.InvalidCredentials();
 
         string token = CreateToken(user);
 

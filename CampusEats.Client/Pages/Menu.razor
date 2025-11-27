@@ -2,11 +2,13 @@
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
 @using CampusEats.Client.Components
+@using Microsoft.Extensions.Configuration
 @inject MenuService MenuService
 @inject CategoryService CategoryService
 @inject CartService CartService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject IConfiguration Configuration
 
 <PageTitle>Menu - CampusEats</PageTitle>
 
@@ -376,8 +378,9 @@
         if (imagePath.StartsWith("http"))
             return imagePath;
 
-        // Otherwise, prepend the API base URL
-        return $"http://localhost:5233{imagePath}";
+        // Otherwise, prepend the API base URL from configuration
+        var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "";
+        return $"{apiBaseUrl}{imagePath}";
     }
 
     private async Task OpenMenuItemModal(MenuItemResponse? item)

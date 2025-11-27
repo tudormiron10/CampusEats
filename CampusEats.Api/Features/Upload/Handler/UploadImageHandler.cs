@@ -1,5 +1,6 @@
 using CampusEats.Api.Features.Upload.Request;
 using CampusEats.Api.Features.Upload.Response;
+using CampusEats.Api.Infrastructure.Extensions;
 using MediatR;
 using System;
 using System.IO;
@@ -25,11 +26,10 @@ namespace CampusEats.Api.Features.Upload.Handler
         {
             try
             {
-                // Validate file
                 if (request.File == null || request.File.Length == 0)
                 {
                     _logger.LogWarning("Upload requested with no file.");
-                    return Results.BadRequest("No file provided.");
+                    return ApiErrors.ValidationFailed("No file provided.");
                 }
 
                 // Resolve web root reliably (use WebRootPath if available, fallback to ContentRootPath/wwwroot or current directory)

@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Orders;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
-
 using CampusEats.Api.Features.Order.Request;
 
 namespace CampusEats.Api.Features.Orders
@@ -23,15 +23,11 @@ namespace CampusEats.Api.Features.Orders
             var validator = new CreateOrderValidator();
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-            {
-                return Results.BadRequest(validationResult.Errors);
-            }
+                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
             var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
-            {
-                return Results.NotFound("User not found.");
-            }
+                return ApiErrors.UserNotFound();
 
             var requestedIds = request.MenuItemIds ?? new List<Guid>();
             var distinctIds = requestedIds.Distinct().ToList();
@@ -41,9 +37,7 @@ namespace CampusEats.Api.Features.Orders
                 .ToListAsync(cancellationToken);
 
             if (menuItems.Count != distinctIds.Count)
-            {
-                return Results.BadRequest("One or more menu items are invalid.");
-            }
+                return ApiErrors.ValidationFailed("One or more menu items are invalid.");
 
             var counts = requestedIds
                 .GroupBy(id => id)

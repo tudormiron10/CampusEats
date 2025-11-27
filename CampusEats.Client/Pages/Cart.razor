@@ -113,9 +113,6 @@
     private string? orderError;
     private bool orderSuccess = false;
 
-    // Hardcoded user ID for now (from your seeder - admin user)
-    private readonly Guid userId = Guid.Parse("a0000000-0000-0000-0000-000000000001");
-
     protected override void OnInitialized()
     {
         CartService.OnChange += StateHasChanged;
@@ -154,7 +151,8 @@
             orderSuccess = false;
 
             var menuItemIds = CartService.GetMenuItemIds();
-            var request = new CreateOrderRequest(userId, menuItemIds);
+            // UserId is ignored by backend - it extracts from JWT
+            var request = new CreateOrderRequest(Guid.Empty, menuItemIds);
 
             var order = await OrderService.CreateOrderAsync(request);
 
@@ -167,6 +165,10 @@
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/orders");
             }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/login");
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
 @inject OrderService OrderService
+@inject NavigationManager Navigation
 
 <PageTitle>My Orders - CampusEats</PageTitle>
 
@@ -117,7 +118,13 @@
         {
             isLoading = true;
             error = null;
-            orders = await OrderService.GetAllOrdersAsync();
+
+            // Backend returns user's orders based on JWT (or all for staff)
+            orders = await OrderService.GetOrdersAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/login");
         }
         catch (Exception ex)
         {

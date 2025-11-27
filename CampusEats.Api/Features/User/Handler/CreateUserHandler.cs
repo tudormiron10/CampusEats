@@ -1,12 +1,13 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
-using CampusEats.Api.Features.User.Request; 
-using CampusEats.Api.Features.User.Response; 
+using CampusEats.Api.Features.User.Request;
+using CampusEats.Api.Features.User.Response;
 using MediatR;
 using System.Security.Cryptography;
-using FluentValidation; 
+using FluentValidation;
 using Microsoft.AspNetCore.Http; 
 
 namespace CampusEats.Api.Features.Users; // Sau .User
@@ -24,17 +25,13 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
     {
         var validator = new CreateUserValidator();
         
-        var validationResult = await validator.ValidateAsync(request, cancellationToken); 
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
-            return Results.BadRequest(validationResult.Errors);
-        }
+            return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
         var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken);
         if (emailExists)
-        {
-            return Results.Conflict("An account with this email already exists.");
-        }
+            return ApiErrors.EmailAlreadyExists();
 
         CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 

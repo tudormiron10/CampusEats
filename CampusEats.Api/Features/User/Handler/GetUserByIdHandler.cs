@@ -1,4 +1,5 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
@@ -19,9 +20,7 @@ namespace CampusEats.Api.Features.Users
                 .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken);
 
             if (user == null)
-            {
-                return Results.NotFound("User not found.");
-            }
+                return ApiErrors.UserNotFound();
 
             var response = new UserResponse(
                 user.UserId,

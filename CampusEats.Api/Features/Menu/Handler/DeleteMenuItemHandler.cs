@@ -1,5 +1,5 @@
-﻿// Features/Menu/DeleteMenuItemHandler.cs
-using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using CampusEats.Api.Features.Menu.Request;
@@ -19,16 +19,11 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
     {
         var menuItem = await _context.MenuItems.FindAsync(request.MenuItemId);
         if (menuItem == null)
-        {
-            return Results.NotFound("Menu item not found.");
-        }
+            return ApiErrors.MenuItemNotFound();
 
-        // Verificăm dacă articolul este folosit într-o comandă
         var usedInOrders = await _context.OrderItems.AnyAsync(oi => oi.MenuItemId == request.MenuItemId);
         if (usedInOrders)
-        {
-            return Results.BadRequest("Cannot delete menu item as it is part of an existing order.");
-        }
+            return ApiErrors.InvalidOperation("Cannot delete menu item as it is part of an existing order.");
 
         _context.MenuItems.Remove(menuItem);
         await _context.SaveChangesAsync();

@@ -12,10 +12,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]
     ?? throw new InvalidOperationException("API BaseUrl not configured in appsettings.json");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
-
-// Add Blazored LocalStorage
+// Add Blazored LocalStorage (must be before HttpClient registration)
 builder.Services.AddBlazoredLocalStorage();
+
+// Register auth token handler
+builder.Services.AddScoped<AuthTokenHandler>();
+
+// Configure HttpClient with auth handler
+builder.Services.AddScoped(sp =>
+{
+    var handler = sp.GetRequiredService<AuthTokenHandler>();
+    handler.InnerHandler = new HttpClientHandler();
+    return new HttpClient(handler) { BaseAddress = new Uri(apiBaseUrl) };
+});
 
 // Register our services
 builder.Services.AddScoped<AuthService>();

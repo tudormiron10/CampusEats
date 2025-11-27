@@ -1,4 +1,5 @@
 ﻿using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Users;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
@@ -20,33 +21,24 @@ namespace CampusEats.Api.Features.Users
         {
             var userId = request.UserId;
 
-            // 1. Validare
             var validator = new UpdateUserValidator();
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-            {
-                return Results.BadRequest(validationResult.Errors);
-            }
+                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
-            // 2. Găsim utilizatorul, incluzând datele de loialitate
             var user = await _context.Users
                 .Include(u => u.Loyalty)
                 .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
 
             if (user == null)
-            {
-                return Results.NotFound("User not found.");
-            }
+                return ApiErrors.UserNotFound();
 
-            // 3. Verificăm unicitatea email-ului (dacă s-a schimbat)
             if (user.Email != request.Email)
             {
                 var emailExists = await _context.Users
                     .AnyAsync(u => u.Email == request.Email && u.UserId != userId, cancellationToken);
                 if (emailExists)
-                {
-                    return Results.Conflict("An account with this email already exists.");
-                }
+                    return ApiErrors.EmailAlreadyExists();
             }
 
             user.Name = request.Name;

@@ -19,8 +19,9 @@ public class OrderService
         return await response.Content.ReadFromJsonAsync<OrderResponse>();
     }
 
-    public async Task<List<SimpleOrderResponse>> GetAllOrdersAsync()
+    public async Task<List<SimpleOrderResponse>> GetOrdersAsync()
     {
+        // Backend returns user's orders (or all for staff) based on JWT
         var response = await _http.GetFromJsonAsync<List<SimpleOrderResponse>>("/orders");
         return response ?? new List<SimpleOrderResponse>();
     }
@@ -28,5 +29,12 @@ public class OrderService
     public async Task<OrderResponse?> GetOrderByIdAsync(Guid orderId)
     {
         return await _http.GetFromJsonAsync<OrderResponse>($"/orders/{orderId}");
+    }
+
+    public async Task<OrderResponse?> CancelOrderAsync(Guid orderId)
+    {
+        var response = await _http.DeleteAsync($"/orders/{orderId}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<OrderResponse>();
     }
 }

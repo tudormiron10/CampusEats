@@ -2,6 +2,7 @@
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
 
@@ -21,12 +22,11 @@ namespace CampusEats.Api.Features.Kitchen
                     .ThenInclude(oi => oi.MenuItem)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId, cancellationToken);
 
-            if (order == null) return Results.NotFound("Order not found.");
+            if (order == null)
+                return ApiErrors.OrderNotFound();
 
             if (order.Status != OrderStatus.Ready)
-            {
-                return Results.BadRequest("Only orders marked 'Ready' can be completed.");
-            }
+                return ApiErrors.InvalidOperation("Only orders marked 'Ready' can be completed.");
 
             order.Status = OrderStatus.Completed;
             await _context.SaveChangesAsync(cancellationToken);

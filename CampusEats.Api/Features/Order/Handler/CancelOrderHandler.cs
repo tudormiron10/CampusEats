@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.Orders.Response;
 
 namespace CampusEats.Api.Features.Orders
@@ -22,14 +23,10 @@ namespace CampusEats.Api.Features.Orders
 
             var order = await _context.Orders.FindAsync(new object[] { orderId }, cancellationToken);
             if (order == null)
-            {
-                return Results.NotFound("Order not found.");
-            }
+                return ApiErrors.OrderNotFound();
 
             if (order.Status != OrderStatus.Pending)
-            {
-                return Results.BadRequest("Only 'Pending' orders can be cancelled.");
-            }
+                return ApiErrors.InvalidOperation("Only pending orders can be cancelled.");
 
             order.Status = OrderStatus.Cancelled;
 
