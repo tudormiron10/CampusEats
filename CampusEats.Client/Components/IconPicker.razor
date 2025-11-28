@@ -1,0 +1,96 @@
+@namespace CampusEats.Client.Components
+
+<div class="relative">
+    <button type="button"
+            @onclick="ToggleDropdown"
+            @onclick:stopPropagation="true"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 bg-white flex items-center justify-between">
+        <span class="flex items-center gap-2">
+            @if (!string.IsNullOrEmpty(Value))
+            {
+                <LucideIcon Name="@Value" Class="w-5 h-5" />
+                <span class="text-gray-700">@FormatIconName(Value)</span>
+            }
+            else
+            {
+                <span class="text-gray-400">Select an icon...</span>
+            }
+        </span>
+        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+    </button>
+
+    @if (_isOpen)
+    {
+        <div class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden"
+             @onclick:stopPropagation="true">
+            <!-- Search -->
+            <div class="p-2 border-b">
+                <input type="text"
+                       @bind="_searchTerm"
+                       @bind:event="oninput"
+                       placeholder="Search icons..."
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500" />
+            </div>
+
+            <!-- Icon Grid -->
+            <div class="p-2 grid grid-cols-5 gap-1 max-h-60 overflow-y-auto">
+                @foreach (var iconName in FilteredIcons)
+                {
+                    <button type="button"
+                            @onclick="() => SelectIcon(iconName)"
+                            class="@GetIconButtonClass(iconName) p-2 rounded-md flex flex-col items-center justify-center gap-1 hover:bg-orange-50 transition-colors"
+                            title="@FormatIconName(iconName)">
+                        <LucideIcon Name="@iconName" Class="w-6 h-6" />
+                    </button>
+                }
+            </div>
+
+            @if (!FilteredIcons.Any())
+            {
+                <div class="p-4 text-center text-gray-500 text-sm">
+                    No icons found
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private bool _isOpen;
+    private string _searchTerm = "";
+
+    private IEnumerable<string> FilteredIcons =>
+        string.IsNullOrWhiteSpace(_searchTerm)
+            ? LucideIcon.AvailableIcons
+            : LucideIcon.AvailableIcons.Where(i => i.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private string FormatIconName(string iconName)
+    {
+        return string.Join(" ", iconName.Split('-').Select(w =>
+            char.ToUpper(w[0]) + w[1..]));
+    }
+
+    private string GetIconButtonClass(string iconName)
+    {
+        return iconName == Value
+            ? "bg-orange-100 ring-2 ring-orange-500"
+            : "";
+    }
+
+    private void ToggleDropdown()
+    {
+        _isOpen = !_isOpen;
+    }
+
+    private async Task SelectIcon(string iconName)
+    {
+        Value = iconName;
+        await ValueChanged.InvokeAsync(iconName);
+        _isOpen = false;
+    }
+}

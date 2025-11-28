@@ -1,5 +1,6 @@
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
+@using CampusEats.Client.Components
 @inject CategoryService CategoryService
 
 @if (isVisible)
@@ -10,7 +11,7 @@
                 <h2 class="text-2xl font-bold text-white">
                     Manage Categories
                 </h2>
-                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">×</button>
+                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">x</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-1 bg-gray-50/30">
@@ -33,44 +34,46 @@
                     <h3 class="font-bold text-gray-900 mb-4 text-lg">
                         Add New Category
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input type="text"
-                               class="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
-                               @bind="newCategoryName"
-                               placeholder="Category name" />
-                        <input type="text"
-                               class="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all text-center text-2xl shadow-sm"
-                               @bind="newCategoryIcon"
-                               placeholder="🍽️" />
-                        <input type="number"
-                               class="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
-                               @bind="newCategorySortOrder"
-                               placeholder="Sort order" />
-                        <button type="button" class="bg-gradient-to-r from-oxford-blue to-oxford-blue-dark text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                @onclick="AddCategory"
-                                disabled="@isSaving">
-                            @if (isSaving)
-                            {
-                                <span class="flex items-center justify-center gap-2">
-                                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Adding...</span>
-                                </span>
-                            }
-                            else
-                            {
-                                <span>Add</span>
-                            }
-                        </button>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input type="text"
+                                   class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                                   @bind="newCategoryName"
+                                   placeholder="Category name" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                            <IconPicker @bind-Value="newCategoryIcon" />
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" class="w-full bg-gradient-to-r from-oxford-blue to-oxford-blue-dark text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    @onclick="AddCategory"
+                                    disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <span class="flex items-center justify-center gap-2">
+                                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Adding...</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Add Category</span>
+                                }
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Existing Categories List -->
+                <!-- Existing Categories List with Drag & Drop -->
                 <div>
                     <h3 class="font-bold text-gray-900 mb-4 text-lg">
                         Existing Categories
+                        <span class="text-sm font-normal text-gray-500 ml-2">(Drag to reorder)</span>
                     </h3>
                     @if (isLoading)
                     {
@@ -91,58 +94,55 @@
                     }
                     else
                     {
-                        <div class="space-y-3">
-                            @foreach (var category in categories.OrderBy(c => c.SortOrder).ThenBy(c => c.Name))
-                            {
-                                <div class="flex items-center gap-3 bg-white border border-gray-200 hover:border-oxford-blue/40 rounded-xl p-4 transition-all group shadow-sm">
-                                    @if (editingCategoryId == category.CategoryId)
-                                    {
-                                        <!-- Edit Mode -->
+                        <DragDropList TItem="CategoryResponse" @bind-Items="categories" OnOrderChanged="SaveCategoryOrder">
+                            <ItemTemplate Context="category">
+                                @if (editingCategoryId == category.CategoryId)
+                                {
+                                    <!-- Edit Mode -->
+                                    <div class="flex items-center gap-3 w-full">
                                         <input type="text"
-                                               class="flex-1 px-3 py-2.5 bg-white border border-oxford-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 shadow-sm"
+                                               class="flex-1 px-3 py-2 bg-white border border-oxford-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 shadow-sm"
                                                @bind="editName"
                                                placeholder="Category name" />
-                                        <input type="text"
-                                               class="w-20 px-3 py-2.5 bg-white border border-oxford-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 text-center text-2xl shadow-sm"
-                                               @bind="editIcon"
-                                               placeholder="🍽️" />
-                                        <input type="number"
-                                               class="w-28 px-3 py-2.5 bg-white border border-oxford-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 shadow-sm"
-                                               @bind="editSortOrder"
-                                               placeholder="Order" />
-                                        <button type="button" class="px-5 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-sm"
+                                        <div class="w-48">
+                                            <IconPicker @bind-Value="editIcon" />
+                                        </div>
+                                        <button type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-sm"
                                                 @onclick="() => SaveEdit(category.CategoryId)">
                                             Save
                                         </button>
-                                        <button type="button" class="px-5 py-2.5 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-all shadow-sm"
+                                        <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-all shadow-sm"
                                                 @onclick="CancelEdit">
                                             Cancel
                                         </button>
-                                    }
-                                    else
-                                    {
-                                        <!-- View Mode -->
-                                        <span class="text-3xl flex-shrink-0">@category.Icon</span>
-                                        <span class="flex-1 font-semibold text-gray-900 text-lg">
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- View Mode -->
+                                    <div class="flex items-center gap-3 w-full">
+                                        <span class="w-8 h-8 flex items-center justify-center text-oxford-blue">
+                                            <LucideIcon Name="@category.Icon" Class="w-6 h-6" />
+                                        </span>
+                                        <span class="flex-1 font-semibold text-gray-900">
                                             @category.Name
                                         </span>
-                                        <span class="px-4 py-1.5 bg-gray-100 text-gray-700 text-sm rounded-full font-medium">
-                                            Order: @category.SortOrder
-                                        </span>
-                                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button type="button" class="px-4 py-2 bg-oxford-blue text-white rounded-lg font-semibold hover:bg-oxford-blue-dark transition-all text-sm shadow-sm"
-                                                    @onclick="() => StartEdit(category)">
+                                        <div class="flex gap-2">
+                                            <button type="button" class="px-3 py-1.5 bg-oxford-blue text-white rounded-lg font-medium hover:bg-oxford-blue-dark transition-all text-sm shadow-sm"
+                                                    @onclick="() => StartEdit(category)"
+                                                    @onclick:stopPropagation="true">
                                                 Edit
                                             </button>
-                                            <button type="button" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all text-sm shadow-sm"
-                                                    @onclick="() => DeleteCategory(category)">
+                                            <button type="button" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all text-sm shadow-sm"
+                                                    @onclick="() => DeleteCategory(category)"
+                                                    @onclick:stopPropagation="true">
                                                 Delete
                                             </button>
                                         </div>
-                                    }
-                                </div>
-                            }
-                        </div>
+                                    </div>
+                                }
+                            </ItemTemplate>
+                        </DragDropList>
                     }
                 </div>
             </div>
@@ -171,13 +171,11 @@
     // Add new category
     private string newCategoryName = "";
     private string newCategoryIcon = "";
-    private int newCategorySortOrder = 0;
 
     // Edit category
     private Guid? editingCategoryId = null;
     private string editName = "";
     private string editIcon = "";
-    private int editSortOrder = 0;
 
     public async Task OpenAsync()
     {
@@ -198,7 +196,8 @@
         try
         {
             isLoading = true;
-            categories = await CategoryService.GetCategoriesAsync() ?? new List<CategoryResponse>();
+            var loaded = await CategoryService.GetCategoriesAsync() ?? new List<CategoryResponse>();
+            categories = loaded.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
         }
         catch (Exception ex)
         {
@@ -228,13 +227,17 @@
 
             if (string.IsNullOrWhiteSpace(newCategoryIcon))
             {
-                newCategoryIcon = "";
+                errorMessage = "Please select an icon";
+                return;
             }
+
+            // Set sort order to be at the end
+            var maxSortOrder = categories.Any() ? categories.Max(c => c.SortOrder) : 0;
 
             var request = new CreateCategoryRequest(
                 newCategoryName.Trim(),
                 newCategoryIcon.Trim(),
-                newCategorySortOrder
+                maxSortOrder + 1
             );
 
             await CategoryService.CreateCategoryAsync(request);
@@ -242,7 +245,6 @@
             // Clear form
             newCategoryName = "";
             newCategoryIcon = "";
-            newCategorySortOrder = 0;
 
             successMessage = "Category added successfully";
             await LoadCategories();
@@ -264,7 +266,6 @@
         editingCategoryId = category.CategoryId;
         editName = category.Name;
         editIcon = category.Icon;
-        editSortOrder = category.SortOrder;
     }
 
     private void CancelEdit()
@@ -272,7 +273,6 @@
         editingCategoryId = null;
         editName = "";
         editIcon = "";
-        editSortOrder = 0;
     }
 
     private async Task SaveEdit(Guid categoryId)
@@ -288,10 +288,13 @@
                 return;
             }
 
+            var existingCategory = categories.FirstOrDefault(c => c.CategoryId == categoryId);
+            var sortOrder = existingCategory?.SortOrder ?? 0;
+
             var request = new UpdateCategoryRequest(
                 editName.Trim(),
                 editIcon.Trim(),
-                editSortOrder
+                sortOrder
             );
 
             await CategoryService.UpdateCategoryAsync(categoryId, request);
@@ -307,6 +310,32 @@
         }
         finally
         {
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveCategoryOrder()
+    {
+        try
+        {
+            errorMessage = null;
+            var orderedIds = categories.Select(c => c.CategoryId).ToList();
+            await CategoryService.ReorderCategoriesAsync(orderedIds);
+            successMessage = "Category order saved";
+            await OnChanged.InvokeAsync();
+            StateHasChanged();
+
+            // Clear success message after 2 seconds
+            await Task.Delay(2000);
+            if (successMessage == "Category order saved")
+            {
+                successMessage = null;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save order: {ex.Message}";
             StateHasChanged();
         }
     }

@@ -10,6 +10,6 @@ public record UpdateMenuItemRequest(
     string Category,
     string? ImagePath,
     string? Description,
-    string? DietaryTags,
+    List<Guid>? DietaryTagIds,
     bool IsAvailable,
     int SortOrder) : IRequest<IResult>;

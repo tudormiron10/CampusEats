@@ -3,6 +3,7 @@ using System;
 using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CampusEats.Api.Migrations
 {
     [DbContext(typeof(CampusEatsDbContext))]
-    partial class CampusEatsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251128161512_AddDietaryTags")]
+    partial class AddDietaryTags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,6 +94,9 @@ namespace CampusEats.Api.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DietaryTags")
                         .HasColumnType("text");
 
                     b.Property<string>("ImagePath")

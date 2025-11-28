@@ -1,8 +1,10 @@
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
+@using CampusEats.Client.Components
 @using Microsoft.Extensions.Configuration
 @inject MenuService MenuService
 @inject CategoryService CategoryService
+@inject DietaryTagService DietaryTagService
 @inject IConfiguration Configuration
 
 @if (isVisible)
@@ -13,7 +15,7 @@
                 <h2 class="text-2xl font-bold text-white">
                     @(editingItem == null ? "Add Menu Item" : "Edit Menu Item")
                 </h2>
-                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">×</button>
+                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">x</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-1 bg-gray-50/30">
@@ -46,32 +48,23 @@
                             <option value="">Select a category</option>
                             @foreach (var cat in categories)
                             {
-                                <option value="@cat.Name">@cat.Icon @cat.Name</option>
+                                <option value="@cat.Name">@cat.Name</option>
                             }
                         </select>
                     </div>
 
-                    <!-- Price and Sort Order -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">
-                                Price <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-                                <input type="number"
-                                       step="0.01"
-                                       class="w-full pl-8 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
-                                       @bind="price"
-                                       placeholder="0.00" />
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Sort Order</label>
+                    <!-- Price -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Price <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
                             <input type="number"
-                                   class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
-                                   @bind="sortOrder"
-                                   placeholder="0" />
+                                   step="0.01"
+                                   class="w-full pl-8 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
+                                   @bind="price"
+                                   placeholder="0.00" />
                         </div>
                     </div>
 
@@ -92,13 +85,12 @@
                             Dietary Tags
                             <span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
                         </label>
-                        <input type="text"
-                               class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
-                               @bind="dietaryTags"
-                               placeholder="e.g., Vegetarian, Vegan, Gluten-Free (comma separated)" />
-                        <p class="text-xs text-gray-500 mt-2">
-                            Separate multiple tags with commas
-                        </p>
+                        <MultiSelectDropdown TItem="DietaryTagResponse"
+                                             Items="availableDietaryTags"
+                                             @bind-SelectedItems="selectedDietaryTags"
+                                             DisplayTextSelector="@(tag => tag.Name)"
+                                             KeySelector="@(tag => tag.DietaryTagId)"
+                                             Placeholder="Select dietary tags..." />
                     </div>
 
                     <!-- Image Upload -->
@@ -195,11 +187,12 @@
     private MenuItemResponse? editingItem;
 
     private List<CategoryResponse> categories = new();
+    private List<DietaryTagResponse> availableDietaryTags = new();
+    private List<DietaryTagResponse> selectedDietaryTags = new();
     private string name = "";
     private string category = "";
     private decimal price = 0;
     private string description = "";
-    private string? dietaryTags = "";
     private string? imagePath = "";
     private int sortOrder = 0;
     private bool isAvailable = true;
@@ -220,6 +213,17 @@
             categories = new List<CategoryResponse>();
         }
 
+        // Load dietary tags
+        try
+        {
+            availableDietaryTags = await DietaryTagService.GetDietaryTagsAsync() ?? new List<DietaryTagResponse>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load dietary tags: {ex.Message}";
+            availableDietaryTags = new List<DietaryTagResponse>();
+        }
+
         if (item != null)
         {
             // Edit mode
@@ -227,10 +231,12 @@
             category = item.Category;
             price = item.Price;
             description = item.Description;
-            dietaryTags = item.DietaryTags;
             imagePath = item.ImagePath;
             sortOrder = item.SortOrder;
             isAvailable = item.IsAvailable;
+
+            // Map dietary tags from response to selected items
+            selectedDietaryTags = item.DietaryTags?.ToList() ?? new List<DietaryTagResponse>();
         }
         else
         {
@@ -239,10 +245,10 @@
             category = "";
             price = 0;
             description = "";
-            dietaryTags = "";
             imagePath = "";
             sortOrder = 0;
             isAvailable = true;
+            selectedDietaryTags = new List<DietaryTagResponse>();
         }
 
         isVisible = true;
@@ -339,6 +345,9 @@
                 return;
             }
 
+            // Get selected dietary tag IDs
+            var dietaryTagIds = selectedDietaryTags.Select(t => t.DietaryTagId).ToList();
+
             if (editingItem != null)
             {
                 // Update existing item
@@ -348,7 +357,7 @@
                     category,
                     imagePath,
                     description,
-                    dietaryTags,
+                    dietaryTagIds,
                     isAvailable,
                     sortOrder
                 );
@@ -364,7 +373,7 @@
                     category,
                     description,
                     imagePath,
-                    dietaryTags,
+                    dietaryTagIds,
                     isAvailable,
                     sortOrder
                 );

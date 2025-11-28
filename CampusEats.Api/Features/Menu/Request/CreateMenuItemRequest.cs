@@ -9,6 +9,6 @@ public record CreateMenuItemRequest(
     string Category,
     string Description,
     string? ImagePath,
-    string? DietaryTags,
+    List<Guid>? DietaryTagIds,
     bool IsAvailable,
     int SortOrder) : IRequest<IResult>;

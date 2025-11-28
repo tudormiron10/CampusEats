@@ -38,7 +38,6 @@ public static class DataSeeder
         
         // --- 2. Articole de Meniu (Bogus) ---
         var menuCategories = new[] { "Supe", "Salate", "Fel Principal", "Desert", "Băuturi" };
-        var dietaryOptions = new[] { "Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut-Free", "" };
 
         var menuItemFaker = new Faker<MenuItem>("ro")
             .RuleFor(m => m.MenuItemId, f => Guid.NewGuid())
@@ -47,7 +46,6 @@ public static class DataSeeder
             .RuleFor(m => m.Category, f => f.PickRandom(menuCategories))
             .RuleFor(m => m.Description, f => f.Lorem.Sentence(5))
             .RuleFor(m => m.ImagePath, f => f.Image.PicsumUrl())
-            .RuleFor(m => m.DietaryTags, f => f.PickRandom(dietaryOptions))
             .RuleFor(m => m.IsAvailable, f => true)
             .RuleFor(m => m.SortOrder, f => f.Random.Int(0, 100));
 
@@ -139,14 +137,28 @@ public static class DataSeeder
         // --- 6. Categorii (Sample Categories) ---
         var categories = new List<Category>
         {
-            new Category { CategoryId = Guid.NewGuid(), Name = "Supe", Icon = "🍲", SortOrder = 1 },
-            new Category { CategoryId = Guid.NewGuid(), Name = "Salate", Icon = "🥗", SortOrder = 2 },
-            new Category { CategoryId = Guid.NewGuid(), Name = "Fel Principal", Icon = "🍖", SortOrder = 3 },
-            new Category { CategoryId = Guid.NewGuid(), Name = "Desert", Icon = "🍰", SortOrder = 4 },
-            new Category { CategoryId = Guid.NewGuid(), Name = "Băuturi", Icon = "🥤", SortOrder = 5 }
+            new Category { CategoryId = Guid.NewGuid(), Name = "Supe", Icon = "soup", SortOrder = 1 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Salate", Icon = "salad", SortOrder = 2 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Fel Principal", Icon = "utensils", SortOrder = 3 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Desert", Icon = "cake", SortOrder = 4 },
+            new Category { CategoryId = Guid.NewGuid(), Name = "Băuturi", Icon = "cup-soda", SortOrder = 5 }
+        };
+
+        // --- 7. Dietary Tags ---
+        var dietaryTags = new List<DietaryTag>
+        {
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Vegetarian" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Vegan" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Gluten-Free" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Dairy-Free" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Nut-Free" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Halal" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Kosher" },
+            new DietaryTag { DietaryTagId = Guid.NewGuid(), Name = "Spicy" }
         };
 
         // --- Adăugarea în Baza de Date ---
+        context.DietaryTags.AddRange(dietaryTags);
         context.Categories.AddRange(categories);
         context.Users.Add(adminUser);
         context.Users.AddRange(fakeClients);
@@ -154,6 +166,27 @@ public static class DataSeeder
         context.MenuItems.AddRange(fakeMenuItems);
         context.Orders.AddRange(fakeOrders);
         context.Payments.AddRange(fakePayments);
+
+        // --- 8. Assign random dietary tags to menu items ---
+        var menuItemDietaryTags = new List<MenuItemDietaryTag>();
+        foreach (var menuItem in fakeMenuItems)
+        {
+            // Randomly assign 0-3 dietary tags to each menu item
+            var tagCount = faker.Random.Int(0, 3);
+            if (tagCount > 0)
+            {
+                var selectedTags = faker.PickRandom(dietaryTags, tagCount).ToList();
+                foreach (var tag in selectedTags)
+                {
+                    menuItemDietaryTags.Add(new MenuItemDietaryTag
+                    {
+                        MenuItemId = menuItem.MenuItemId,
+                        DietaryTagId = tag.DietaryTagId
+                    });
+                }
+            }
+        }
+        context.MenuItemDietaryTags.AddRange(menuItemDietaryTags);
 
         context.SaveChanges();
     }

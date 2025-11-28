@@ -1,0 +1,116 @@
+@namespace CampusEats.Client.Components
+@typeparam TItem
+
+<div class="space-y-1">
+    @for (var i = 0; i < Items.Count; i++)
+    {
+        var index = i;
+        var item = Items[i];
+        <div draggable="true"
+             @ondragstart="() => HandleDragStart(index)"
+             @ondragover="() => HandleDragOver(index)"
+             @ondragover:preventDefault="true"
+             @ondrop="() => HandleDrop(index)"
+             @ondragend="HandleDragEnd"
+             class="@GetItemClass(index) flex items-center gap-2 p-3 bg-white border rounded-md cursor-move transition-all select-none">
+            <!-- Drag Handle -->
+            <div class="text-gray-400 flex-shrink-0 pointer-events-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                </svg>
+            </div>
+
+            <!-- Item Content -->
+            <div class="flex-1 min-w-0 pointer-events-none">
+                @ItemTemplate(item)
+            </div>
+
+            <!-- Order Number -->
+            <div class="text-gray-400 text-sm flex-shrink-0 pointer-events-none">
+                #@(index + 1)
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<TItem> Items { get; set; } = new();
+    [Parameter] public EventCallback<List<TItem>> ItemsChanged { get; set; }
+    [Parameter] public RenderFragment<TItem> ItemTemplate { get; set; } = default!;
+    [Parameter] public EventCallback OnOrderChanged { get; set; }
+
+    private int? _draggedIndex;
+    private int? _dragOverIndex;
+
+    private string GetItemClass(int index)
+    {
+        if (_draggedIndex == index)
+        {
+            return "opacity-50 border-dashed border-oxford-blue bg-gray-50";
+        }
+
+        if (_dragOverIndex == index && _draggedIndex != index)
+        {
+            return "border-oxford-blue border-2 bg-oxford-blue/5";
+        }
+
+        return "border-gray-200 hover:border-gray-300 hover:shadow-sm";
+    }
+
+    private void HandleDragStart(int index)
+    {
+        _draggedIndex = index;
+        _dragOverIndex = null;
+    }
+
+    private void HandleDragOver(int index)
+    {
+        if (_draggedIndex != null && _draggedIndex != index)
+        {
+            _dragOverIndex = index;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDrop(int dropIndex)
+    {
+        if (_draggedIndex == null || _draggedIndex == dropIndex)
+        {
+            ResetDragState();
+            return;
+        }
+
+        var draggedIndex = _draggedIndex.Value;
+        var draggedItem = Items[draggedIndex];
+
+        // Create new list with reordered items
+        var newItems = new List<TItem>(Items);
+        newItems.RemoveAt(draggedIndex);
+
+        // Adjust drop index if we removed an item before it
+        var insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+        newItems.Insert(insertIndex, draggedItem);
+
+        // Update the list
+        Items.Clear();
+        Items.AddRange(newItems);
+
+        ResetDragState();
+        StateHasChanged();
+
+        await ItemsChanged.InvokeAsync(Items);
+        await OnOrderChanged.InvokeAsync();
+    }
+
+    private void HandleDragEnd()
+    {
+        ResetDragState();
+        StateHasChanged();
+    }
+
+    private void ResetDragState()
+    {
+        _draggedIndex = null;
+        _dragOverIndex = null;
+    }
+}

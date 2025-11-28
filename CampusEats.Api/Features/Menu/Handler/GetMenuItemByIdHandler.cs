@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
@@ -18,6 +18,8 @@ namespace CampusEats.Api.Features.Menu.Handler
         public async Task<IResult> Handle(GetMenuItemByIdRequest request, CancellationToken cancellationToken)
         {
             var response = await _context.MenuItems
+                .Include(m => m.MenuItemDietaryTags)
+                    .ThenInclude(mdt => mdt.DietaryTag)
                 .Where(m => m.MenuItemId == request.MenuItemId)
                 .Select(m => new MenuItemResponse(
                     m.MenuItemId,
@@ -26,10 +28,13 @@ namespace CampusEats.Api.Features.Menu.Handler
                     m.Category,
                     m.ImagePath,
                     m.Description,
-                    m.DietaryTags,
+                    m.MenuItemDietaryTags.Select(mdt => new DietaryTagDto(
+                        mdt.DietaryTagId,
+                        mdt.DietaryTag.Name
+                    )).ToList(),
                     m.IsAvailable,
                     m.SortOrder))
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             return response != null ? Results.Ok(response) : ApiErrors.MenuItemNotFound();
         }

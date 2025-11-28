@@ -37,4 +37,11 @@ public class CategoryService
         var response = await _http.DeleteAsync($"/categories/{id}");
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task ReorderCategoriesAsync(List<Guid> orderedIds)
+    {
+        var request = new ReorderCategoriesRequest(orderedIds);
+        var response = await _http.PutAsJsonAsync("/categories/reorder", request);
+        response.EnsureSuccessStatusCode();
+    }
 }

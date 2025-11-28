@@ -1,8 +1,10 @@
-﻿using CampusEats.Api.Features.Menu.Request;
+using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Infrastructure.Persistence;
+using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Menu;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CampusEats.Api.Features.Menu
 {
@@ -22,7 +24,10 @@ namespace CampusEats.Api.Features.Menu
             if (!validationResult.IsValid)
                 return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
-            var item = await _context.MenuItems.FindAsync(request.MenuItemId);
+            var item = await _context.MenuItems
+                .Include(m => m.MenuItemDietaryTags)
+                .FirstOrDefaultAsync(m => m.MenuItemId == request.MenuItemId, cancellationToken);
+
             if (item == null)
                 return ApiErrors.MenuItemNotFound();
 
@@ -31,11 +36,36 @@ namespace CampusEats.Api.Features.Menu
             item.Category = request.Category;
             item.ImagePath = request.ImagePath ?? item.ImagePath;
             item.Description = request.Description ?? item.Description;
-            item.DietaryTags = request.DietaryTags ?? item.DietaryTags;
             item.IsAvailable = request.IsAvailable;
             item.SortOrder = request.SortOrder;
 
-            await _context.SaveChangesAsync();
+            // Update dietary tags if provided
+            if (request.DietaryTagIds != null)
+            {
+                // Remove existing tags
+                _context.MenuItemDietaryTags.RemoveRange(item.MenuItemDietaryTags);
+
+                // Add new tags
+                if (request.DietaryTagIds.Any())
+                {
+                    var newTags = request.DietaryTagIds.Select(tagId => new MenuItemDietaryTag
+                    {
+                        MenuItemId = item.MenuItemId,
+                        DietaryTagId = tagId
+                    }).ToList();
+
+                    await _context.MenuItemDietaryTags.AddRangeAsync(newTags, cancellationToken);
+                }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Load dietary tags for response
+            var dietaryTagIds = request.DietaryTagIds ?? item.MenuItemDietaryTags.Select(mdt => mdt.DietaryTagId).ToList();
+            var dietaryTags = await _context.DietaryTags
+                .Where(dt => dietaryTagIds.Contains(dt.DietaryTagId))
+                .Select(dt => new DietaryTagDto(dt.DietaryTagId, dt.Name))
+                .ToListAsync(cancellationToken);
 
             var response = new MenuItemResponse(
                 item.MenuItemId,
@@ -44,7 +74,7 @@ namespace CampusEats.Api.Features.Menu
                 item.Category,
                 item.ImagePath,
                 item.Description,
-                item.DietaryTags,
+                dietaryTags,
                 item.IsAvailable,
                 item.SortOrder
             );

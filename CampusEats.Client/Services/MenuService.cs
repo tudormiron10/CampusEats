@@ -95,6 +95,13 @@ public class MenuService
         var result = await response.Content.ReadFromJsonAsync<UploadImageResponse>();
         return result?.Path;
     }
+
+    public async Task ReorderMenuItemsAsync(List<Guid> orderedIds)
+    {
+        var request = new ReorderMenuItemsRequest(orderedIds);
+        var response = await _http.PutAsJsonAsync("/menu/reorder", request);
+        response.EnsureSuccessStatusCode();
+    }
 }
 
 public record UploadImageResponse(string Path);

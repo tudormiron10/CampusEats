@@ -17,6 +17,7 @@ using CampusEats.Api.Features.Order.Request;
 using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.User.Request;
+using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
@@ -181,6 +182,20 @@ app.MapDelete("/menu/{menuItemId:guid}", async (
 .RequireAuthorization()
 .WithTags("Menu");
 
+// Endpoint for reordering menu items (Staff: Manager/Admin).
+app.MapPut("/menu/reorder", async (
+        ReorderMenuItemsRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    return await mediator.Send(request);
+})
+.RequireAuthorization()
+.WithTags("Menu");
+
 // ====== CATEGORIES GROUP ======
 
 // Endpoint for retrieving all categories (public).
@@ -232,6 +247,72 @@ app.MapDelete("/categories/{categoryId:guid}", async (
 })
 .RequireAuthorization()
 .WithTags("Categories");
+
+// Endpoint for reordering categories (Staff: Manager/Admin).
+app.MapPut("/categories/reorder", async (
+        ReorderCategoriesRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    return await mediator.Send(request);
+})
+.RequireAuthorization()
+.WithTags("Categories");
+
+// ====== DIETARY TAGS GROUP ======
+
+// Endpoint for retrieving all dietary tags (public).
+app.MapGet("/dietary-tags", async ([FromServices] IMediator mediator) =>
+    await mediator.Send(new GetDietaryTagsRequest())
+)
+.WithTags("DietaryTags");
+
+// Endpoint for creating a new dietary tag (Staff: Manager/Admin).
+app.MapPost("/dietary-tags", async (
+        CreateDietaryTagRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    return await mediator.Send(request);
+})
+.RequireAuthorization()
+.WithTags("DietaryTags");
+
+// Endpoint for updating a dietary tag (Staff: Manager/Admin).
+app.MapPut("/dietary-tags/{dietaryTagId:guid}", async (
+        Guid dietaryTagId,
+        UpdateDietaryTagRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    var requestWithId = request with { DietaryTagId = dietaryTagId };
+    return await mediator.Send(requestWithId);
+})
+.RequireAuthorization()
+.WithTags("DietaryTags");
+
+// Endpoint for deleting a dietary tag (Staff: Manager/Admin).
+app.MapDelete("/dietary-tags/{dietaryTagId:guid}", async (
+        Guid dietaryTagId,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    return await mediator.Send(new DeleteDietaryTagRequest(dietaryTagId));
+})
+.RequireAuthorization()
+.WithTags("DietaryTags");
 
 // ====== UPLOAD GROUP ======
 

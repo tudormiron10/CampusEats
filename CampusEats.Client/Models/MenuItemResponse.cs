@@ -7,7 +7,7 @@ public record MenuItemResponse(
     string Category,
     string? ImagePath,
     string Description,
-    string? DietaryTags,
+    List<DietaryTagResponse> DietaryTags,
     bool IsAvailable,
     int SortOrder
 );
@@ -18,7 +18,7 @@ public record CreateMenuItemRequest(
     string Category,
     string Description,
     string? ImagePath,
-    string? DietaryTags,
+    List<Guid>? DietaryTagIds,
     bool IsAvailable,
     int SortOrder
 );
@@ -29,7 +29,7 @@ public record UpdateMenuItemRequest(
     string Category,
     string? ImagePath,
     string? Description,
-    string? DietaryTags,
+    List<Guid>? DietaryTagIds,
     bool IsAvailable,
     int SortOrder
 );

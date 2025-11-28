@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Menu.Request;
+using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
@@ -16,7 +16,10 @@ namespace CampusEats.Api.Features.Menu.Handler
 
         public async Task<IResult> Handle(GetMenuRequest request, CancellationToken cancellationToken)
         {
-            var query = _context.MenuItems.AsNoTracking();
+            var query = _context.MenuItems
+                .Include(m => m.MenuItemDietaryTags)
+                    .ThenInclude(mdt => mdt.DietaryTag)
+                .AsNoTracking();
 
             // Filter by availability - only show available items
             query = query.Where(mi => mi.IsAvailable);
@@ -31,7 +34,8 @@ namespace CampusEats.Api.Features.Menu.Handler
                 // Search in both description and dietary tags
                 query = query.Where(mi =>
                     EF.Functions.ILike(mi.Description, $"%{request.DietaryKeyword}%") ||
-                    (mi.DietaryTags != null && EF.Functions.ILike(mi.DietaryTags, $"%{request.DietaryKeyword}%")));
+                    mi.MenuItemDietaryTags.Any(mdt =>
+                        EF.Functions.ILike(mdt.DietaryTag.Name, $"%{request.DietaryKeyword}%")));
             }
 
             var menuItems = await query
@@ -45,7 +49,10 @@ namespace CampusEats.Api.Features.Menu.Handler
                     m.Category,
                     m.ImagePath,
                     m.Description,
-                    m.DietaryTags,
+                    m.MenuItemDietaryTags.Select(mdt => new DietaryTagDto(
+                        mdt.DietaryTagId,
+                        mdt.DietaryTag.Name
+                    )).ToList(),
                     m.IsAvailable,
                     m.SortOrder))
                 .ToListAsync(cancellationToken);

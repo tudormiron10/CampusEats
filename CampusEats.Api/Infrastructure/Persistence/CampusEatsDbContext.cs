@@ -15,6 +15,8 @@ public class CampusEatsDbContext : DbContext
     public DbSet<Payment> Payments { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<DietaryTag> DietaryTags { get; set; }
+    public DbSet<MenuItemDietaryTag> MenuItemDietaryTags { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +46,22 @@ public class CampusEatsDbContext : DbContext
 
         modelBuilder.Entity<Payment>()
             .Property(p => p.Status)
-            .HasConversion<string>(); //
+            .HasConversion<string>();
+
+        // Configure many-to-many relationship between MenuItem and DietaryTag
+        modelBuilder.Entity<MenuItemDietaryTag>()
+            .HasKey(mdt => new { mdt.MenuItemId, mdt.DietaryTagId });
+
+        modelBuilder.Entity<MenuItemDietaryTag>()
+            .HasOne(mdt => mdt.MenuItem)
+            .WithMany(m => m.MenuItemDietaryTags)
+            .HasForeignKey(mdt => mdt.MenuItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MenuItemDietaryTag>()
+            .HasOne(mdt => mdt.DietaryTag)
+            .WithMany(dt => dt.MenuItemDietaryTags)
+            .HasForeignKey(mdt => mdt.DietaryTagId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
