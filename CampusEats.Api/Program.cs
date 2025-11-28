@@ -443,6 +443,22 @@ app.MapGet("/kitchen/report", async (
 .RequireAuthorization()
 .WithTags("Kitchen");
 
+// Endpoint to get kitchen analytics.
+app.MapGet("/kitchen/analytics", async (
+        DateTime startDate,
+        DateTime endDate,
+        string groupBy,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsStaff())
+        return Results.Forbid();
+
+    return await mediator.Send(new GetAnalyticsRequest(startDate, endDate, groupBy));
+})
+.RequireAuthorization()
+.WithTags("Kitchen");
+
 // ====== USER GROUP ======
 
 // Endpoint for creating a new user (registration).

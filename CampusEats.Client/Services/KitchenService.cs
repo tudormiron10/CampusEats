@@ -35,4 +35,12 @@ public class KitchenService
         var response = await _http.PostAsync($"/kitchen/orders/{orderId}/complete", null);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<AnalyticsResponse?> GetAnalyticsAsync(DateTime startDate, DateTime endDate, string groupBy)
+    {
+        var startDateStr = Uri.EscapeDataString(startDate.ToString("o"));
+        var endDateStr = Uri.EscapeDataString(endDate.ToString("o"));
+        var url = $"/kitchen/analytics?startDate={startDateStr}&endDate={endDateStr}&groupBy={groupBy}";
+        return await _http.GetFromJsonAsync<AnalyticsResponse>(url);
+    }
 }

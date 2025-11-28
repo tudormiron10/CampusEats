@@ -4,6 +4,8 @@
 @inject KitchenService KitchenService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <PageTitle>Kitchen - CampusEats</PageTitle>
 
@@ -97,13 +99,13 @@
                             Orders
                         </span>
                     </button>
-                    <button class="bg-slate-50 text-slate-400 px-5 py-2.5 rounded-lg font-medium cursor-not-allowed border border-dashed border-slate-300" disabled>
+                    <button class="@(activeSection == "analytics" ? "bg-oxford-blue text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-5 py-2.5 rounded-lg font-medium transition-all duration-200"
+                            @onclick="SetAnalyticsSection">
                         <span class="flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                             </svg>
-                            Reports
-                            <span class="text-xs bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Soon</span>
+                            Analytics
                         </span>
                     </button>
                 </div>
@@ -295,6 +297,378 @@
                 </div>
             }
         }
+        else if (activeSection == "analytics")
+        {
+            <!-- Analytics Date Controls -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <!-- Quick Buttons -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button class="@(IsQuickButtonActive("today") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                @onclick="@(() => SetQuickPeriod("today"))">Today</button>
+                        <button class="@(IsQuickButtonActive("week") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                @onclick="@(() => SetQuickPeriod("week"))">This Week</button>
+                        <button class="@(IsQuickButtonActive("month") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                @onclick="@(() => SetQuickPeriod("month"))">This Month</button>
+                        <button class="@(IsQuickButtonActive("year") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                @onclick="@(() => SetQuickPeriod("year"))">This Year</button>
+                    </div>
+
+                    <!-- Date Navigation -->
+                    <div class="flex items-center gap-2">
+                        <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="PreviousPeriod">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 min-w-[200px] text-center">
+                            <span class="font-medium text-slate-700">@GetPeriodDisplayText()</span>
+                        </div>
+                        <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="NextPeriod">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- View Mode -->
+                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                        <button class="@(analyticsViewMode == "day" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                                @onclick="@(() => SetViewMode("day"))">Day</button>
+                        <button class="@(analyticsViewMode == "week" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                                @onclick="@(() => SetViewMode("week"))">Week</button>
+                        <button class="@(analyticsViewMode == "month" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                                @onclick="@(() => SetViewMode("month"))">Month</button>
+                        <button class="@(analyticsViewMode == "year" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                                @onclick="@(() => SetViewMode("year"))">Year</button>
+                    </div>
+                </div>
+            </div>
+
+            @if (analyticsLoading)
+            {
+                <div class="flex flex-col items-center justify-center py-16">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                        <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                    </div>
+                    <p class="mt-4 text-slate-500 font-medium">Loading analytics...</p>
+                </div>
+            }
+            else if (analyticsError != null)
+            {
+                <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+                    <div class="p-2 bg-red-100 rounded-lg shrink-0">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-red-800">Error loading analytics</h3>
+                        <p class="text-red-600 text-sm mt-1">@analyticsError</p>
+                    </div>
+                </div>
+            }
+            else if (analytics != null)
+            {
+                <!-- ROW 1: Summary Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Total Orders</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalOrders</p>
+                                @if (analytics.Summary.ChangeVsPrevious.HasValue)
+                                {
+                                    <p class="text-sm mt-2 @(analytics.Summary.ChangeVsPrevious >= 0 ? "text-emerald-600" : "text-red-600")">
+                                        @(analytics.Summary.ChangeVsPrevious >= 0 ? "+" : "")@analytics.Summary.ChangeVsPrevious?.ToString("F1")% vs previous
+                                    </p>
+                                }
+                            </div>
+                            <div class="p-3 bg-blue-100 rounded-xl">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Total Revenue</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalRevenue.ToString("C")</p>
+                            </div>
+                            <div class="p-3 bg-emerald-100 rounded-xl">
+                                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Avg Order Value</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.AverageOrderValue.ToString("C")</p>
+                            </div>
+                            <div class="p-3 bg-purple-100 rounded-xl">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Items Sold</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalItemsSold</p>
+                            </div>
+                            <div class="p-3 bg-amber-100 rounded-xl">
+                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW 2: Main Chart -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Orders & Revenue Over Time</h3>
+                    <div id="mainChart" style="height: 350px;"></div>
+                </div>
+
+                <!-- ROW 3: Performance Metrics -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Peak Hour</span>
+                        </div>
+                        @if (analytics.Performance.PeakHour != null)
+                        {
+                            <p class="text-2xl font-bold text-slate-800">@FormatHour(analytics.Performance.PeakHour.Hour)</p>
+                            <p class="text-sm text-slate-500 mt-1">@analytics.Performance.PeakHour.OrderCount orders</p>
+                        }
+                        else
+                        {
+                            <p class="text-lg text-slate-400">No data</p>
+                        }
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-indigo-100 rounded-lg">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Best Day</span>
+                        </div>
+                        @if (analytics.Performance.BestDayOfWeek != null)
+                        {
+                            <p class="text-2xl font-bold text-slate-800">@analytics.Performance.BestDayOfWeek.DayName</p>
+                            <p class="text-sm text-slate-500 mt-1">Avg @analytics.Performance.BestDayOfWeek.AvgOrders.ToString("F0") orders</p>
+                        }
+                        else
+                        {
+                            <p class="text-lg text-slate-400">No data</p>
+                        }
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-emerald-100 rounded-lg">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Completion Rate</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-800">@analytics.Performance.CompletionRate.ToString("F1")%</p>
+                        <p class="text-sm text-slate-500 mt-1">@analytics.Performance.CompletedOrders completed, @analytics.Performance.CancelledOrders cancelled</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-cyan-100 rounded-lg">
+                                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Items/Order</span>
+                        </div>
+                        <p class="text-2xl font-bold text-slate-800">@analytics.Performance.AvgItemsPerOrder.ToString("F1")</p>
+                        <p class="text-sm text-slate-500 mt-1">avg basket size</p>
+                    </div>
+                </div>
+
+                <!-- ROW 4: Item Insights -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🏆</span>
+                            <span class="text-sm font-medium text-amber-700">Most Sold</span>
+                        </div>
+                        @if (analytics.Items.MostSold != null)
+                        {
+                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.MostSold.Name</p>
+                            <p class="text-sm text-amber-700 mt-1">@analytics.Items.MostSold.Quantity units</p>
+                        }
+                        else
+                        {
+                            <p class="text-slate-400">No data</p>
+                        }
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">📉</span>
+                            <span class="text-sm font-medium text-slate-600">Least Sold</span>
+                        </div>
+                        @if (analytics.Items.LeastSold != null)
+                        {
+                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.LeastSold.Name</p>
+                            <p class="text-sm text-slate-500 mt-1">@analytics.Items.LeastSold.Quantity units</p>
+                        }
+                        else
+                        {
+                            <p class="text-slate-400">No data</p>
+                        }
+                    </div>
+                    <div class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-5 border border-yellow-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">☀️</span>
+                            <span class="text-sm font-medium text-yellow-700">Morning Best (6-12)</span>
+                        </div>
+                        @if (analytics.Items.MorningBestseller != null)
+                        {
+                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.MorningBestseller.Name</p>
+                            <p class="text-sm text-yellow-700 mt-1">@analytics.Items.MorningBestseller.Quantity units</p>
+                        }
+                        else
+                        {
+                            <p class="text-slate-400">No data</p>
+                        }
+                    </div>
+                    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-2xl">🌙</span>
+                            <span class="text-sm font-medium text-indigo-700">Evening Best (17-22)</span>
+                        </div>
+                        @if (analytics.Items.EveningBestseller != null)
+                        {
+                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.EveningBestseller.Name</p>
+                            <p class="text-sm text-indigo-700 mt-1">@analytics.Items.EveningBestseller.Quantity units</p>
+                        }
+                        else
+                        {
+                            <p class="text-slate-400">No data</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- ROW 5: Revenue Insights -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <!-- Revenue by Hour Sparkline -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <h4 class="text-sm font-medium text-slate-500 mb-2">Revenue by Hour</h4>
+                        <div id="revenueSparkline" style="height: 60px;"></div>
+                        @if (analytics.Revenue.RevenueByHour.Any())
+                        {
+                            var peakRevHour = analytics.Revenue.RevenueByHour.OrderByDescending(r => r.Revenue).FirstOrDefault();
+                            if (peakRevHour != null)
+                            {
+                                <p class="text-sm text-slate-600 mt-2">Peak: @peakRevHour.Revenue.ToString("C") at @FormatHour(peakRevHour.Period.Hour)</p>
+                            }
+                        }
+                    </div>
+
+                    <!-- Top 5 Items by Revenue -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <h4 class="text-sm font-medium text-slate-500 mb-3">Top 5 by Revenue</h4>
+                        <div class="space-y-2">
+                            @foreach (var item in analytics.Revenue.TopItemsByRevenue.Take(5))
+                            {
+                                var maxRevenue = analytics.Revenue.TopItemsByRevenue.FirstOrDefault()?.Revenue ?? 1;
+                                var percentage = maxRevenue > 0 ? (item.Revenue / maxRevenue) * 100 : 0;
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-slate-700 truncate">@item.Name</p>
+                                        <div class="h-1.5 bg-slate-100 rounded-full mt-1">
+                                            <div class="h-1.5 bg-emerald-500 rounded-full" style="width: @percentage%"></div>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-800 whitespace-nowrap">@item.Revenue.ToString("C")</span>
+                                </div>
+                            }
+                            @if (!analytics.Revenue.TopItemsByRevenue.Any())
+                            {
+                                <p class="text-slate-400 text-sm">No data available</p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <h4 class="text-sm font-medium text-slate-500 mb-3">Category Breakdown</h4>
+                        <div id="categoryDonut" style="height: 200px;"></div>
+                    </div>
+                </div>
+
+                <!-- ROW 6: Customer Insights -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Unique Customers</span>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800">@analytics.Customers.UniqueCustomers</p>
+                        <p class="text-sm text-slate-500 mt-1">in this period</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">Orders/Customer</span>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800">@analytics.Customers.OrdersPerCustomer.ToString("F1")</p>
+                        <p class="text-sm text-slate-500 mt-1">average</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="p-2 bg-teal-100 rounded-lg">
+                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-slate-500">New vs Returning</span>
+                        </div>
+                        <div class="space-y-2 mt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-600">New</span>
+                                <span class="text-sm font-medium text-slate-800">@analytics.Customers.NewCustomers (@analytics.Customers.NewCustomerPercentage.ToString("F0")%)</span>
+                            </div>
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full" style="width: @analytics.Customers.NewCustomerPercentage%"></div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-600">Returning</span>
+                                <span class="text-sm font-medium text-slate-800">@analytics.Customers.ReturningCustomers (@((100 - analytics.Customers.NewCustomerPercentage).ToString("F0"))%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
@@ -428,4 +802,268 @@
     private decimal GetOrderTotal(KitchenOrderResponse order) => order.Items.Sum(i => i.UnitPrice * i.Quantity);
 
     private void SetOrdersSection() => activeSection = "orders";
+
+    // Analytics State
+    private AnalyticsResponse? analytics;
+    private bool analyticsLoading = false;
+    private string? analyticsError;
+    private string analyticsViewMode = "day"; // day, week, month, year
+    private DateTime analyticsStartDate = DateTime.Today;
+    private DateTime analyticsEndDate = DateTime.Today.AddDays(1);
+    private string quickPeriod = "today";
+
+    private async Task SetAnalyticsSection()
+    {
+        activeSection = "analytics";
+        if (analytics == null)
+        {
+            await LoadAnalytics();
+        }
+    }
+
+    private bool shouldRenderCharts = false;
+
+    private async Task LoadAnalytics()
+    {
+        try
+        {
+            analyticsLoading = true;
+            analyticsError = null;
+            shouldRenderCharts = false;
+            StateHasChanged();
+
+            var groupBy = analyticsViewMode switch
+            {
+                "day" => "hour",
+                "week" => "day",
+                "month" => "day",
+                "year" => "month",
+                _ => "hour"
+            };
+
+            analytics = await KitchenService.GetAnalyticsAsync(analyticsStartDate, analyticsEndDate, groupBy);
+            shouldRenderCharts = true;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            Navigation.NavigateTo("/menu");
+        }
+        catch (Exception ex)
+        {
+            analyticsError = $"Failed to load analytics: {ex.Message}";
+        }
+        finally
+        {
+            analyticsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shouldRenderCharts && analytics != null)
+        {
+            shouldRenderCharts = false;
+            await RenderCharts();
+        }
+    }
+
+    private async Task RenderCharts()
+    {
+        if (analytics == null) return;
+
+        try
+        {
+            // Main chart - Orders & Revenue
+            var categories = analytics.TimeSeries.Select(t => FormatTimeSeriesLabel(t.Period)).ToArray();
+            var orderData = analytics.TimeSeries.Select(t => t.OrderCount).ToArray();
+            var revenueData = analytics.TimeSeries.Select(t => (double)t.Revenue).ToArray();
+
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderRevenueChart",
+                "mainChart", categories, orderData, revenueData);
+
+            // Revenue sparkline
+            var sparklineData = analytics.Revenue.RevenueByHour.Select(r => (double)r.Revenue).ToArray();
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderSparkline",
+                "revenueSparkline", sparklineData, "#10b981");
+
+            // Category donut chart
+            if (analytics.Revenue.CategoryBreakdown.Any())
+            {
+                var categoryLabels = analytics.Revenue.CategoryBreakdown.Select(c => c.CategoryName).ToArray();
+                var categoryData = analytics.Revenue.CategoryBreakdown.Select(c => (double)c.Revenue).ToArray();
+                await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderDonutChart",
+                    "categoryDonut", categoryLabels, categoryData, (string[]?)null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Chart render error: {ex.Message}");
+        }
+    }
+
+    private string FormatTimeSeriesLabel(DateTime period)
+    {
+        return analyticsViewMode switch
+        {
+            "day" => period.ToString("HH:00"),
+            "week" => period.ToString("ddd"),
+            "month" => period.ToString("MMM d"),
+            "year" => period.ToString("MMM"),
+            _ => period.ToString("HH:00")
+        };
+    }
+
+    private bool IsQuickButtonActive(string period) => quickPeriod == period;
+
+    private async Task SetQuickPeriod(string period)
+    {
+        quickPeriod = period;
+        var today = DateTime.Today;
+
+        switch (period)
+        {
+            case "today":
+                analyticsViewMode = "day";
+                analyticsStartDate = today;
+                analyticsEndDate = today.AddDays(1);
+                break;
+            case "week":
+                analyticsViewMode = "week";
+                var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+                if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
+                analyticsStartDate = startOfWeek;
+                analyticsEndDate = startOfWeek.AddDays(7);
+                break;
+            case "month":
+                analyticsViewMode = "month";
+                analyticsStartDate = new DateTime(today.Year, today.Month, 1);
+                analyticsEndDate = analyticsStartDate.AddMonths(1);
+                break;
+            case "year":
+                analyticsViewMode = "year";
+                analyticsStartDate = new DateTime(today.Year, 1, 1);
+                analyticsEndDate = new DateTime(today.Year + 1, 1, 1);
+                break;
+        }
+
+        await LoadAnalytics();
+    }
+
+    private async Task SetViewMode(string mode)
+    {
+        analyticsViewMode = mode;
+        quickPeriod = ""; // Clear quick period selection
+
+        var today = DateTime.Today;
+        switch (mode)
+        {
+            case "day":
+                analyticsStartDate = today;
+                analyticsEndDate = today.AddDays(1);
+                break;
+            case "week":
+                var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+                if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
+                analyticsStartDate = startOfWeek;
+                analyticsEndDate = startOfWeek.AddDays(7);
+                break;
+            case "month":
+                analyticsStartDate = new DateTime(today.Year, today.Month, 1);
+                analyticsEndDate = analyticsStartDate.AddMonths(1);
+                break;
+            case "year":
+                analyticsStartDate = new DateTime(today.Year, 1, 1);
+                analyticsEndDate = new DateTime(today.Year + 1, 1, 1);
+                break;
+        }
+
+        await LoadAnalytics();
+    }
+
+    private async Task PreviousPeriod()
+    {
+        quickPeriod = "";
+        switch (analyticsViewMode)
+        {
+            case "day":
+                analyticsStartDate = analyticsStartDate.AddDays(-1);
+                analyticsEndDate = analyticsEndDate.AddDays(-1);
+                break;
+            case "week":
+                analyticsStartDate = analyticsStartDate.AddDays(-7);
+                analyticsEndDate = analyticsEndDate.AddDays(-7);
+                break;
+            case "month":
+                analyticsStartDate = analyticsStartDate.AddMonths(-1);
+                analyticsEndDate = analyticsEndDate.AddMonths(-1);
+                break;
+            case "year":
+                analyticsStartDate = analyticsStartDate.AddYears(-1);
+                analyticsEndDate = analyticsEndDate.AddYears(-1);
+                break;
+        }
+        await LoadAnalytics();
+    }
+
+    private async Task NextPeriod()
+    {
+        quickPeriod = "";
+        switch (analyticsViewMode)
+        {
+            case "day":
+                analyticsStartDate = analyticsStartDate.AddDays(1);
+                analyticsEndDate = analyticsEndDate.AddDays(1);
+                break;
+            case "week":
+                analyticsStartDate = analyticsStartDate.AddDays(7);
+                analyticsEndDate = analyticsEndDate.AddDays(7);
+                break;
+            case "month":
+                analyticsStartDate = analyticsStartDate.AddMonths(1);
+                analyticsEndDate = analyticsEndDate.AddMonths(1);
+                break;
+            case "year":
+                analyticsStartDate = analyticsStartDate.AddYears(1);
+                analyticsEndDate = analyticsEndDate.AddYears(1);
+                break;
+        }
+        await LoadAnalytics();
+    }
+
+    private string GetPeriodDisplayText()
+    {
+        return analyticsViewMode switch
+        {
+            "day" => analyticsStartDate.ToString("MMMM d, yyyy"),
+            "week" => $"{analyticsStartDate:MMM d} - {analyticsEndDate.AddDays(-1):MMM d, yyyy}",
+            "month" => analyticsStartDate.ToString("MMMM yyyy"),
+            "year" => analyticsStartDate.ToString("yyyy"),
+            _ => analyticsStartDate.ToString("MMMM d, yyyy")
+        };
+    }
+
+    private string FormatHour(int hour)
+    {
+        var time = new DateTime(2000, 1, 1, hour, 0, 0);
+        return time.ToString("h:mm tt");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "mainChart");
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "revenueSparkline");
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "categoryDonut");
+        }
+        catch
+        {
+            // Ignore errors during disposal
+        }
+    }
 }
