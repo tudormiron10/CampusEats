@@ -12,6 +12,33 @@ public class MenuService
         _http = http;
     }
 
+    private async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+            return;
+
+        ApiError? apiError = null;
+        try
+        {
+            apiError = await response.Content.ReadFromJsonAsync<ApiError>();
+        }
+        catch
+        {
+            // If we can't parse the error, fall back to generic message
+        }
+
+        if (apiError != null)
+        {
+            throw new ApiException(response.StatusCode, apiError);
+        }
+
+        // Fallback for non-API errors
+        throw new ApiException(
+            response.StatusCode,
+            "ERROR",
+            $"Request failed with status {(int)response.StatusCode} ({response.StatusCode})");
+    }
+
     public async Task<List<MenuItemResponse>> GetMenuAsync(string? category = null, string? dietaryKeyword = null)
     {
         var url = "/menu";
@@ -52,7 +79,7 @@ public class MenuService
     public async Task DeleteMenuItemAsync(Guid id)
     {
         var response = await _http.DeleteAsync($"/menu/{id}");
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowApiException(response);
     }
 
     public async Task<string?> UploadImageAsync(Stream imageStream, string fileName)

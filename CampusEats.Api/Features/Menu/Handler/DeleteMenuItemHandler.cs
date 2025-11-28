@@ -21,9 +21,20 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
         if (menuItem == null)
             return ApiErrors.MenuItemNotFound();
 
-        var usedInOrders = await _context.OrderItems.AnyAsync(oi => oi.MenuItemId == request.MenuItemId);
-        if (usedInOrders)
-            return ApiErrors.InvalidOperation("Cannot delete menu item as it is part of an existing order.");
+        // Only block deletion if item is in an active order (Pending, InPreparation, Ready)
+        var activeStatuses = new[]
+        {
+            Infrastructure.Persistence.Entities.OrderStatus.Pending,
+            Infrastructure.Persistence.Entities.OrderStatus.InPreparation,
+            Infrastructure.Persistence.Entities.OrderStatus.Ready
+        };
+
+        var usedInActiveOrders = await _context.OrderItems
+            .AnyAsync(oi => oi.MenuItemId == request.MenuItemId
+                         && activeStatuses.Contains(oi.Order.Status), cancellationToken);
+
+        if (usedInActiveOrders)
+            return ApiErrors.Conflict("Cannot delete menu item as it is part of an active order.");
 
         _context.MenuItems.Remove(menuItem);
         await _context.SaveChangesAsync();

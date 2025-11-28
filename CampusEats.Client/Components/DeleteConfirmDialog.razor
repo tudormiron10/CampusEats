@@ -104,6 +104,10 @@
             await OnDeleted.InvokeAsync();
             CloseDialog();
         }
+        catch (ApiException ex)
+        {
+            errorMessage = GetUserFriendlyMessage(ex);
+        }
         catch (Exception ex)
         {
             errorMessage = $"Failed to delete item: {ex.Message}";
@@ -113,5 +117,23 @@
             isDeleting = false;
             StateHasChanged();
         }
+    }
+
+    private string GetUserFriendlyMessage(ApiException ex)
+    {
+        // Return the API message directly for conflict/operation errors - it's already user-friendly
+        if (ex.IsConflict || ex.IsInvalidOperation)
+            return ex.Message;
+
+        if (ex.IsForbidden)
+            return "You don't have permission to delete this item.";
+
+        if (ex.IsUnauthorized)
+            return "Please log in to perform this action.";
+
+        if (ex.IsNotFound)
+            return "This item no longer exists.";
+
+        return ex.Message;
     }
 }

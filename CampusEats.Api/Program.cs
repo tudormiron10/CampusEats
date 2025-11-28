@@ -119,13 +119,13 @@ if (app.Environment.IsDevelopment())
 
 // ====== MENU GROUP ======
 
-// Endpoint for creating a new menu item (Admin only).
+// Endpoint for creating a new menu item (Staff: Manager/Admin).
 app.MapPost("/menu", async (
         CreateMenuItemRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     return await mediator.Send(request);
@@ -151,14 +151,14 @@ app.MapGet("/menu/{menuItemId:guid}", async (
 })
 .WithTags("Menu");
 
-// Endpoint for updating a specific menu item (Admin only).
+// Endpoint for updating a specific menu item (Staff: Manager/Admin).
 app.MapPut("/menu/{menuItemId:guid}", async (
         Guid menuItemId,
         UpdateMenuItemRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     var requestWithId = request with { MenuItemId = menuItemId };
@@ -167,13 +167,13 @@ app.MapPut("/menu/{menuItemId:guid}", async (
 .RequireAuthorization()
 .WithTags("Menu");
 
-// Endpoint for deleting a specific menu item (Admin only).
+// Endpoint for deleting a specific menu item (Staff: Manager/Admin).
 app.MapDelete("/menu/{menuItemId:guid}", async (
         Guid menuItemId,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     return await mediator.Send(new DeleteMenuItemRequest(menuItemId));
@@ -189,13 +189,13 @@ app.MapGet("/categories", async ([FromServices] IMediator mediator) =>
 )
 .WithTags("Categories");
 
-// Endpoint for creating a new category (Admin only).
+// Endpoint for creating a new category (Staff: Manager/Admin).
 app.MapPost("/categories", async (
         CreateCategoryRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     return await mediator.Send(request);
@@ -203,14 +203,14 @@ app.MapPost("/categories", async (
 .RequireAuthorization()
 .WithTags("Categories");
 
-// Endpoint for updating a category (Admin only).
+// Endpoint for updating a category (Staff: Manager/Admin).
 app.MapPut("/categories/{categoryId:guid}", async (
         Guid categoryId,
         UpdateCategoryRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     var requestWithId = request with { CategoryId = categoryId };
@@ -219,13 +219,13 @@ app.MapPut("/categories/{categoryId:guid}", async (
 .RequireAuthorization()
 .WithTags("Categories");
 
-// Endpoint for deleting a category (Admin only).
+// Endpoint for deleting a category (Staff: Manager/Admin).
 app.MapDelete("/categories/{categoryId:guid}", async (
         Guid categoryId,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     return await mediator.Send(new DeleteCategoryRequest(categoryId));
@@ -235,7 +235,7 @@ app.MapDelete("/categories/{categoryId:guid}", async (
 
 // ====== UPLOAD GROUP ======
 
-// Endpoint for uploading images (Admin only).
+// Endpoint for uploading images (Staff: Manager/Admin).
 app.MapPost("/upload/image", async (
         IFormFile file,
         HttpContext httpContext,
@@ -243,7 +243,7 @@ app.MapPost("/upload/image", async (
         [FromServices] IMediator mediator,
         CancellationToken ct) =>
 {
-    if (!httpContext.IsAdmin())
+    if (!httpContext.IsStaff())
         return Results.Forbid();
 
     var request = new UploadImageRequest(file);
