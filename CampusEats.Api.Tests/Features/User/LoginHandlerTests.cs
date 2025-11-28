@@ -148,7 +148,9 @@ namespace CampusEats.Api.Tests.Features.User
 
             // Assert
             result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("Unauthorized");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(401);
         }
 
         [Fact]
@@ -162,7 +164,9 @@ namespace CampusEats.Api.Tests.Features.User
 
             // Assert
             result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("Unauthorized");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(401);
         }
 
         [Fact]
@@ -269,7 +273,9 @@ namespace CampusEats.Api.Tests.Features.User
 
             // Assert
             result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("Unauthorized");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(401);
         }
 
         [Fact]
@@ -308,7 +314,9 @@ namespace CampusEats.Api.Tests.Features.User
 
             // Assert
             result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("Unauthorized");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(401);
         }
 
         [Fact]

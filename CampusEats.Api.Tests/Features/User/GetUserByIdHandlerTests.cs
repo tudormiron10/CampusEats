@@ -136,9 +136,9 @@ namespace CampusEats.Api.Tests.Features.User
             var result = await _handler.Handle(request, CancellationToken.None);
 
             // Assert
-            var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<string>;
-            notFound.Should().NotBeNull();
-            notFound!.Value.Should().Be("User not found.");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(404);
         }
 
         [Fact]

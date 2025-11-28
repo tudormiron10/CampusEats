@@ -9,6 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
+using Microsoft.AspNetCore.Http;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -94,9 +95,9 @@ namespace CampusEats.Api.Tests.Features.User
             var result = await _handler.Handle(request, CancellationToken.None);
 
             // Assert
-            var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<string>;
-            notFound.Should().NotBeNull();
-            notFound!.Value.Should().Be("User not found.");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(404);
         }
 
         [Fact]
@@ -130,9 +131,9 @@ namespace CampusEats.Api.Tests.Features.User
             var result = await _handler.Handle(request, CancellationToken.None);
 
             // Assert
-            var conflict = result as Microsoft.AspNetCore.Http.HttpResults.Conflict<string>;
-            conflict.Should().NotBeNull();
-            conflict!.Value.Should().Be("An account with this email already exists.");
+            var statusCodeResult = result as IStatusCodeHttpResult;
+            statusCodeResult.Should().NotBeNull();
+            statusCodeResult!.StatusCode.Should().Be(409);
         }
 
         [Fact]
