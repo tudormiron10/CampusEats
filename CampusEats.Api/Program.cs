@@ -10,7 +10,6 @@ using System.Text;
 using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Features.Categories.Handler;
 using CampusEats.Api.Features.Upload.Request;
-using CampusEats.Api.Features.Upload.Handler;
 using CampusEats.Api.Features.Kitchen.Request;
 using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
@@ -36,7 +35,33 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Add JWT Bearer auth to Swagger UI
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "CampusEats API", Version = "v1" });
+    var securityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Enter 'Bearer {token}'",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+        {
+            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    };
+    c.AddSecurityDefinition("Bearer", securityScheme);
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            securityScheme,
+            Array.Empty<string>()
+        }
+    });
+});
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
@@ -468,61 +493,22 @@ app.MapGet("/kitchen/orders", async (
 .RequireAuthorization()
 .WithTags("Kitchen");
 
-// Endpoint to mark an order as being in preparation.
-app.MapPost("/kitchen/orders/{orderId:guid}/prepare", async (
+// Consolidated endpoint to update order status (resource-centric PATCH)
+app.MapPatch("/kitchen/orders/{orderId:guid}", async (
         Guid orderId,
         HttpContext httpContext,
+        [FromBody] UpdateOrderStatusRequest body,
         [FromServices] IMediator mediator) =>
 {
     if (!httpContext.IsStaff())
         return Results.Forbid();
 
-    return await mediator.Send(new PrepareOrderRequest(orderId));
+    var request = body with { OrderId = orderId };
+    return await mediator.Send(request);
 })
 .RequireAuthorization()
 .WithTags("Kitchen");
 
-// Endpoint to mark an order as ready for pickup.
-app.MapPost("/kitchen/orders/{orderId:guid}/ready", async (
-        Guid orderId,
-        HttpContext httpContext,
-        [FromServices] IMediator mediator) =>
-{
-    if (!httpContext.IsStaff())
-        return Results.Forbid();
-
-    return await mediator.Send(new ReadyOrderRequest(orderId));
-})
-.RequireAuthorization()
-.WithTags("Kitchen");
-
-// Endpoint to mark an order as completed.
-app.MapPost("/kitchen/orders/{orderId:guid}/complete", async (
-        Guid orderId,
-        HttpContext httpContext,
-        [FromServices] IMediator mediator) =>
-{
-    if (!httpContext.IsStaff())
-        return Results.Forbid();
-
-    return await mediator.Send(new CompleteOrderRequest(orderId));
-})
-.RequireAuthorization()
-.WithTags("Kitchen");
-
-// Endpoint to get the daily sales report.
-app.MapGet("/kitchen/report", async (
-        DateOnly? date,
-        HttpContext httpContext,
-        [FromServices] IMediator mediator) =>
-{
-    if (!httpContext.IsStaff())
-        return Results.Forbid();
-
-    return await mediator.Send(new GetDailySalesReportRequest(date ?? DateOnly.FromDateTime(DateTime.UtcNow)));
-})
-.RequireAuthorization()
-.WithTags("Kitchen");
 
 // Endpoint to get kitchen analytics.
 app.MapGet("/kitchen/analytics", async (
