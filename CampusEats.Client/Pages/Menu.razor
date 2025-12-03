@@ -32,11 +32,14 @@
                 }
                 else
                 {
-                    <button class="border-2 border-oxford-blue text-oxford-blue px-6 py-3 rounded-lg font-semibold hover:bg-oxford-blue hover:text-white transition-all flex items-center gap-2"
-                            @onclick="StartReorder">
-                        <LucideIcon Name="grip-vertical" Class="w-5 h-5" />
-                        Edit Order
-                    </button>
+                    @if (!string.IsNullOrEmpty(selectedCategory))
+                    {
+                        <button class="border-2 border-oxford-blue text-oxford-blue px-6 py-3 rounded-lg font-semibold hover:bg-oxford-blue hover:text-white transition-all flex items-center gap-2"
+                                @onclick="StartReorder">
+                            <LucideIcon Name="grip-vertical" Class="w-5 h-5" />
+                            Edit Order
+                        </button>
+                    }
                     <button class="bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all"
                             @onclick="() => OpenMenuItemModal(null)">
                         + Add Menu Item
@@ -416,6 +419,16 @@
             ).ToList();
         }
 
+        // Sort by SortOrder only when a specific category is selected
+        // For "All Items" view, preserve API ordering (Category.SortOrder → MenuItem.SortOrder)
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            filteredItems = filteredItems
+                .OrderBy(i => i.SortOrder)
+                .ThenBy(i => i.Name)
+                .ToList();
+        }
+
         StateHasChanged();
     }
 
@@ -473,7 +486,8 @@
 
     private async Task OnCategoriesChanged()
     {
-        await LoadCategories();
+        // Reload both categories and menu items to reflect new category order
+        await LoadMenu();
     }
 
     // Reorder mode methods

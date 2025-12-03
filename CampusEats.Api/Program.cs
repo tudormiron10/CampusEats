@@ -208,7 +208,7 @@ app.MapDelete("/menu/{menuItemId:guid}", async (
 .WithTags("Menu");
 
 // Endpoint for reordering menu items (Staff: Manager/Admin).
-app.MapPut("/menu/reorder", async (
+app.MapPatch("/menu/reorder", async (
         ReorderMenuItemsRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>
@@ -274,7 +274,7 @@ app.MapDelete("/categories/{categoryId:guid}", async (
 .WithTags("Categories");
 
 // Endpoint for reordering categories (Staff: Manager/Admin).
-app.MapPut("/categories/reorder", async (
+app.MapPatch("/categories/reorder", async (
         ReorderCategoriesRequest request,
         HttpContext httpContext,
         [FromServices] IMediator mediator) =>

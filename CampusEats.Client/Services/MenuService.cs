@@ -99,7 +99,7 @@ public class MenuService
     public async Task ReorderMenuItemsAsync(List<Guid> orderedIds)
     {
         var request = new ReorderMenuItemsRequest(orderedIds);
-        var response = await _http.PutAsJsonAsync("/menu/reorder", request);
+        var response = await _http.PatchAsJsonAsync("/menu/reorder", request);
         response.EnsureSuccessStatusCode();
     }
 }

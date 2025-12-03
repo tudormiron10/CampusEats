@@ -39,22 +39,27 @@ namespace CampusEats.Api.Features.Menu.Handler
             }
 
             var menuItems = await query
-                .OrderBy(m => m.Category)
-                .ThenBy(m => m.SortOrder)
-                .ThenBy(m => m.Name)
-                .Select(m => new MenuItemResponse(
-                    m.MenuItemId,
-                    m.Name,
-                    m.Price,
-                    m.Category,
-                    m.ImagePath,
-                    m.Description,
-                    m.MenuItemDietaryTags.Select(mdt => new DietaryTagDto(
+                .Join(_context.Categories,
+                    mi => mi.Category,
+                    c => c.Name,
+                    (mi, c) => new { MenuItem = mi, CategorySortOrder = c.SortOrder })
+                .OrderBy(x => x.CategorySortOrder)
+                .ThenBy(x => x.MenuItem.Category)
+                .ThenBy(x => x.MenuItem.SortOrder)
+                .ThenBy(x => x.MenuItem.Name)
+                .Select(x => new MenuItemResponse(
+                    x.MenuItem.MenuItemId,
+                    x.MenuItem.Name,
+                    x.MenuItem.Price,
+                    x.MenuItem.Category,
+                    x.MenuItem.ImagePath,
+                    x.MenuItem.Description,
+                    x.MenuItem.MenuItemDietaryTags.Select(mdt => new DietaryTagDto(
                         mdt.DietaryTagId,
                         mdt.DietaryTag.Name
                     )).ToList(),
-                    m.IsAvailable,
-                    m.SortOrder))
+                    x.MenuItem.IsAvailable,
+                    x.MenuItem.SortOrder))
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(menuItems);
