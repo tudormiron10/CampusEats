@@ -1,5 +1,6 @@
 ﻿﻿using MediatR;
 using CampusEats.Api.Features.Kitchen.Request;
+using CampusEats.Api.Features.Notifications;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
@@ -10,10 +11,12 @@ namespace CampusEats.Api.Features.Kitchen.Handler;
 public class UpdateOrderStatusHandler : IRequestHandler<UpdateOrderStatusRequest, IResult>
 {
     private readonly CampusEatsDbContext _context;
+    private readonly IPublisher _publisher;
 
-    public UpdateOrderStatusHandler(CampusEatsDbContext context)
+    public UpdateOrderStatusHandler(CampusEatsDbContext context, IPublisher publisher)
     {
         _context = context;
+        _publisher = publisher;
     }
 
     public async Task<IResult> Handle(UpdateOrderStatusRequest request, CancellationToken cancellationToken)
@@ -40,6 +43,15 @@ public class UpdateOrderStatusHandler : IRequestHandler<UpdateOrderStatusRequest
 
         order.Status = next;
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Publish notification for real-time updates via SignalR
+        await _publisher.Publish(new OrderStatusChangedNotification(
+            order.OrderId,
+            order.UserId,
+            current.ToString(),
+            next.ToString(),
+            DateTime.UtcNow
+        ), cancellationToken);
 
         return Results.NoContent();
     }

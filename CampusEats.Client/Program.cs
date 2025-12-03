@@ -35,4 +35,7 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<KitchenService>();
 builder.Services.AddSingleton<CartService>();
 
+// Singleton: one SignalR connection shared across all pages
+builder.Services.AddSingleton<OrderHubService>();
+
 await builder.Build().RunAsync();

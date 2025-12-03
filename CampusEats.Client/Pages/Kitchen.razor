@@ -1,13 +1,21 @@
 @page "/kitchen"
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
+@using Blazored.LocalStorage
 @inject KitchenService KitchenService
 @inject AuthService AuthService
+@inject OrderHubService OrderHubService
+@inject ILocalStorageService LocalStorage
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
 <PageTitle>Kitchen - CampusEats</PageTitle>
+
+<!-- Hidden audio element for new order notification sound -->
+<audio id="newOrderSound" preload="auto">
+    <source src="/sounds/notification.mp3" type="audio/mpeg" />
+</audio>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -694,7 +702,111 @@
             return;
         }
 
+        // Subscribe to SignalR events
+        OrderHubService.OnNewOrder += HandleNewOrder;
+        OrderHubService.OnOrderCancelled += HandleOrderCancelled;
+        OrderHubService.OnOrderStatusChanged += HandleOrderStatusChanged;
+        OrderHubService.OnReconnected += HandleReconnected;
+
+        // Start SignalR connection with token provider delegate
+        try
+        {
+            await OrderHubService.StartAsync(
+                async () => await LocalStorage.GetItemAsync<string>("authToken"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR connection failed: {ex.Message}");
+            // Continue anyway - page will still work with polling/manual refresh
+        }
+
         await LoadOrders();
+    }
+
+    private async void HandleNewOrder(NewOrderNotification notification)
+    {
+        try
+        {
+            // Add the new order to our local list (using record positional constructor)
+            var newOrder = new KitchenOrderResponse(
+                notification.OrderId,
+                notification.Status,
+                notification.OrderDate,
+                notification.Items.Select(i => new KitchenOrderItemResponse(
+                    i.MenuItemId,
+                    i.Name,
+                    i.Quantity,
+                    i.UnitPrice
+                )).ToList()
+            );
+
+            orders.Insert(0, newOrder);
+            await InvokeAsync(StateHasChanged);
+
+            // Play notification sound
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('newOrderSound').play().catch(() => {})");
+            }
+            catch
+            {
+                // Ignore audio playback errors
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling new order: {ex.Message}");
+        }
+    }
+
+    private async void HandleOrderCancelled(Guid orderId)
+    {
+        try
+        {
+            // Remove the cancelled order from our local list
+            var order = orders.FirstOrDefault(o => o.Id == orderId);
+            if (order != null)
+            {
+                orders.Remove(order);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling order cancellation: {ex.Message}");
+        }
+    }
+
+    private async void HandleOrderStatusChanged(OrderStatusUpdate update)
+    {
+        try
+        {
+            // Update the order status in our local list
+            var index = orders.FindIndex(o => o.Id == update.OrderId);
+            if (index >= 0)
+            {
+                var existing = orders[index];
+                orders[index] = existing with { Status = update.Status };
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling order status change: {ex.Message}");
+        }
+    }
+
+    private async void HandleReconnected()
+    {
+        try
+        {
+            // Refresh orders after reconnection to catch any missed updates
+            await InvokeAsync(async () => await LoadOrders());
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error refreshing orders after reconnection: {ex.Message}");
+        }
     }
 
     private async Task LoadOrders()
@@ -795,7 +907,7 @@
         _ => "<svg class=\"w-6 h-6 text-slate-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>"
     };
 
-    private string GetOrderNumber(Guid orderId) => Math.Abs(orderId.GetHashCode() % 1000000).ToString("D6");
+    private string GetOrderNumber(Guid orderId) => ((orderId.GetHashCode() & 0x7FFFFFFF) % 1000000).ToString("D6");
 
     private string FormatStatus(string status) => System.Text.RegularExpressions.Regex.Replace(status, "([a-z])([A-Z])", "$1 $2");
 
@@ -1055,6 +1167,12 @@
 
     public async ValueTask DisposeAsync()
     {
+        // Unsubscribe from SignalR events
+        OrderHubService.OnNewOrder -= HandleNewOrder;
+        OrderHubService.OnOrderCancelled -= HandleOrderCancelled;
+        OrderHubService.OnOrderStatusChanged -= HandleOrderStatusChanged;
+        OrderHubService.OnReconnected -= HandleReconnected;
+
         try
         {
             await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "mainChart");

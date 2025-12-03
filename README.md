@@ -5,15 +5,19 @@ A cafeteria ordering system built with .NET 8 Minimal API and Blazor WebAssembly
 ## Tech Stack
 
 **Backend:**
-- .NET 8.0 Minimal API
+- .NET 8.0 Minimal API with MediatR (CQRS)
 - PostgreSQL with Entity Framework Core
 - Vertical Slice Architecture
 - FluentValidation
+- JWT Authentication
+- SignalR for real-time WebSocket communication
 
 **Frontend:**
 - Blazor WebAssembly
-- Bootstrap 5
-- Bootstrap Icons
+- TailwindCSS (custom theme)
+- SignalR Client for real-time updates
+- ApexCharts for analytics
+- Blazored.LocalStorage
 
 ## Prerequisites
 
@@ -161,7 +165,8 @@ CampusEats/
 │   └── Program.cs               # API configuration and endpoints
 │
 └── CampusEats.Client/           # Blazor WebAssembly frontend
-    ├── Pages/                   # Razor pages (Home, Menu, Cart, Orders)
+    ├── Pages/                   # Razor pages (Home, Menu, Cart, Orders, Kitchen)
+    ├── Components/              # Reusable components (modals, drag-drop, icons)
     ├── Layout/                  # App layout and navigation
     ├── Services/                # HTTP services for API calls
     ├── Models/                  # DTOs matching API responses
@@ -170,14 +175,35 @@ CampusEats/
 
 ## Features
 
-- Browse menu items with filtering by category
-- Add items to cart with real-time updates
-- Place orders
-- View order history with expandable details
-- Order status tracking (Pending, In Preparation, Ready, Completed, Cancelled)
-- Kitchen management (API endpoints for order preparation workflow)
-- Payment processing (API endpoints)
-- User management with role-based access
+### Client Features
+- Browse menu items with category filtering and dietary tag search
+- Add items to cart with real-time quantity updates
+- Place orders (JWT authentication required)
+- View order history with expandable item details
+- Cancel pending orders
+- **Real-time order status updates via SignalR WebSockets**
+- Order status tracking (Pending → In Preparation → Ready → Completed)
+- Audio notifications when order status changes
+
+### Staff Features (Manager/Admin)
+- Full menu CRUD with image upload
+- Category management with Lucide icons
+- Drag-drop reordering for menu items (per-category) and categories
+- Dietary tags management (multi-select)
+- Kitchen dashboard with order workflow
+- **Real-time new order notifications with audio alerts**
+- **Live order cancellation updates**
+- Analytics dashboard with charts (ApexCharts):
+  - Revenue/orders over time
+  - Peak hours and best days
+  - Top selling items
+  - Category breakdown
+  - Customer insights
+
+### Roles
+- **Client:** Regular customer - browse menu, place orders, view own orders
+- **Manager:** Kitchen operator - all Client abilities + menu/category CRUD, kitchen operations, analytics
+- **Admin:** System administrator - all Manager abilities + user management (future: CMS dashboard)
 
 ## API Endpoints
 
@@ -187,6 +213,14 @@ CampusEats/
 - `POST /menu` - Create menu item
 - `PUT /menu/{id}` - Update menu item
 - `DELETE /menu/{id}` - Delete menu item
+- `PATCH /menu/reorder` - Reorder menu items (per-category)
+
+### Categories
+- `GET /categories` - Get all categories
+- `POST /categories` - Create category
+- `PUT /categories/{id}` - Update category
+- `DELETE /categories/{id}` - Delete category
+- `PATCH /categories/reorder` - Reorder categories
 
 ### Orders
 - `GET /orders` - Get all orders
@@ -200,13 +234,15 @@ CampusEats/
 - `POST /payments/confirmation` - Payment webhook
 
 ### Kitchen
-- `GET /kitchen/orders` - Get pending orders
+- `GET /kitchen/orders` - Get active orders (Pending/InPreparation/Ready)
 - `POST /kitchen/orders/{id}/prepare` - Mark as preparing
 - `POST /kitchen/orders/{id}/ready` - Mark as ready
 - `POST /kitchen/orders/{id}/complete` - Mark as completed
-- `GET /kitchen/report` - Daily sales report
+- `GET /kitchen/report?date=` - Daily sales report
+- `GET /kitchen/analytics?startDate=&endDate=&groupBy=` - Analytics data
 
 ### Users
+- `POST /users/login` - JWT authentication
 - `GET /users` - Get all users
 - `GET /users/{id}` - Get specific user
 - `POST /users` - Create user

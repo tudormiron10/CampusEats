@@ -3,6 +3,7 @@ using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Validators.Orders;
+using CampusEats.Api.Features.Notifications;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Orders.Response;
 using CampusEats.Api.Features.Order.Request;
@@ -12,10 +13,12 @@ namespace CampusEats.Api.Features.Orders
     public class CreateOrderHandler : IRequestHandler<CreateOrderRequest, IResult>
     {
         private readonly CampusEatsDbContext _context;
+        private readonly IPublisher _publisher;
 
-        public CreateOrderHandler(CampusEatsDbContext context)
+        public CreateOrderHandler(CampusEatsDbContext context, IPublisher publisher)
         {
             _context = context;
+            _publisher = publisher;
         }
 
         public async Task<IResult> Handle(CreateOrderRequest request, CancellationToken cancellationToken)
@@ -65,6 +68,21 @@ namespace CampusEats.Api.Features.Orders
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Publish notification to notify kitchen staff of new order via SignalR
+            await _publisher.Publish(new OrderCreatedNotification(
+                order.OrderId,
+                order.UserId,
+                user.Name,
+                order.TotalAmount,
+                order.OrderDate,
+                order.Items.Select(oi => new OrderItemNotification(
+                    oi.MenuItemId,
+                    oi.MenuItem?.Name ?? string.Empty,
+                    oi.Quantity,
+                    oi.UnitPrice
+                )).ToList()
+            ), cancellationToken);
 
             var response = new DetailedOrderResponse(
                 order.OrderId,

@@ -20,6 +20,7 @@ using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
+using CampusEats.Api.Hubs;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -97,9 +98,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+
+        // Handle JWT for SignalR WebSocket connections
+        // WebSockets cannot use HTTP headers, so we extract the token from the query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                // Only extract from query string for SignalR hub paths
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
+
+// --- SignalR Configuration ---
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -622,5 +645,8 @@ app.MapPost("/users/login", async (
         return await mediator.Send(request);
     })
     .WithTags("Users");
+
+// ====== SIGNALR HUBS ======
+app.MapHub<OrderHub>("/hubs/orders");
 
 app.Run();

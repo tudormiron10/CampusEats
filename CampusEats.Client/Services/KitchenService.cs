@@ -20,19 +20,26 @@ public class KitchenService
 
     public async Task PrepareOrderAsync(Guid orderId)
     {
-        var response = await _http.PostAsync($"/kitchen/orders/{orderId}/prepare", null);
-        response.EnsureSuccessStatusCode();
+        await UpdateOrderStatusAsync(orderId, "InPreparation");
     }
 
     public async Task ReadyOrderAsync(Guid orderId)
     {
-        var response = await _http.PostAsync($"/kitchen/orders/{orderId}/ready", null);
-        response.EnsureSuccessStatusCode();
+        await UpdateOrderStatusAsync(orderId, "Ready");
     }
 
     public async Task CompleteOrderAsync(Guid orderId)
     {
-        var response = await _http.PostAsync($"/kitchen/orders/{orderId}/complete", null);
+        await UpdateOrderStatusAsync(orderId, "Completed");
+    }
+
+    private async Task UpdateOrderStatusAsync(Guid orderId, string newStatus)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/kitchen/orders/{orderId}")
+        {
+            Content = JsonContent.Create(new { newStatus })
+        };
+        var response = await _http.SendAsync(request);
         response.EnsureSuccessStatusCode();
     }
 
