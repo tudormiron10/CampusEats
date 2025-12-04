@@ -17,6 +17,7 @@ using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.DietaryTags.Request;
+using CampusEats.Api.Features.Loyalty.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
@@ -646,7 +647,89 @@ app.MapPost("/users/login", async (
     })
     .WithTags("Users");
 
+// ============================================
+// LOYALTY ENDPOINTS
+// ============================================
+
+// Client endpoints (require authentication)
+app.MapGet("/loyalty", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetLoyaltyStatusRequest(httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapGet("/loyalty/transactions", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetTransactionsRequest(httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapGet("/loyalty/offers", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetOffersRequest(httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapPost("/loyalty/offers/{offerId:guid}/redeem", async (Guid offerId, HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new RedeemOfferRequest(offerId, httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+// Manager endpoints (require Manager or Admin role)
+app.MapGet("/loyalty/offers/manage", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new GetAllOffersRequest(httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapPost("/loyalty/offers", async (CreateOfferRequestBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new CreateOfferRequest(
+        body.Title,
+        body.Description,
+        body.ImageUrl,
+        body.PointCost,
+        body.MinimumTier,
+        body.Items,
+        httpContext
+    )))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapPut("/loyalty/offers/{offerId:guid}", async (Guid offerId, CreateOfferRequestBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new UpdateOfferRequest(
+        offerId,
+        body.Title,
+        body.Description,
+        body.ImageUrl,
+        body.PointCost,
+        body.MinimumTier,
+        body.Items,
+        httpContext
+    )))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapDelete("/loyalty/offers/{offerId:guid}", async (Guid offerId, HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new DeleteOfferRequest(offerId, httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
+app.MapPatch("/loyalty/offers/{offerId:guid}/status", async (Guid offerId, UpdateOfferStatusBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
+    await mediator.Send(new UpdateOfferStatusRequest(offerId, body.IsActive, httpContext)))
+    .RequireAuthorization()
+    .WithTags("Loyalty");
+
 // ====== SIGNALR HUBS ======
 app.MapHub<OrderHub>("/hubs/orders");
 
 app.Run();
+
+// Request body records for minimal API binding (Loyalty)
+public record CreateOfferRequestBody(
+    string Title,
+    string? Description,
+    string? ImageUrl,
+    int PointCost,
+    string? MinimumTier,
+    List<CreateOfferItemRequest> Items
+);
+
+public record UpdateOfferStatusBody(bool IsActive);
+
+

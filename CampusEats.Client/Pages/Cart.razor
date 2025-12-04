@@ -3,6 +3,7 @@
 @using CampusEats.Client.Models
 @inject CartService CartService
 @inject OrderService OrderService
+@inject LoyaltyService LoyaltyService
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -26,28 +27,51 @@
             <div class="lg:col-span-2 space-y-4">
                 @foreach (var item in CartService.Items)
                 {
-                    <div class="bg-white rounded-lg shadow-md border border-tan-light p-6">
+                    <div class="@(item.IsRedeemed ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300" : "bg-white border-tan-light") rounded-lg shadow-md border p-6">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                             <div>
                                 <h5 class="text-xl font-bold text-oxford-blue mb-1">@item.Name</h5>
-                                <p class="text-gray-600">@item.Price.ToString("C") each</p>
+                                @if (item.IsRedeemed)
+                                {
+                                    <p class="text-amber-600 font-semibold">FREE (Loyalty Reward)</p>
+                                }
+                                else
+                                {
+                                    <p class="text-gray-600">@item.Price.ToString("C") each</p>
+                                }
                             </div>
                             <div class="flex items-center justify-center gap-3">
-                                <button class="w-10 h-10 flex items-center justify-center bg-tan hover:bg-tan-dark text-oxford-blue hover:text-white rounded-lg font-bold transition-all"
-                                        @onclick="() => UpdateQuantity(item, -1)">
-                                    -
-                                </button>
-                                <input type="number"
-                                       class="w-16 px-3 py-2 text-center border-2 border-tan-light rounded-lg font-semibold text-oxford-blue"
-                                       value="@item.Quantity"
-                                       readonly />
-                                <button class="w-10 h-10 flex items-center justify-center bg-tan hover:bg-tan-dark text-oxford-blue hover:text-white rounded-lg font-bold transition-all"
-                                        @onclick="() => UpdateQuantity(item, 1)">
-                                    +
-                                </button>
+                                @if (item.IsRedeemed)
+                                {
+                                    <span class="px-4 py-2 bg-amber-100 text-amber-700 rounded-lg font-semibold">
+                                        Qty: @item.Quantity
+                                    </span>
+                                }
+                                else
+                                {
+                                    <button class="w-10 h-10 flex items-center justify-center bg-tan hover:bg-tan-dark text-oxford-blue hover:text-white rounded-lg font-bold transition-all"
+                                            @onclick="() => UpdateQuantity(item, -1)">
+                                        -
+                                    </button>
+                                    <input type="number"
+                                           class="w-16 px-3 py-2 text-center border-2 border-tan-light rounded-lg font-semibold text-oxford-blue"
+                                           value="@item.Quantity"
+                                           readonly />
+                                    <button class="w-10 h-10 flex items-center justify-center bg-tan hover:bg-tan-dark text-oxford-blue hover:text-white rounded-lg font-bold transition-all"
+                                            @onclick="() => UpdateQuantity(item, 1)">
+                                        +
+                                    </button>
+                                }
                             </div>
                             <div class="flex items-center justify-between md:justify-end gap-4">
-                                <span class="text-2xl font-bold text-oxford-blue">@((item.Price * item.Quantity).ToString("C"))</span>
+                                @if (item.IsRedeemed)
+                                {
+                                    <span class="text-2xl font-bold text-amber-600">$0.00</span>
+                                }
+                                else
+                                {
+                                    <span class="text-2xl font-bold text-oxford-blue">@((item.Price * item.Quantity).ToString("C"))</span>
+                                }
                                 <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                                         @onclick="() => RemoveItem(item)">
                                     Remove
@@ -66,8 +90,21 @@
                             <span>Items:</span>
                             <span class="font-semibold">@CartService.TotalItems</span>
                         </div>
+                        @if (CartService.HasPendingOffers)
+                        {
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                                <p class="text-amber-700 text-sm font-medium mb-2">🎁 Loyalty Rewards:</p>
+                                @foreach (var offer in CartService.PendingOffers)
+                                {
+                                    <div class="flex justify-between items-center text-sm text-amber-600">
+                                        <span>@offer.Title</span>
+                                        <span>-@offer.PointCost pts</span>
+                                    </div>
+                                }
+                            </div>
+                        }
                         <div class="flex justify-between items-center mb-4 text-oxford-blue">
-                            <strong class="text-lg">Total:</strong>
+                            <strong class="text-lg">Total to Pay:</strong>
                             <strong class="text-2xl">@CartService.TotalAmount.ToString("C")</strong>
                         </div>
                     </div>
@@ -134,7 +171,7 @@
 
     private void RemoveItem(CartItem item)
     {
-        CartService.RemoveItem(item.MenuItemId);
+        CartService.RemoveCartItem(item);
     }
 
     private void ClearCart()
@@ -150,21 +187,53 @@
             orderError = null;
             orderSuccess = false;
 
-            var menuItemIds = CartService.GetMenuItemIds();
-            // UserId is ignored by backend - it extracts from JWT
-            var request = new CreateOrderRequest(Guid.Empty, menuItemIds);
-
-            var order = await OrderService.CreateOrderAsync(request);
-
-            if (order != null)
+            // 1. First, redeem any pending offers (this deducts points and creates transactions)
+            foreach (var offerId in CartService.GetPendingOfferIds())
             {
-                orderSuccess = true;
-                CartService.Clear();
-
-                // Navigate to orders page after a short delay
-                await Task.Delay(1500);
-                Navigation.NavigateTo("/orders");
+                try
+                {
+                    await LoyaltyService.RedeemOfferAsync(offerId);
+                }
+                catch (Exception ex)
+                {
+                    orderError = $"Failed to redeem offer: {ex.Message}";
+                    return;
+                }
             }
+
+            // 2. Get paid and redeemed item IDs separately
+            var paidMenuItemIds = CartService.GetPaidMenuItemIds();
+            var redeemedMenuItemIds = CartService.GetRedeemedMenuItemIds();
+
+            // Only create order if there are any items (paid or redeemed)
+            if (paidMenuItemIds.Any() || redeemedMenuItemIds.Any())
+            {
+                // UserId is ignored by backend - it extracts from JWT
+                var request = new CreateOrderRequest(
+                    Guid.Empty, 
+                    paidMenuItemIds,
+                    redeemedMenuItemIds.Any() ? redeemedMenuItemIds : null
+                );
+                var order = await OrderService.CreateOrderAsync(request);
+
+                if (order == null)
+                {
+                    orderError = "Failed to create order";
+                    return;
+                }
+            }
+            else
+            {
+                orderError = "Your cart is empty";
+                return;
+            }
+
+            orderSuccess = true;
+            CartService.Clear();
+
+            // Navigate to orders page after a short delay
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/orders");
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {

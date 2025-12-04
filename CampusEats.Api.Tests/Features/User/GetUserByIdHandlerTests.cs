@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +65,8 @@ namespace CampusEats.Api.Tests.Features.User
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,
-                Points = 50
+                CurrentPoints = 50,
+                LifetimePoints = 50
             };
 
             clientUser.Loyalty = loyalty;
@@ -225,7 +226,8 @@ namespace CampusEats.Api.Tests.Features.User
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,
-                Points = 0
+                CurrentPoints = 0,
+                LifetimePoints = 0
             };
 
             clientUser.Loyalty = loyalty;

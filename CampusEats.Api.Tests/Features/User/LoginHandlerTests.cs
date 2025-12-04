@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -348,7 +348,8 @@ namespace CampusEats.Api.Tests.Features.User
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = user.UserId,
-                Points = 100
+                CurrentPoints = 100,
+                LifetimePoints = 100
             };
 
             user.Loyalty = loyalty;

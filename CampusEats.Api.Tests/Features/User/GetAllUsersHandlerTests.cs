@@ -104,7 +104,8 @@ namespace CampusEats.Api.Tests.Features.User
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,
-                Points = 10
+                CurrentPoints = 10,
+                LifetimePoints = 10
             };
 
             // Attach the loyalty to the user navigation so EF will populate it on Include
@@ -178,14 +179,16 @@ namespace CampusEats.Api.Tests.Features.User
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientA.UserId,
-                Points = 10
+                CurrentPoints = 10,
+                LifetimePoints = 10
             };
 
             var loyaltyB = new Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientB.UserId,
-                Points = 50
+                CurrentPoints = 50,
+                LifetimePoints = 50
             };
 
             clientA.Loyalty = loyaltyA;

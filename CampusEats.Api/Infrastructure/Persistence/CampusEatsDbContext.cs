@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusEats.Api.Infrastructure.Persistence;
@@ -10,6 +10,9 @@ public class CampusEatsDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Loyalty> Loyalties { get; set; }
+    public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
+    public DbSet<Offer> Offers { get; set; }
+    public DbSet<OfferItem> OfferItems { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<MenuItem> MenuItems { get; set; }
     public DbSet<Payment> Payments { get; set; }
@@ -62,6 +65,45 @@ public class CampusEatsDbContext : DbContext
             .HasOne(mdt => mdt.DietaryTag)
             .WithMany(dt => dt.MenuItemDietaryTags)
             .HasForeignKey(mdt => mdt.DietaryTagId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Loyalty Transaction - configure primary key and store Type as string
+        modelBuilder.Entity<LoyaltyTransaction>()
+            .HasKey(lt => lt.TransactionId);
+        
+        modelBuilder.Entity<LoyaltyTransaction>()
+            .Property(t => t.Type)
+            .HasConversion<string>();
+
+        // Offer - configure primary key and store MinimumTier as string (nullable enum)
+        modelBuilder.Entity<Offer>()
+            .HasKey(o => o.OfferId);
+        
+        modelBuilder.Entity<Offer>()
+            .Property(o => o.MinimumTier)
+            .HasConversion<string?>();
+
+        // OfferItem - configure primary key and relationships
+        modelBuilder.Entity<OfferItem>()
+            .HasKey(oi => oi.OfferItemId);
+        
+        modelBuilder.Entity<OfferItem>()
+            .HasOne(oi => oi.Offer)
+            .WithMany(o => o.Items)
+            .HasForeignKey(oi => oi.OfferId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<OfferItem>()
+            .HasOne(oi => oi.MenuItem)
+            .WithMany()
+            .HasForeignKey(oi => oi.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // LoyaltyTransaction - configure relationship
+        modelBuilder.Entity<LoyaltyTransaction>()
+            .HasOne(lt => lt.Loyalty)
+            .WithMany(l => l.Transactions)
+            .HasForeignKey(lt => lt.LoyaltyId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -43,7 +43,7 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
             user.Name,
             user.Email,
             user.Role.ToString(),
-            user.Loyalty?.Points 
+            user.Loyalty?.CurrentPoints 
         );
 
         var loginResponse = new LoginResponse(token, userResponse);

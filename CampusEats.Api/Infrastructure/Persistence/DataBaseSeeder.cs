@@ -70,7 +70,8 @@ public static class DataSeeder
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = client.UserId,
-                Points = faker.Random.Int(0, 500)
+                CurrentPoints = faker.Random.Int(0, 500),
+                LifetimePoints = faker.Random.Int(0, 500)
             });
         }
         

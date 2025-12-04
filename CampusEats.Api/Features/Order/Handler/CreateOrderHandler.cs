@@ -32,28 +32,60 @@ namespace CampusEats.Api.Features.Orders
             if (user == null)
                 return ApiErrors.UserNotFound();
 
-            var requestedIds = request.MenuItemIds ?? new List<Guid>();
-            var distinctIds = requestedIds.Distinct().ToList();
+            // Process PAID items
+            var paidIds = request.MenuItemIds ?? new List<Guid>();
+            var redeemedIds = request.RedeemedMenuItemIds ?? new List<Guid>();
+            
+            // Combine all IDs to fetch menu items
+            var allIds = paidIds.Concat(redeemedIds).Distinct().ToList();
+            
+            if (!allIds.Any())
+                return ApiErrors.ValidationFailed("Order must contain at least one item.");
 
             var menuItems = await _context.MenuItems
-                .Where(mi => distinctIds.Contains(mi.MenuItemId))
+                .Where(mi => allIds.Contains(mi.MenuItemId))
                 .ToListAsync(cancellationToken);
 
-            if (menuItems.Count != distinctIds.Count)
+            if (menuItems.Count != allIds.Count)
                 return ApiErrors.ValidationFailed("One or more menu items are invalid.");
 
-            var counts = requestedIds
+            // Count paid items
+            var paidCounts = paidIds
                 .GroupBy(id => id)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var orderItems = menuItems.Select(mi => new OrderItem
-            {
-                MenuItemId = mi.MenuItemId,
-                MenuItem = mi,
-                Quantity = counts.GetValueOrDefault(mi.MenuItemId, 1),
-                UnitPrice = mi.Price
-            }).ToList();
+            // Count redeemed items
+            var redeemedCounts = redeemedIds
+                .GroupBy(id => id)
+                .ToDictionary(g => g.Key, g => g.Count());
 
+            var orderItems = new List<OrderItem>();
+
+            // Add paid items with normal price
+            foreach (var mi in menuItems.Where(m => paidCounts.ContainsKey(m.MenuItemId)))
+            {
+                orderItems.Add(new OrderItem
+                {
+                    MenuItemId = mi.MenuItemId,
+                    MenuItem = mi,
+                    Quantity = paidCounts[mi.MenuItemId],
+                    UnitPrice = mi.Price
+                });
+            }
+
+            // Add redeemed items with price 0
+            foreach (var mi in menuItems.Where(m => redeemedCounts.ContainsKey(m.MenuItemId)))
+            {
+                orderItems.Add(new OrderItem
+                {
+                    MenuItemId = mi.MenuItemId,
+                    MenuItem = mi,
+                    Quantity = redeemedCounts[mi.MenuItemId],
+                    UnitPrice = 0 // FREE - redeemed with loyalty points
+                });
+            }
+
+            // Total amount only includes paid items (redeemed items have price 0)
             var totalAmount = orderItems.Sum(oi => oi.UnitPrice * oi.Quantity);
 
             var order = new Infrastructure.Persistence.Entities.Order

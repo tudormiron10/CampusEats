@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.User.Request;
@@ -27,7 +27,7 @@ namespace CampusEats.Api.Features.Users
                 user.Name,
                 user.Email,
                 user.Role.ToString(),
-                user.Loyalty?.Points
+                user.Loyalty?.CurrentPoints
             );
 
             return Results.Ok(response);
