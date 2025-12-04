@@ -167,17 +167,6 @@
                                         <p class="text-xs text-slate-500 uppercase tracking-wide">Total</p>
                                         <p class="text-2xl font-bold text-slate-800">@order.TotalAmount.ToString("C")</p>
                                     </div>
-                                    @if (order.Status == "Pending" && order.TotalAmount > 0)
-                                    {
-                                        <a href="/checkout/@order.OrderId" 
-                                           class="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex items-center gap-2"
-                                           @onclick:stopPropagation="true">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                                            </svg>
-                                            <span>Pay Now</span>
-                                        </a>
-                                    }
                                     @if (CanCancelOrder(order.Status))
                                     {
                                         <button class="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -272,7 +261,8 @@
         // Start SignalR connection with token provider delegate
         try
         {
-            await OrderHubService.StartAsync(async () => await LocalStorage.GetItemAsync<string>("authToken"));
+            await OrderHubService.StartAsync(
+                async () => await LocalStorage.GetItemAsync<string>("authToken"));
         }
         catch (Exception ex)
         {
@@ -443,5 +433,4 @@
             cancellingOrderId = null;
         }
     }
-
 }

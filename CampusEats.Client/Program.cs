@@ -32,7 +32,6 @@ builder.Services.AddScoped<MenuService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DietaryTagService>();
 builder.Services.AddScoped<OrderService>();
-builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<KitchenService>();
 builder.Services.AddScoped<LoyaltyService>();
 builder.Services.AddSingleton<CartService>();

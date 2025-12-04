@@ -14,11 +14,30 @@ public class OrderService
 
     public async Task<OrderResponse?> CreateOrderAsync(CreateOrderRequest request)
     {
-        // Create Order only - payment is now handled separately via Checkout page
+        // 1. Create Order
         var orderResponse = await _http.PostAsJsonAsync("/orders", request);
         orderResponse.EnsureSuccessStatusCode();
         var order = await orderResponse.Content.ReadFromJsonAsync<OrderResponse>();
         
+        if (order == null)
+            return null;
+
+        // 2. Create Payment (Initiated)
+        var paymentRequest = new { OrderId = order.OrderId };
+        var paymentResponse = await _http.PostAsJsonAsync("/payments", paymentRequest);
+        
+        if (paymentResponse.IsSuccessStatusCode)
+        {
+            var payment = await paymentResponse.Content.ReadFromJsonAsync<PaymentResponse>();
+            
+            if (payment != null)
+            {
+                // 3. Confirm Payment (Successful) - This awards loyalty points
+                var confirmRequest = new { PaymentId = payment.PaymentId, NewStatus = "Successful" };
+                await _http.PostAsJsonAsync("/payments/confirmation", confirmRequest);
+            }
+        }
+
         return order;
     }
 
@@ -41,3 +60,6 @@ public class OrderService
         return await response.Content.ReadFromJsonAsync<OrderResponse>();
     }
 }
+
+// Payment DTOs for the order flow
+public record PaymentResponse(Guid PaymentId, Guid OrderId, decimal Amount, string Status);

@@ -15,7 +15,6 @@ using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
 using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Payments.Request;
-using CampusEats.Api.Features.Payments.Handler;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Features.Loyalty.Request;
@@ -67,9 +66,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
-
-// --- Register Stripe Webhook Handler ---
-builder.Services.AddScoped<StripeWebhookHandler>();
 
 // --- CORS Configuration for Blazor Frontend ---
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -506,16 +502,6 @@ app.MapPost("/payments/confirmation", async (
     })
 .WithTags("Payments");
 
-// Endpoint for Stripe webhook events (NO authentication - Stripe calls this).
-app.MapPost("/payments/webhook", async (
-        HttpRequest request,
-        [FromServices] StripeWebhookHandler webhookHandler) =>
-{
-    return await webhookHandler.HandleWebhook(request);
-})
-.WithTags("Payments")
-.ExcludeFromDescription(); // Hide from Swagger (external webhook)
-
 // ====== KITCHEN GROUP (Manager/Admin only) ======
 
 // Endpoint for staff to view active orders.
@@ -745,3 +731,5 @@ public record CreateOfferRequestBody(
 );
 
 public record UpdateOfferStatusBody(bool IsActive);
+
+
