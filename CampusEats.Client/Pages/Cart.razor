@@ -221,19 +221,16 @@
                     orderError = "Failed to create order";
                     return;
                 }
+
+                // Clear cart and redirect to checkout for payment
+                CartService.Clear();
+                Navigation.NavigateTo($"/checkout/{order.OrderId}");
             }
             else
             {
                 orderError = "Your cart is empty";
                 return;
             }
-
-            orderSuccess = true;
-            CartService.Clear();
-
-            // Navigate to orders page after a short delay
-            await Task.Delay(1500);
-            Navigation.NavigateTo("/orders");
         }
         catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {

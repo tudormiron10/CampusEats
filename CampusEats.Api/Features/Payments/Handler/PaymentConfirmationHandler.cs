@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Features.Payments.Request;
+﻿using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using MediatR;
@@ -28,20 +28,21 @@ namespace CampusEats.Api.Features.Payments
                 return Results.NotFound("Payment not found.");
             }
 
-            if (payment.Status != PaymentStatus.Initiated)
+            if (payment.Status != PaymentStatus.Processing)
             {
                 return Results.BadRequest("This payment has already been processed.");
             }
 
-            if (request.NewStatus == PaymentStatus.Initiated)
+            if (request.NewStatus == PaymentStatus.Processing)
             {
                 return Results.BadRequest("Invalid status provided by webhook.");
             }
 
             payment.Status = request.NewStatus;
+            payment.UpdatedAt = DateTime.UtcNow;
 
             // Award loyalty points if payment is successful
-            if (request.NewStatus == PaymentStatus.Successful && payment.Order != null)
+            if (request.NewStatus == PaymentStatus.Succeeded && payment.Order != null)
             {
                 var user = await _context.Users
                     .Include(u => u.Loyalty)
@@ -80,7 +81,8 @@ namespace CampusEats.Api.Features.Payments
                 payment.PaymentId,
                 payment.OrderId,
                 payment.Amount,
-                payment.Status.ToString()
+                payment.Status.ToString(),
+                payment.ClientSecret
             );
 
             return Results.Ok(response);

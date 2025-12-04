@@ -27,7 +27,7 @@ namespace CampusEats.Api.Features.Payments
                 .AsNoTracking()
                 .Include(p => p.Order)
                 .Where(p => p.Order.UserId == request.UserId)
-                .Select(p => new PaymentResponse(p.PaymentId, p.OrderId, p.Amount, p.Status.ToString()))
+                .Select(p => new PaymentResponse(p.PaymentId, p.OrderId, p.Amount, p.Status.ToString(), p.ClientSecret))
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(payments);
