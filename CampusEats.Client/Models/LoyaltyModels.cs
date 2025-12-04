@@ -75,3 +75,14 @@ public record OfferItemRequest(
     Guid MenuItemId,
     int Quantity
 );
+
+/// <summary>
+/// Response from redeeming an offer
+/// </summary>
+public record RedeemOfferResponse(
+    bool Success,
+    int RemainingPoints,
+    string Message
+);
+
+

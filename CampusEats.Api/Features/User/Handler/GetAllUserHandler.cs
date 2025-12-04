@@ -21,7 +21,7 @@ namespace CampusEats.Api.Features.Users
                     user.Name,
                     user.Email,
                     user.Role.ToString(),
-                    user.Loyalty != null ? (int?)user.Loyalty.Points : null
+                    user.Loyalty != null ? (int?)user.Loyalty.CurrentPoints : null
                 ))
                 .ToListAsync(cancellationToken);
 

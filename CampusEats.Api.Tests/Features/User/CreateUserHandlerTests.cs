@@ -68,7 +68,7 @@ namespace CampusEats.Api.Tests.Features.User
 
             var loyalty = await _context.Loyalties.SingleOrDefaultAsync(l => l.UserId == user.UserId);
             loyalty.Should().NotBeNull();
-            loyalty!.Points.Should().Be(0);
+            loyalty!.CurrentPoints.Should().Be(0);
 
             // Password should be stored as hash (not equal to plain UTF8 bytes)
             user.PasswordHash.Should().NotBeNull();
@@ -170,7 +170,7 @@ namespace CampusEats.Api.Tests.Features.User
                 // If role is Client, loyalty should also be created
                 var loyalty = await _context.Loyalties.SingleOrDefaultAsync(l => l.UserId == user.UserId);
                 loyalty.Should().NotBeNull();
-                loyalty!.Points.Should().Be(0);
+                loyalty!.CurrentPoints.Should().Be(0);
             }
             else
             {

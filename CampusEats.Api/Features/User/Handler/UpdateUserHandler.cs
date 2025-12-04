@@ -52,7 +52,7 @@ namespace CampusEats.Api.Features.Users
                 user.Name,
                 user.Email,
                 user.Role.ToString(),
-                user.Loyalty?.Points
+                user.Loyalty?.CurrentPoints
             );
 
             return Results.Ok(response);

@@ -51,11 +51,12 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
         
         if (request.Role == UserRole.Client)
         {
-            var loyaltyAccount = new Loyalty
+            var loyaltyAccount = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = user.UserId,
-                Points = 0 
+                CurrentPoints = 0,
+                LifetimePoints = 0
             };
             _context.Loyalties.Add(loyaltyAccount);
             

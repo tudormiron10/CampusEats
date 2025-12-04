@@ -1,15 +1,23 @@
 using CampusEats.Client.Models;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CampusEats.Client.Services;
 
 public class LoyaltyService
 {
     private readonly HttpClient _http;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public LoyaltyService(HttpClient http)
     {
         _http = http;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 
     private async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
@@ -47,11 +55,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<LoyaltyStatusResponse?> GetStatusAsync()
     {
-        // TODO: Uncomment when backend is ready
-        // return await _http.GetFromJsonAsync<LoyaltyStatusResponse>("/loyalty");
-
-        await Task.CompletedTask; // Suppress async warning
-        return null; // Empty state for now
+        return await _http.GetFromJsonAsync<LoyaltyStatusResponse>("/loyalty", _jsonOptions);
     }
 
     /// <summary>
@@ -59,12 +63,8 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<LoyaltyTransactionResponse>> GetTransactionsAsync()
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.GetFromJsonAsync<List<LoyaltyTransactionResponse>>("/loyalty/transactions");
-        // return response ?? new List<LoyaltyTransactionResponse>();
-
-        await Task.CompletedTask;
-        return new List<LoyaltyTransactionResponse>();
+        var response = await _http.GetFromJsonAsync<List<LoyaltyTransactionResponse>>("/loyalty/transactions", _jsonOptions);
+        return response ?? new List<LoyaltyTransactionResponse>();
     }
 
     /// <summary>
@@ -72,25 +72,20 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<OfferResponse>> GetOffersAsync()
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers");
-        // return response ?? new List<OfferResponse>();
-
-        await Task.CompletedTask;
-        return new List<OfferResponse>();
+        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers", _jsonOptions);
+        return response ?? new List<OfferResponse>();
     }
 
     /// <summary>
-    /// Redeem an offer - adds items to cart and marks for point payment
+    /// Redeem an offer - returns the redeemed items to add to cart
     /// </summary>
-    public async Task RedeemOfferAsync(Guid offerId)
+    public async Task<RedeemOfferResponse?> RedeemOfferAsync(Guid offerId)
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.PostAsync($"/loyalty/offers/{offerId}/redeem", null);
-        // await EnsureSuccessOrThrowApiException(response);
-
-        await Task.CompletedTask;
+        var response = await _http.PostAsync($"/loyalty/offers/{offerId}/redeem", null);
+        await EnsureSuccessOrThrowApiException(response);
+        return await response.Content.ReadFromJsonAsync<RedeemOfferResponse>(_jsonOptions);
     }
+
 
     // ─────────────────────────────────────────────────────────────────────────────
     // Manager endpoints
@@ -101,12 +96,8 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<OfferResponse>> GetAllOffersAsync()
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers/manage");
-        // return response ?? new List<OfferResponse>();
-
-        await Task.CompletedTask;
-        return new List<OfferResponse>();
+        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers/manage", _jsonOptions);
+        return response ?? new List<OfferResponse>();
     }
 
     /// <summary>
@@ -114,13 +105,9 @@ public class LoyaltyService
     /// </summary>
     public async Task<OfferResponse?> CreateOfferAsync(CreateOfferRequest request)
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.PostAsJsonAsync("/loyalty/offers", request);
-        // await EnsureSuccessOrThrowApiException(response);
-        // return await response.Content.ReadFromJsonAsync<OfferResponse>();
-
-        await Task.CompletedTask;
-        return null;
+        var response = await _http.PostAsJsonAsync("/loyalty/offers", request, _jsonOptions);
+        await EnsureSuccessOrThrowApiException(response);
+        return await response.Content.ReadFromJsonAsync<OfferResponse>(_jsonOptions);
     }
 
     /// <summary>
@@ -128,13 +115,9 @@ public class LoyaltyService
     /// </summary>
     public async Task<OfferResponse?> UpdateOfferAsync(Guid offerId, CreateOfferRequest request)
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.PutAsJsonAsync($"/loyalty/offers/{offerId}", request);
-        // await EnsureSuccessOrThrowApiException(response);
-        // return await response.Content.ReadFromJsonAsync<OfferResponse>();
-
-        await Task.CompletedTask;
-        return null;
+        var response = await _http.PutAsJsonAsync($"/loyalty/offers/{offerId}", request, _jsonOptions);
+        await EnsureSuccessOrThrowApiException(response);
+        return await response.Content.ReadFromJsonAsync<OfferResponse>(_jsonOptions);
     }
 
     /// <summary>
@@ -142,11 +125,8 @@ public class LoyaltyService
     /// </summary>
     public async Task DeleteOfferAsync(Guid offerId)
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.DeleteAsync($"/loyalty/offers/{offerId}");
-        // await EnsureSuccessOrThrowApiException(response);
-
-        await Task.CompletedTask;
+        var response = await _http.DeleteAsync($"/loyalty/offers/{offerId}");
+        await EnsureSuccessOrThrowApiException(response);
     }
 
     /// <summary>
@@ -154,10 +134,7 @@ public class LoyaltyService
     /// </summary>
     public async Task ToggleOfferStatusAsync(Guid offerId, bool isActive)
     {
-        // TODO: Uncomment when backend is ready
-        // var response = await _http.PatchAsJsonAsync($"/loyalty/offers/{offerId}/status", new { IsActive = isActive });
-        // await EnsureSuccessOrThrowApiException(response);
-
-        await Task.CompletedTask;
+        var response = await _http.PatchAsJsonAsync($"/loyalty/offers/{offerId}/status", new { IsActive = isActive }, _jsonOptions);
+        await EnsureSuccessOrThrowApiException(response);
     }
 }

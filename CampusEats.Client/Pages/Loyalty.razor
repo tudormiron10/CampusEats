@@ -3,6 +3,7 @@
 @using CampusEats.Client.Services
 @inject LoyaltyService LoyaltyService
 @inject AuthService AuthService
+@inject CartService CartService
 @inject NavigationManager Navigation
 
 <PageTitle>Loyalty Program - CampusEats</PageTitle>
@@ -388,12 +389,26 @@
     {
         try
         {
-            await LoyaltyService.RedeemOfferAsync(offer.OfferId);
+            // Check if user has enough points
+            if (loyaltyStatus == null || loyaltyStatus.CurrentPoints < offer.PointCost)
+            {
+                Console.WriteLine("Not enough points to redeem this offer");
+                return;
+            }
+
+            // Add offer items to cart as pending (will be redeemed at checkout)
+            var itemsToAdd = offer.Items
+                .Select(i => (i.MenuItemId, i.Name, i.Quantity))
+                .ToList();
+            
+            CartService.AddPendingOffer(offer.OfferId, offer.Title, offer.PointCost, itemsToAdd);
+            
+            // Navigate to cart
             Navigation.NavigateTo("/cart");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error redeeming offer: {ex.Message}");
+            Console.WriteLine($"Error adding offer to cart: {ex.Message}");
         }
     }
 
@@ -464,9 +479,9 @@
         _ => "Gold"
     };
 
-    private double GetProgressPercentage(LoyaltyStatusResponse status)
+    private string GetProgressPercentage(LoyaltyStatusResponse status)
     {
-        if (status.NextTierThreshold == 0) return 100;
+        if (status.NextTierThreshold == 0) return "100";
         var previousThreshold = status.Tier switch
         {
             LoyaltyTier.Bronze => 0,
@@ -475,6 +490,7 @@
         };
         var range = status.NextTierThreshold - previousThreshold;
         var progress = status.LifetimePoints - previousThreshold;
-        return Math.Min(100, Math.Max(0, (double)progress / range * 100));
+        var percentage = Math.Min(100, Math.Max(0, (double)progress / range * 100));
+        return percentage.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     }
 }
