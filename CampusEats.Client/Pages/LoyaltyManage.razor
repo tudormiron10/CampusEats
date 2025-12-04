@@ -1,0 +1,352 @@
+@page "/loyalty/manage"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@using CampusEats.Client.Components
+@inject LoyaltyService LoyaltyService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Manage Loyalty - CampusEats</PageTitle>
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Manage Loyalty</h1>
+                        <p class="text-slate-500">Create and manage loyalty offers</p>
+                    </div>
+                </div>
+                <a href="/loyalty"
+                   class="inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 font-medium transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Loyalty
+                </a>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex gap-2 mb-6 border-b border-slate-200 pb-2">
+            <button class="@GetTabClass("offers")" @onclick="@(() => activeTab = "offers")">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                Offers
+            </button>
+            <button class="@GetTabClass("missions")" disabled title="Coming Soon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                Missions
+                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
+            </button>
+            <button class="@GetTabClass("events")" disabled title="Coming Soon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Events
+                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="relative">
+                    <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                    <div class="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                </div>
+                <p class="mt-4 text-slate-500 font-medium">Loading offers...</p>
+            </div>
+        }
+        else if (activeTab == "offers")
+        {
+            @* OFFERS TAB *@
+            <div>
+                <!-- Create Button -->
+                <div class="mb-6">
+                    <button class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                            @onclick="CreateOffer">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Create Offer
+                    </button>
+                </div>
+
+                @if (offers.Any())
+                {
+                    <div class="space-y-4">
+                        @foreach (var offer in offers)
+                        {
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 @(offer.IsActive ? "" : "opacity-60")">
+                                <div class="flex items-stretch">
+                                    <!-- Image -->
+                                    @if (!string.IsNullOrEmpty(offer.ImageUrl))
+                                    {
+                                        <div class="w-32 h-32 flex-shrink-0 bg-slate-100">
+                                            <img src="@offer.ImageUrl" alt="@offer.Title" class="w-full h-full object-cover" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="w-32 h-32 flex-shrink-0 bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                            <svg class="w-12 h-12 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                            </svg>
+                                        </div>
+                                    }
+
+                                    <!-- Content -->
+                                    <div class="flex-1 p-4">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <h3 class="font-bold text-lg text-slate-800">@offer.Title</h3>
+                                                    @if (offer.MinimumTier != null)
+                                                    {
+                                                        <span class="@GetTierBadgeClass(offer.MinimumTier.Value) px-2 py-0.5 rounded-full text-xs font-semibold">
+                                                            @offer.MinimumTier+
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-semibold">
+                                                            All Tiers
+                                                        </span>
+                                                    }
+                                                </div>
+                                                <p class="text-xl font-bold text-amber-600 mb-2">@offer.PointCost.ToString("N0") pts</p>
+                                                <div class="text-sm text-slate-500">
+                                                    @foreach (var item in offer.Items)
+                                                    {
+                                                        <span class="inline-block bg-slate-100 px-2 py-0.5 rounded mr-1 mb-1">
+                                                            @item.Quantity x @item.Name
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <!-- Status & Actions -->
+                                            <div class="flex flex-col items-end gap-3">
+                                                <span class="@(offer.IsActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600") px-3 py-1 rounded-full text-xs font-semibold">
+                                                    @(offer.IsActive ? "Active" : "Inactive")
+                                                </span>
+                                                <div class="flex items-center gap-2">
+                                                    <button class="p-2 text-slate-500 hover:text-oxford-blue hover:bg-slate-100 rounded-lg transition-colors"
+                                                            title="Edit"
+                                                            @onclick="() => EditOffer(offer)">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button class="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Delete"
+                                                            @onclick="() => DeleteOffer(offer)">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- Empty State -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                        <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-700 mb-2">No offers yet</h3>
+                        <p class="text-slate-500 mb-6">Create your first loyalty offer for customers to redeem!</p>
+                        <button class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+                                @onclick="CreateOffer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create First Offer
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Offer Modal -->
+<OfferModal @ref="offerModal" OnSaved="HandleOfferSaved" />
+
+<!-- Delete Confirmation -->
+@if (offerToDelete != null)
+{
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-red-100 rounded-xl">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Delete Offer</h3>
+                    <p class="text-slate-500 text-sm">This action cannot be undone</p>
+                </div>
+            </div>
+            <p class="text-slate-600 mb-6">
+                Are you sure you want to delete "<strong>@offerToDelete.Title</strong>"?
+            </p>
+            <div class="flex justify-end gap-3">
+                <button class="px-5 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition-colors"
+                        @onclick="CancelDelete">
+                    Cancel
+                </button>
+                <button class="px-5 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                        @onclick="ConfirmDelete"
+                        disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <span class="flex items-center gap-2">
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Deleting...
+                        </span>
+                    }
+                    else
+                    {
+                        <span>Delete</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string activeTab = "offers";
+    private bool isLoading = true;
+    private bool isDeleting = false;
+    private List<OfferResponse> offers = new();
+    private OfferResponse? offerToDelete;
+    private OfferModal? offerModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await AuthService.GetUserRoleAsync();
+        if (role != "Manager" && role != "Admin")
+        {
+            Navigation.NavigateTo("/loyalty");
+            return;
+        }
+
+        await LoadOffers();
+    }
+
+    private async Task LoadOffers()
+    {
+        try
+        {
+            isLoading = true;
+            offers = await LoyaltyService.GetAllOffersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading offers: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CreateOffer()
+    {
+        if (offerModal != null)
+        {
+            await offerModal.OpenAsync(null);
+        }
+    }
+
+    private async Task EditOffer(OfferResponse offer)
+    {
+        if (offerModal != null)
+        {
+            await offerModal.OpenAsync(offer);
+        }
+    }
+
+    private void DeleteOffer(OfferResponse offer)
+    {
+        offerToDelete = offer;
+    }
+
+    private void CancelDelete()
+    {
+        offerToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (offerToDelete == null) return;
+
+        try
+        {
+            isDeleting = true;
+            await LoyaltyService.DeleteOfferAsync(offerToDelete.OfferId);
+            await LoadOffers();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting offer: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+            offerToDelete = null;
+        }
+    }
+
+    private async Task HandleOfferSaved()
+    {
+        await LoadOffers();
+    }
+
+    private string GetTabClass(string tab)
+    {
+        var baseClass = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ";
+        if (tab == "missions" || tab == "events")
+        {
+            return baseClass + "text-slate-400 cursor-not-allowed";
+        }
+        return activeTab == tab
+            ? baseClass + "bg-amber-100 text-amber-700"
+            : baseClass + "text-slate-600 hover:bg-slate-100";
+    }
+
+    private string GetTierBadgeClass(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "bg-amber-100 text-amber-700",
+        LoyaltyTier.Silver => "bg-slate-200 text-slate-700",
+        LoyaltyTier.Gold => "bg-yellow-100 text-yellow-700",
+        _ => "bg-slate-100 text-slate-600"
+    };
+}

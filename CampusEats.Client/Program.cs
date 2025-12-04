@@ -33,6 +33,7 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DietaryTagService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<KitchenService>();
+builder.Services.AddScoped<LoyaltyService>();
 builder.Services.AddSingleton<CartService>();
 
 // Singleton: one SignalR connection shared across all pages

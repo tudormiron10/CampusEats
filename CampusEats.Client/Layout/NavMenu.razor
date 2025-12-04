@@ -12,6 +12,11 @@
     <!-- Desktop Navigation -->
     <nav class="hidden md:flex items-center gap-2">
         <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                 href="loyalty"
+                 ActiveClass="bg-tan text-oxford-blue font-semibold">
+            Loyalty
+        </NavLink>
+        <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
                  href="menu"
                  ActiveClass="bg-tan text-oxford-blue font-semibold">
             Menu
@@ -88,6 +93,14 @@
         }
 
         <div class="px-3 pb-2 @(string.IsNullOrEmpty(userFullName) ? "pt-4" : "")">
+            <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                     href="loyalty"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold"
+                     @onclick="ToggleNavMenu">
+                <i class="bi bi-gift mr-3 text-lg"></i> Loyalty
+            </NavLink>
+        </div>
+        <div class="px-3 pb-2">
             <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
                      href="menu"
                      ActiveClass="bg-tan text-oxford-blue font-semibold"

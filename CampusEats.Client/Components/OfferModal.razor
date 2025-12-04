@@ -1,0 +1,402 @@
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject LoyaltyService LoyaltyService
+@inject MenuService MenuService
+
+@if (isVisible)
+{
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" @onclick="CloseModal">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in" @onclick:stopPropagation="true">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-white">
+                    @(editingOffer == null ? "Create Offer" : "Edit Offer")
+                </h2>
+                <button class="text-white/80 hover:text-white hover:bg-white/10 transition-all text-2xl leading-none w-9 h-9 rounded-lg flex items-center justify-center" @onclick="CloseModal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 overflow-y-auto flex-1 bg-gray-50/30">
+                @if (errorMessage != null)
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-5 shadow-sm">
+                        <span class="font-medium">@errorMessage</span>
+                    </div>
+                }
+
+                <div class="space-y-5">
+                    <!-- Title -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text"
+                               class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm"
+                               @bind="title"
+                               placeholder="e.g., Coffee Bundle, Pizza Deal" />
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Description
+                            <span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+                        </label>
+                        <textarea class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all resize-none shadow-sm"
+                                  rows="2"
+                                  @bind="description"
+                                  placeholder="Describe what's included in this offer"></textarea>
+                    </div>
+
+                    <!-- Point Cost -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Point Cost <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="number"
+                                   min="1"
+                                   class="w-full pl-4 pr-12 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm"
+                                   @bind="pointCost"
+                                   placeholder="500" />
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium pointer-events-none">pts</span>
+                        </div>
+                    </div>
+
+                    <!-- Minimum Tier -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Minimum Tier
+                            <span class="text-xs font-normal text-gray-500 ml-2">(Who can redeem)</span>
+                        </label>
+                        <select class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm"
+                                @bind="minimumTier">
+                            <option value="">All Tiers</option>
+                            <option value="Silver">Silver & Gold</option>
+                            <option value="Gold">Gold Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Image URL
+                            <span class="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+                        </label>
+                        <input type="text"
+                               class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm"
+                               @bind="imageUrl"
+                               placeholder="https://..." />
+                    </div>
+
+                    <!-- Menu Items Selection -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            Included Items <span class="text-red-500">*</span>
+                        </label>
+                        <p class="text-sm text-gray-500 mb-3">Select menu items to include in this offer</p>
+
+                        @if (isLoadingMenuItems)
+                        {
+                            <div class="flex items-center gap-2 text-gray-500 py-4">
+                                <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span>Loading menu items...</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Selected Items -->
+                            @if (selectedItems.Any())
+                            {
+                                <div class="space-y-2 mb-4">
+                                    @foreach (var item in selectedItems)
+                                    {
+                                        <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                                            <div class="flex items-center gap-3">
+                                                <span class="font-medium text-gray-800">@GetMenuItemName(item.MenuItemId)</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex items-center gap-2">
+                                                    <button type="button"
+                                                            class="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+                                                            @onclick="() => UpdateItemQuantity(item.MenuItemId, -1)">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <span class="w-8 text-center font-bold">@item.Quantity</span>
+                                                    <button type="button"
+                                                            class="w-8 h-8 bg-white border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+                                                            @onclick="() => UpdateItemQuantity(item.MenuItemId, 1)">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <button type="button"
+                                                        class="text-red-500 hover:text-red-700 transition-colors"
+                                                        @onclick="() => RemoveItem(item.MenuItemId)">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <!-- Add Item Dropdown -->
+                            <div class="relative">
+                                <select class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all shadow-sm"
+                                        @onchange="HandleAddItem">
+                                    <option value="">+ Add a menu item...</option>
+                                    @foreach (var menuItem in availableMenuItems.Where(m => !selectedItems.Any(s => s.MenuItemId == m.MenuItemId)))
+                                    {
+                                        <option value="@menuItem.MenuItemId">@menuItem.Name (@menuItem.Category)</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Is Active -->
+                    <div class="flex items-center p-4 bg-white border border-green-200 rounded-lg shadow-sm">
+                        <input type="checkbox"
+                               id="isActive"
+                               class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
+                               @bind="isActive" />
+                        <label for="isActive" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer select-none">
+                            Offer is active and visible to users
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-between items-center">
+                <p class="text-xs text-gray-500">
+                    <span class="text-red-500">*</span> Required fields
+                </p>
+                <div class="flex gap-3">
+                    <button class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all"
+                            @onclick="CloseModal"
+                            disabled="@isSaving">
+                        Cancel
+                    </button>
+                    <button class="px-8 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                            @onclick="SaveOffer"
+                            disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span>Saving...</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Save Offer</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private bool isVisible = false;
+    private bool isSaving = false;
+    private bool isLoadingMenuItems = false;
+    private string? errorMessage;
+    private OfferResponse? editingOffer;
+
+    // Form fields
+    private string title = "";
+    private string? description;
+    private int pointCost = 100;
+    private string minimumTier = "";
+    private string? imageUrl;
+    private bool isActive = true;
+    private List<OfferItemRequest> selectedItems = new();
+
+    // Available menu items for selection
+    private List<MenuItemResponse> availableMenuItems = new();
+
+    public async Task OpenAsync(OfferResponse? offer = null)
+    {
+        editingOffer = offer;
+        errorMessage = null;
+
+        // Load menu items
+        isLoadingMenuItems = true;
+        isVisible = true;
+        StateHasChanged();
+
+        try
+        {
+            availableMenuItems = await MenuService.GetMenuAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load menu items: {ex.Message}";
+            availableMenuItems = new List<MenuItemResponse>();
+        }
+        finally
+        {
+            isLoadingMenuItems = false;
+        }
+
+        if (offer != null)
+        {
+            // Edit mode
+            title = offer.Title;
+            description = offer.Description;
+            pointCost = offer.PointCost;
+            minimumTier = offer.MinimumTier?.ToString() ?? "";
+            imageUrl = offer.ImageUrl;
+            isActive = offer.IsActive;
+            selectedItems = offer.Items.Select(i => new OfferItemRequest(i.MenuItemId, i.Quantity)).ToList();
+        }
+        else
+        {
+            // Create mode
+            title = "";
+            description = null;
+            pointCost = 100;
+            minimumTier = "";
+            imageUrl = null;
+            isActive = true;
+            selectedItems = new List<OfferItemRequest>();
+        }
+
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        isVisible = false;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private void HandleAddItem(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var menuItemId))
+        {
+            if (!selectedItems.Any(s => s.MenuItemId == menuItemId))
+            {
+                selectedItems.Add(new OfferItemRequest(menuItemId, 1));
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void UpdateItemQuantity(Guid menuItemId, int delta)
+    {
+        var item = selectedItems.FirstOrDefault(s => s.MenuItemId == menuItemId);
+        if (item != null)
+        {
+            var newQuantity = item.Quantity + delta;
+            if (newQuantity > 0)
+            {
+                var index = selectedItems.IndexOf(item);
+                selectedItems[index] = new OfferItemRequest(menuItemId, newQuantity);
+            }
+            else
+            {
+                selectedItems.Remove(item);
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveItem(Guid menuItemId)
+    {
+        selectedItems.RemoveAll(s => s.MenuItemId == menuItemId);
+        StateHasChanged();
+    }
+
+    private string GetMenuItemName(Guid menuItemId)
+    {
+        return availableMenuItems.FirstOrDefault(m => m.MenuItemId == menuItemId)?.Name ?? "Unknown Item";
+    }
+
+    private async Task SaveOffer()
+    {
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+
+            // Validate
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                errorMessage = "Title is required";
+                return;
+            }
+
+            if (pointCost <= 0)
+            {
+                errorMessage = "Point cost must be greater than 0";
+                return;
+            }
+
+            if (!selectedItems.Any())
+            {
+                errorMessage = "At least one menu item is required";
+                return;
+            }
+
+            LoyaltyTier? tier = minimumTier switch
+            {
+                "Silver" => LoyaltyTier.Silver,
+                "Gold" => LoyaltyTier.Gold,
+                _ => null
+            };
+
+            var request = new CreateOfferRequest(
+                title,
+                description,
+                imageUrl,
+                pointCost,
+                tier,
+                selectedItems
+            );
+
+            if (editingOffer != null)
+            {
+                await LoyaltyService.UpdateOfferAsync(editingOffer.OfferId, request);
+            }
+            else
+            {
+                await LoyaltyService.CreateOfferAsync(request);
+            }
+
+            await OnSaved.InvokeAsync();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to save offer: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

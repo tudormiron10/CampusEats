@@ -1,0 +1,480 @@
+@page "/loyalty"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@inject LoyaltyService LoyaltyService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Loyalty Program - CampusEats</PageTitle>
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Loyalty Program</h1>
+                        <p class="text-slate-500">Earn points and redeem exclusive offers</p>
+                    </div>
+                </div>
+                @if (isStaff)
+                {
+                    <a href="/loyalty/manage"
+                       class="inline-flex items-center gap-2 bg-gradient-to-r from-oxford-blue to-oxford-blue-light text-white px-5 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-oxford-blue/25 transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Manage Offers
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex gap-2 mb-6 border-b border-slate-200 pb-2">
+            <button class="@GetTabClass("home")" @onclick="@(() => activeTab = "home")">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Home
+            </button>
+            <button class="@GetTabClass("offers")" @onclick="@(() => activeTab = "offers")">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                </svg>
+                Offers
+            </button>
+            <button class="@GetTabClass("missions")" disabled title="Coming Soon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+                Missions
+                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
+            </button>
+            <button class="@GetTabClass("events")" disabled title="Coming Soon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Events
+                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="relative">
+                    <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                    <div class="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                </div>
+                <p class="mt-4 text-slate-500 font-medium">Loading your loyalty status...</p>
+            </div>
+        }
+        else
+        {
+            @if (activeTab == "home")
+            {
+                @* HOME TAB *@
+                <div class="space-y-6">
+                    <!-- Tier Card -->
+                    @if (loyaltyStatus != null)
+                    {
+                        <div class="@GetTierCardClass(loyaltyStatus.Tier) rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="@GetTierIconBgClass(loyaltyStatus.Tier) p-3 rounded-xl">
+                                        @((MarkupString)GetTierIcon(loyaltyStatus.Tier))
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium opacity-80 uppercase tracking-wide">Current Tier</p>
+                                        <h2 class="text-2xl font-bold">@loyaltyStatus.Tier Member</h2>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium opacity-80">Earn Rate</p>
+                                    <p class="text-xl font-bold">@GetEarnRate(loyaltyStatus.Tier) pts/$1</p>
+                                </div>
+                            </div>
+
+                            <!-- Points Display -->
+                            <div class="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-3xl font-bold">@loyaltyStatus.CurrentPoints.ToString("N0") pts</span>
+                                    <span class="text-sm opacity-80">Lifetime: @loyaltyStatus.LifetimePoints.ToString("N0")</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress to Next Tier -->
+                            @if (loyaltyStatus.Tier != LoyaltyTier.Gold)
+                            {
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span>Progress to @GetNextTier(loyaltyStatus.Tier)</span>
+                                        <span>@loyaltyStatus.LifetimePoints.ToString("N0") / @loyaltyStatus.NextTierThreshold.ToString("N0")</span>
+                                    </div>
+                                    <div class="h-3 bg-white/30 rounded-full overflow-hidden">
+                                        <div class="h-full bg-white rounded-full transition-all duration-500"
+                                             style="width: @(GetProgressPercentage(loyaltyStatus))%"></div>
+                                    </div>
+                                    <p class="text-sm mt-2 opacity-80">@loyaltyStatus.PointsToNextTier.ToString("N0") points to @GetNextTier(loyaltyStatus.Tier)</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center gap-2 text-white/90">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                    </svg>
+                                    <span class="font-medium">You've reached the highest tier!</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Empty State for Status -->
+                        <div class="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-6 border border-amber-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="bg-amber-200 p-3 rounded-xl">
+                                    <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-xl font-bold text-amber-800">Welcome to Loyalty!</h2>
+                                    <p class="text-amber-700">Your loyalty status will appear here once connected.</p>
+                                </div>
+                            </div>
+                            <div class="bg-white/50 rounded-xl p-4">
+                                <p class="text-amber-800 text-sm">
+                                    <strong>How it works:</strong> Earn points on every order, unlock higher tiers for better earn rates, and redeem points for exclusive offers!
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Tier Info Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gradient-to-br from-amber-700 to-amber-800 text-white rounded-xl p-4 @(loyaltyStatus?.Tier == LoyaltyTier.Bronze ? "ring-2 ring-amber-400 ring-offset-2" : "opacity-75")">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">🥉</span>
+                                <span class="font-bold">Bronze</span>
+                            </div>
+                            <p class="text-sm opacity-90">0 - 4,999 pts</p>
+                            <p class="text-lg font-bold">10 pts/$1</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-400 to-slate-500 text-white rounded-xl p-4 @(loyaltyStatus?.Tier == LoyaltyTier.Silver ? "ring-2 ring-slate-300 ring-offset-2" : "opacity-75")">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">🥈</span>
+                                <span class="font-bold">Silver</span>
+                            </div>
+                            <p class="text-sm opacity-90">5,000 - 14,999 pts</p>
+                            <p class="text-lg font-bold">12 pts/$1</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-yellow-500 to-amber-500 text-white rounded-xl p-4 @(loyaltyStatus?.Tier == LoyaltyTier.Gold ? "ring-2 ring-yellow-300 ring-offset-2" : "opacity-75")">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-2xl">🥇</span>
+                                <span class="font-bold">Gold</span>
+                            </div>
+                            <p class="text-sm opacity-90">15,000+ pts</p>
+                            <p class="text-lg font-bold">15 pts/$1</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="font-semibold text-slate-800">Recent Activity</h3>
+                        </div>
+                        @if (transactions.Any())
+                        {
+                            <div class="divide-y divide-slate-100">
+                                @foreach (var transaction in transactions.Take(10))
+                                {
+                                    <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <div class="@(transaction.Type == "Earned" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600") p-2 rounded-lg">
+                                                @if (transaction.Type == "Earned")
+                                                {
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                    </svg>
+                                                }
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-slate-800">@transaction.Description</p>
+                                                <p class="text-sm text-slate-500">@transaction.Date.ToLocalTime().ToString("MMM dd, yyyy 'at' HH:mm")</p>
+                                            </div>
+                                        </div>
+                                        <span class="@(transaction.Points > 0 ? "text-emerald-600" : "text-red-600") font-bold text-lg">
+                                            @(transaction.Points > 0 ? "+" : "")@transaction.Points pts
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="px-6 py-12 text-center">
+                                <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <h4 class="font-semibold text-slate-700 mb-1">No activity yet</h4>
+                                <p class="text-slate-500 text-sm">Your point transactions will appear here once you start earning!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else if (activeTab == "offers")
+            {
+                @* OFFERS TAB *@
+                <div>
+                    @if (offers.Any())
+                    {
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            @foreach (var offer in offers)
+                            {
+                                var isEligible = IsEligibleForOffer(offer);
+                                <div class="@(isEligible ? "bg-white" : "bg-slate-100 opacity-60") rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
+                                    <!-- Offer Image -->
+                                    @if (!string.IsNullOrEmpty(offer.ImageUrl))
+                                    {
+                                        <div class="h-40 bg-slate-200 overflow-hidden">
+                                            <img src="@offer.ImageUrl" alt="@offer.Title" class="w-full h-full object-cover" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="h-40 bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                                            <svg class="w-16 h-16 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                            </svg>
+                                        </div>
+                                    }
+
+                                    <!-- Offer Content -->
+                                    <div class="p-4 flex-1 flex flex-col">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <h3 class="font-bold text-slate-800">@offer.Title</h3>
+                                            @if (offer.MinimumTier != null)
+                                            {
+                                                <span class="@GetTierBadgeClass(offer.MinimumTier.Value) px-2 py-0.5 rounded-full text-xs font-semibold">
+                                                    @offer.MinimumTier+
+                                                </span>
+                                            }
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(offer.Description))
+                                        {
+                                            <p class="text-sm text-slate-600 mb-3">@offer.Description</p>
+                                        }
+
+                                        <!-- Included Items -->
+                                        <div class="text-xs text-slate-500 mb-4 flex-1">
+                                            @foreach (var item in offer.Items)
+                                            {
+                                                <span class="inline-block bg-slate-100 px-2 py-1 rounded mr-1 mb-1">
+                                                    @item.Quantity x @item.Name
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <!-- Price & Button -->
+                                        <div class="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
+                                            <span class="text-xl font-bold text-amber-600">@offer.PointCost.ToString("N0") pts</span>
+                                            @if (isEligible)
+                                            {
+                                                <button class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                                                        @onclick="() => RedeemOffer(offer)">
+                                                    Redeem
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <div class="flex items-center gap-1 text-slate-500">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                                    </svg>
+                                                    <span class="text-sm font-medium">@offer.MinimumTier Required</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Empty State for Offers -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">No offers available</h3>
+                            <p class="text-slate-500">Check back soon for exclusive loyalty offers!</p>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private string activeTab = "home";
+    private bool isLoading = true;
+    private bool isStaff = false;
+    private LoyaltyStatusResponse? loyaltyStatus;
+    private List<LoyaltyTransactionResponse> transactions = new();
+    private List<OfferResponse> offers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var role = await AuthService.GetUserRoleAsync();
+        isStaff = role == "Manager" || role == "Admin";
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            loyaltyStatus = await LoyaltyService.GetStatusAsync();
+            transactions = await LoyaltyService.GetTransactionsAsync();
+            offers = await LoyaltyService.GetOffersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading loyalty data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RedeemOffer(OfferResponse offer)
+    {
+        try
+        {
+            await LoyaltyService.RedeemOfferAsync(offer.OfferId);
+            Navigation.NavigateTo("/cart");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error redeeming offer: {ex.Message}");
+        }
+    }
+
+    private bool IsEligibleForOffer(OfferResponse offer)
+    {
+        if (offer.MinimumTier == null) return true;
+        if (loyaltyStatus == null) return false;
+
+        return loyaltyStatus.Tier >= offer.MinimumTier;
+    }
+
+    private string GetTabClass(string tab)
+    {
+        var baseClass = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ";
+        if (tab == "missions" || tab == "events")
+        {
+            return baseClass + "text-slate-400 cursor-not-allowed";
+        }
+        return activeTab == tab
+            ? baseClass + "bg-amber-100 text-amber-700"
+            : baseClass + "text-slate-600 hover:bg-slate-100";
+    }
+
+    private string GetTierCardClass(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "bg-gradient-to-br from-amber-700 to-amber-900 text-white",
+        LoyaltyTier.Silver => "bg-gradient-to-br from-slate-400 to-slate-600 text-white",
+        LoyaltyTier.Gold => "bg-gradient-to-br from-yellow-400 to-amber-500 text-white",
+        _ => "bg-gradient-to-br from-slate-400 to-slate-600 text-white"
+    };
+
+    private string GetTierIconBgClass(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "bg-amber-600",
+        LoyaltyTier.Silver => "bg-slate-300",
+        LoyaltyTier.Gold => "bg-yellow-300",
+        _ => "bg-slate-300"
+    };
+
+    private string GetTierIcon(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "<span class=\"text-2xl\">🥉</span>",
+        LoyaltyTier.Silver => "<span class=\"text-2xl\">🥈</span>",
+        LoyaltyTier.Gold => "<span class=\"text-2xl\">🥇</span>",
+        _ => "<span class=\"text-2xl\">🎖️</span>"
+    };
+
+    private string GetTierBadgeClass(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "bg-amber-100 text-amber-700",
+        LoyaltyTier.Silver => "bg-slate-200 text-slate-700",
+        LoyaltyTier.Gold => "bg-yellow-100 text-yellow-700",
+        _ => "bg-slate-100 text-slate-600"
+    };
+
+    private int GetEarnRate(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => 10,
+        LoyaltyTier.Silver => 12,
+        LoyaltyTier.Gold => 15,
+        _ => 10
+    };
+
+    private string GetNextTier(LoyaltyTier tier) => tier switch
+    {
+        LoyaltyTier.Bronze => "Silver",
+        LoyaltyTier.Silver => "Gold",
+        _ => "Gold"
+    };
+
+    private double GetProgressPercentage(LoyaltyStatusResponse status)
+    {
+        if (status.NextTierThreshold == 0) return 100;
+        var previousThreshold = status.Tier switch
+        {
+            LoyaltyTier.Bronze => 0,
+            LoyaltyTier.Silver => 5000,
+            _ => 15000
+        };
+        var range = status.NextTierThreshold - previousThreshold;
+        var progress = status.LifetimePoints - previousThreshold;
+        return Math.Min(100, Math.Max(0, (double)progress / range * 100));
+    }
+}
