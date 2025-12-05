@@ -6,6 +6,7 @@ using MediatR;
 using CampusEats.Api.Features.Payments.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using Stripe;
+using Microsoft.EntityFrameworkCore;
 
 namespace CampusEats.Api.Features.Payments
 {
@@ -44,6 +45,32 @@ namespace CampusEats.Api.Features.Payments
             if (order.Status != OrderStatus.Pending)
             {
                 return ApiErrors.InvalidOperation("This order is not pending and cannot be paid.");
+            }
+
+            // Check if there's already an active payment for this order
+            var existingPayment = await _context.Payments
+                .Where(p => p.OrderId == request.OrderId 
+                            && p.Status != PaymentStatus.Failed 
+                            && p.Status != PaymentStatus.Cancelled)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (existingPayment != null)
+            {
+                _logger.LogInformation(
+                    "Returning existing payment {PaymentId} for order {OrderId} to prevent duplicate PaymentIntent creation",
+                    existingPayment.PaymentId,
+                    request.OrderId);
+
+                // Return the existing payment instead of creating a new one
+                var existingResponse = new PaymentResponse(
+                    existingPayment.PaymentId,
+                    existingPayment.OrderId,
+                    existingPayment.Amount,
+                    existingPayment.Status.ToString(),
+                    existingPayment.ClientSecret
+                );
+                
+                return Results.Ok(existingResponse);
             }
 
             StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
