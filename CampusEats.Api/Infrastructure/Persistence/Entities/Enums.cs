@@ -3,6 +3,6 @@
 //
 public enum OrderStatus { Pending, InPreparation, Ready, Completed, Cancelled }
 //
-public enum PaymentStatus { Initiated, Successful, Failed }
+public enum PaymentStatus { Pending, Processing, Succeeded, Failed, Cancelled }
 
 public enum UserRole { Admin, Client, Manager }

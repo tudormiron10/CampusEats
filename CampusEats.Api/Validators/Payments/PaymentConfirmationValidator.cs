@@ -13,6 +13,6 @@ public class PaymentConfirmationValidator : AbstractValidator<PaymentConfirmatio
 
         RuleFor(x => x.NewStatus)
             .IsInEnum().WithMessage("Invalid payment status.")
-            .NotEqual(PaymentStatus.Initiated).WithMessage("Webhook cannot set status back to Initiated.");
+            .NotEqual(PaymentStatus.Processing).WithMessage("Webhook cannot set status back to Processing.");
     }
 }
