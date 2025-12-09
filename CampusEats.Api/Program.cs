@@ -15,6 +15,7 @@ using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Features.Order.Request;
 using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Payments.Request;
+using CampusEats.Api.Features.Payments.Handler;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Features.Loyalty.Request;
@@ -66,6 +67,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+// Add HttpContextAccessor for accessing user claims in handlers
+builder.Services.AddHttpContextAccessor();
+
+// --- Register Stripe Webhook Handler ---
+builder.Services.AddScoped<StripeWebhookHandler>();
 
 // --- CORS Configuration for Blazor Frontend ---
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -475,7 +482,17 @@ app.MapGet("/orders", async (
 
 // ====== PAYMENTS GROUP ======
 
-// Endpoint for initiating a payment for an order.
+// Endpoint for initiating a checkout session (new flow - creates Order after payment succeeds)
+app.MapPost("/checkout", async (
+        InitiateCheckoutRequest request,
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(request);
+})
+.RequireAuthorization()
+.WithTags("Payments");
+
+// Endpoint for initiating a payment for an order (legacy - kept for backward compatibility).
 app.MapPost("/payments", async (
         CreatePaymentRequest request,
         [FromServices] IMediator mediator) =>
@@ -501,6 +518,16 @@ app.MapPost("/payments/confirmation", async (
         return await mediator.Send(request);
     })
 .WithTags("Payments");
+
+// Endpoint for Stripe webhook events (NO authentication - Stripe calls this).
+app.MapPost("/payments/webhook", async (
+        HttpRequest request,
+        [FromServices] StripeWebhookHandler webhookHandler) =>
+{
+    return await webhookHandler.HandleWebhook(request);
+})
+.WithTags("Payments")
+.ExcludeFromDescription(); // Hide from Swagger (external webhook)
 
 // ====== KITCHEN GROUP (Manager/Admin only) ======
 
@@ -731,5 +758,3 @@ public record CreateOfferRequestBody(
 );
 
 public record UpdateOfferStatusBody(bool IsActive);
-
-

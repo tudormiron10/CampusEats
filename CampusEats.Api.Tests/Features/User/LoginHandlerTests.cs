@@ -1,14 +1,9 @@
-﻿﻿using System;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Security.Cryptography;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NSubstitute;
-using Xunit;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.User.Request;

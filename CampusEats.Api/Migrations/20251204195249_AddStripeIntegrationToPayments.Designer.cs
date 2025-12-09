@@ -3,6 +3,7 @@ using System;
 using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CampusEats.Api.Migrations
 {
     [DbContext(typeof(CampusEatsDbContext))]
-    partial class CampusEatsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204195249_AddStripeIntegrationToPayments")]
+    partial class AddStripeIntegrationToPayments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,45 +321,6 @@ namespace CampusEats.Api.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.PendingCheckout", b =>
-                {
-                    b.Property<Guid>("PendingCheckoutId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ItemsJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PendingOfferIdsJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RedeemedItemsJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("StripePaymentIntentId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PendingCheckoutId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PendingCheckouts");
-                });
-
             modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.User", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -490,17 +454,6 @@ namespace CampusEats.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.PendingCheckout", b =>
-                {
-                    b.HasOne("CampusEats.Api.Infrastructure.Persistence.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.DietaryTag", b =>

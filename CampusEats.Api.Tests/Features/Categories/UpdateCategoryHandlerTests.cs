@@ -1,9 +1,5 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 using CampusEats.Api.Features.Categories.Handler;
 using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Features.Categories.Response;

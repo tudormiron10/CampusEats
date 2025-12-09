@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CampusEats.Api.Infrastructure.Persistence;
@@ -20,6 +20,7 @@ public class CampusEatsDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<DietaryTag> DietaryTags { get; set; }
     public DbSet<MenuItemDietaryTag> MenuItemDietaryTags { get; set; }
+    public DbSet<PendingCheckout> PendingCheckouts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

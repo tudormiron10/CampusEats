@@ -129,7 +129,8 @@ public static class DataSeeder
                         PaymentId = Guid.NewGuid(),
                         OrderId = newOrder.OrderId,
                         Amount = newOrder.TotalAmount,
-                        Status = PaymentStatus.Successful
+                        Status = PaymentStatus.Succeeded,
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
             }
