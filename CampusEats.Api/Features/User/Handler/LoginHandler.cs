@@ -31,7 +31,9 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
         if (!validationResult.IsValid)
             return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
 
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        var user = await _context.Users
+            .Include(u => u.Loyalty)
+            .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user == null || !VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
             return ApiErrors.InvalidCredentials();

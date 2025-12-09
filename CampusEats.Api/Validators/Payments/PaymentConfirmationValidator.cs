@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Payments.Request;
+﻿﻿using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using FluentValidation;
 
@@ -13,6 +13,7 @@ public class PaymentConfirmationValidator : AbstractValidator<PaymentConfirmatio
 
         RuleFor(x => x.NewStatus)
             .IsInEnum().WithMessage("Invalid payment status.")
-            .NotEqual(PaymentStatus.Processing).WithMessage("Webhook cannot set status back to Processing.");
+            .NotEqual(PaymentStatus.Pending).WithMessage("Cannot set status to Pending/Initiated.")
+            .NotEqual(PaymentStatus.Processing).WithMessage("Cannot set status to Processing.");
     }
 }

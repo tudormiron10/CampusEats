@@ -2,8 +2,6 @@
 @using CampusEats.Client.Services
 @using CampusEats.Client.Models
 @inject CartService CartService
-@inject OrderService OrderService
-@inject LoyaltyService LoyaltyService
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -109,16 +107,16 @@
                         </div>
                     </div>
                     <button class="w-full bg-oxford-blue text-white px-6 py-3 rounded-lg font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-oxford-blue/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-3"
-                            @onclick="PlaceOrder"
-                            disabled="@isPlacingOrder">
-                        @if (isPlacingOrder)
+                            @onclick="ProceedToCheckout"
+                            disabled="@isProcessing">
+                        @if (isProcessing)
                         {
                             <span class="inline-block animate-spin mr-2">⏳</span>
-                            <span>Placing Order...</span>
+                            <span>Processing...</span>
                         }
                         else
                         {
-                            <span>Place Order</span>
+                            <span><i class="bi bi-credit-card mr-2"></i>Proceed to Checkout</span>
                         }
                     </button>
                     <button class="w-full bg-tan text-oxford-blue px-6 py-3 rounded-lg font-semibold hover:bg-tan-dark hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all"
@@ -126,17 +124,10 @@
                         Clear Cart
                     </button>
 
-                    @if (orderError != null)
+                    @if (errorMessage != null)
                     {
                         <div class="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg mt-4">
-                            @orderError
-                        </div>
-                    }
-
-                    @if (orderSuccess)
-                    {
-                        <div class="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-lg mt-4">
-                            Order placed successfully!
+                            @errorMessage
                         </div>
                     }
                 </div>
@@ -146,9 +137,8 @@
 </div>
 
 @code {
-    private bool isPlacingOrder = false;
-    private string? orderError;
-    private bool orderSuccess = false;
+    private bool isProcessing = false;
+    private string? errorMessage;
 
     protected override void OnInitialized()
     {
@@ -179,73 +169,15 @@
         CartService.Clear();
     }
 
-    private async Task PlaceOrder()
+    private void ProceedToCheckout()
     {
-        try
+        if (!CartService.Items.Any())
         {
-            isPlacingOrder = true;
-            orderError = null;
-            orderSuccess = false;
-
-            // 1. First, redeem any pending offers (this deducts points and creates transactions)
-            foreach (var offerId in CartService.GetPendingOfferIds())
-            {
-                try
-                {
-                    await LoyaltyService.RedeemOfferAsync(offerId);
-                }
-                catch (Exception ex)
-                {
-                    orderError = $"Failed to redeem offer: {ex.Message}";
-                    return;
-                }
-            }
-
-            // 2. Get paid and redeemed item IDs separately
-            var paidMenuItemIds = CartService.GetPaidMenuItemIds();
-            var redeemedMenuItemIds = CartService.GetRedeemedMenuItemIds();
-
-            // Only create order if there are any items (paid or redeemed)
-            if (paidMenuItemIds.Any() || redeemedMenuItemIds.Any())
-            {
-                // UserId is ignored by backend - it extracts from JWT
-                var request = new CreateOrderRequest(
-                    Guid.Empty, 
-                    paidMenuItemIds,
-                    redeemedMenuItemIds.Any() ? redeemedMenuItemIds : null
-                );
-                var order = await OrderService.CreateOrderAsync(request);
-
-                if (order == null)
-                {
-                    orderError = "Failed to create order";
-                    return;
-                }
-            }
-            else
-            {
-                orderError = "Your cart is empty";
-                return;
-            }
-
-            orderSuccess = true;
-            CartService.Clear();
-
-            // Navigate to orders page after a short delay
-            await Task.Delay(1500);
-            Navigation.NavigateTo("/orders");
+            errorMessage = "Your cart is empty";
+            return;
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-        {
-            Navigation.NavigateTo("/login");
-        }
-        catch (Exception ex)
-        {
-            orderError = $"Failed to place order: {ex.Message}";
-        }
-        finally
-        {
-            isPlacingOrder = false;
-        }
+
+        // Navigate to checkout page - payment and order creation happens there
+        Navigation.NavigateTo("/checkout");
     }
 }

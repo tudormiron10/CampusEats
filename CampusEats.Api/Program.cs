@@ -68,6 +68,9 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
+// Add HttpContextAccessor for accessing user claims in handlers
+builder.Services.AddHttpContextAccessor();
+
 // --- Register Stripe Webhook Handler ---
 builder.Services.AddScoped<StripeWebhookHandler>();
 
@@ -479,7 +482,17 @@ app.MapGet("/orders", async (
 
 // ====== PAYMENTS GROUP ======
 
-// Endpoint for initiating a payment for an order.
+// Endpoint for initiating a checkout session (new flow - creates Order after payment succeeds)
+app.MapPost("/checkout", async (
+        InitiateCheckoutRequest request,
+        [FromServices] IMediator mediator) =>
+{
+    return await mediator.Send(request);
+})
+.RequireAuthorization()
+.WithTags("Payments");
+
+// Endpoint for initiating a payment for an order (legacy - kept for backward compatibility).
 app.MapPost("/payments", async (
         CreatePaymentRequest request,
         [FromServices] IMediator mediator) =>
