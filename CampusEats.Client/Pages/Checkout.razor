@@ -201,8 +201,33 @@
             loadingMessage = "Connecting to payment provider...";
             StateHasChanged();
 
-            checkoutSession = await PaymentService.InitiateCheckoutAsync(request);
-            
+
+            var initResult = await PaymentService.InitiateCheckoutAsync(request);
+
+            if (initResult == null)
+            {
+                errorMessage = "Failed to create checkout session.";
+                isLoading = false;
+                StateHasChanged();
+                return;
+            }
+
+            // If server returned FreeCheckoutResponse (order created without payment)
+            if (initResult.Free != null)
+            {
+                // Order created, show success to user
+                isLoading = false;
+                paymentSucceeded = true;
+                CartService.Clear();
+                StateHasChanged();
+                // Optionally navigate to orders after a short delay
+                await Task.Delay(1500);
+                Navigation.NavigateTo($"/orders");
+                return;
+            }
+
+            checkoutSession = initResult.Session;
+
             if (checkoutSession == null)
             {
                 errorMessage = "Failed to create checkout session.";
@@ -322,4 +347,3 @@
         public string? PaymentIntentId { get; set; }
     }
 }
-

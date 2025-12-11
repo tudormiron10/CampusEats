@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -323,14 +323,5 @@ public class StripeWebhookHandler
             "Payment cancelled for PendingCheckout {CheckoutId}. No order created.",
             pendingCheckout.PendingCheckoutId
         );
-    }
-
-    // Helper class for JSON deserialization
-    private sealed class CheckoutItemData
-    {
-        public Guid MenuItemId { get; init; }
-        public int Quantity { get; init; }
-        public decimal UnitPrice { get; init; }
-        public string Name { get; init; } = null!;
     }
 }

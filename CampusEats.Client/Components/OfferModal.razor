@@ -166,17 +166,6 @@
                             </div>
                         }
                     </div>
-
-                    <!-- Is Active -->
-                    <div class="flex items-center p-4 bg-white border border-green-200 rounded-lg shadow-sm">
-                        <input type="checkbox"
-                               id="isActive"
-                               class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
-                               @bind="isActive" />
-                        <label for="isActive" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer select-none">
-                            Offer is active and visible to users
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -230,7 +219,6 @@
     private int pointCost = 100;
     private string minimumTier = "";
     private string? imageUrl;
-    private bool isActive = true;
     private List<OfferItemRequest> selectedItems = new();
 
     // Available menu items for selection
@@ -268,7 +256,6 @@
             pointCost = offer.PointCost;
             minimumTier = offer.MinimumTier?.ToString() ?? "";
             imageUrl = offer.ImageUrl;
-            isActive = offer.IsActive;
             selectedItems = offer.Items.Select(i => new OfferItemRequest(i.MenuItemId, i.Quantity)).ToList();
         }
         else
@@ -279,7 +266,6 @@
             pointCost = 100;
             minimumTier = "";
             imageUrl = null;
-            isActive = true;
             selectedItems = new List<OfferItemRequest>();
         }
 

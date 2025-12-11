@@ -15,17 +15,29 @@ public class PaymentService
     /// <summary>
     /// Initiates a checkout session with Stripe. Returns clientSecret for Payment Element.
     /// </summary>
-    public async Task<CheckoutSessionResponse?> InitiateCheckoutAsync(InitiateCheckoutRequest request)
+    public async Task<InitiateCheckoutResult> InitiateCheckoutAsync(InitiateCheckoutRequest request)
     {
         var response = await _http.PostAsJsonAsync("/checkout", request);
-        
+
+        var result = new InitiateCheckoutResult();
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Created)
+        {
+            // Free checkout - parse FreeCheckoutResponse
+            var free = await response.Content.ReadFromJsonAsync<FreeCheckoutResponse>();
+            result.Free = free;
+            return result;
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
             throw new ApiException(response.StatusCode, "CHECKOUT_ERROR", $"Failed to initiate checkout: {error}");
         }
-        
-        return await response.Content.ReadFromJsonAsync<CheckoutSessionResponse>();
+
+        var session = await response.Content.ReadFromJsonAsync<CheckoutSessionResponse>();
+        result.Session = session;
+        return result;
     }
 
     /// <summary>
@@ -37,4 +49,3 @@ public class PaymentService
         return response ?? new List<PaymentHistoryItem>();
     }
 }
-
