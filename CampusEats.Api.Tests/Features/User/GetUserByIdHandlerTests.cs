@@ -1,10 +1,13 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -46,7 +49,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ExistingClientWithLoyalty_When_Handle_Then_ReturnsOkWithLoyaltyPoints()
         {
             // Arrange
-            var clientUser = new Infrastructure.Persistence.Entities.User
+            var clientUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client Test",
@@ -91,7 +94,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ExistingAdminWithoutLoyalty_When_Handle_Then_ReturnsOkWithNullLoyaltyPoints()
         {
             // Arrange
-            var adminUser = new Infrastructure.Persistence.Entities.User
+            var adminUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Admin Test",
@@ -131,17 +134,18 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            var statusCodeResult = result as IStatusCodeHttpResult;
-            statusCodeResult.Should().NotBeNull();
-            statusCodeResult!.StatusCode.Should().Be(404);
+            // Assert - ApiErrors.UserNotFound() returns NotFound<ApiError>
+            var notFound = result as NotFound<ApiError>;
+            notFound.Should().NotBeNull();
+            notFound!.Value!.Code.Should().Be("NOT_FOUND");
+            notFound.Value.Message.Should().Contain("User");
         }
 
         [Fact]
         public async Task Given_ClientUserWithoutLoyaltyRow_When_Handle_Then_ReturnsOkWithNullPoints()
         {
             // Arrange
-            var clientUser = new Infrastructure.Persistence.Entities.User
+            var clientUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client No Loyalty",
@@ -174,7 +178,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ManagerUser_When_Handle_Then_ReturnsOkWithNullPoints()
         {
             // Arrange
-            var managerUser = new Infrastructure.Persistence.Entities.User
+            var managerUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Manager User",
@@ -207,7 +211,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ClientWithZeroPoints_When_Handle_Then_ReturnsOkWithZeroValue()
         {
             // Arrange
-            var clientUser = new Infrastructure.Persistence.Entities.User
+            var clientUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client Zero Points",

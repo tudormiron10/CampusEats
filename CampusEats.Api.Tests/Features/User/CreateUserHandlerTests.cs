@@ -9,7 +9,10 @@ using Xunit;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -103,7 +106,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ExistingEmail_When_Handle_Then_ReturnsConflict()
         {
             // Arrange
-            var existingUser = new Infrastructure.Persistence.Entities.User
+            var existingUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Existing",
@@ -120,9 +123,10 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("Conflict");
+            // Assert - ApiErrors.EmailAlreadyExists() returns Conflict<ApiError>
+            var conflict = result as Conflict<ApiError>;
+            conflict.Should().NotBeNull();
+            conflict!.Value!.Code.Should().Be("CONFLICT");
 
             var usersWithEmail = await _context.Users.CountAsync(u => u.Email == request.Email);
             usersWithEmail.Should().Be(1);
@@ -137,9 +141,10 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("BadRequest");
+            // Assert - ApiErrors.ValidationFailed() returns BadRequest<ApiError>
+            var badRequest = result as BadRequest<ApiError>;
+            badRequest.Should().NotBeNull();
+            badRequest!.Value!.Code.Should().Be("VALIDATION_FAILED");
 
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == request.Email);
             user.Should().BeNull();

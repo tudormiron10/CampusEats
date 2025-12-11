@@ -28,10 +28,4 @@
       <ProjectReference Include="..\CampusEats.Api\CampusEats.Api.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Features\Menu\" />
-      <Folder Include="Features\Order\" />
-      <Folder Include="Features\Payments\" />
-    </ItemGroup>
-
 </Project>

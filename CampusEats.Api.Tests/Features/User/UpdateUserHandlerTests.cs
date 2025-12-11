@@ -1,10 +1,13 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -46,7 +49,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ValidUpdate_When_Handle_Then_ReturnsOkAndPersistsChanges()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Original Name",
@@ -89,17 +92,18 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            var statusCodeResult = result as IStatusCodeHttpResult;
-            statusCodeResult.Should().NotBeNull();
-            statusCodeResult!.StatusCode.Should().Be(404);
+            // Assert - ApiErrors.UserNotFound() returns NotFound<ApiError>
+            var notFound = result as NotFound<ApiError>;
+            notFound.Should().NotBeNull();
+            notFound!.Value!.Code.Should().Be("NOT_FOUND");
+            notFound.Value.Message.Should().Contain("User");
         }
 
         [Fact]
         public async Task Given_EmailTakenByAnotherUser_When_Handle_Then_ReturnsConflict()
         {
             // Arrange
-            var userA = new Infrastructure.Persistence.Entities.User
+            var userA = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "User A",
@@ -108,7 +112,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordHash = new byte[] { 1 },
                 PasswordSalt = new byte[] { 2 }
             };
-            var userB = new Infrastructure.Persistence.Entities.User
+            var userB = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "User B",
@@ -125,17 +129,17 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            var statusCodeResult = result as IStatusCodeHttpResult;
-            statusCodeResult.Should().NotBeNull();
-            statusCodeResult!.StatusCode.Should().Be(409);
+            // Assert - ApiErrors.EmailAlreadyExists() returns Conflict<ApiError>
+            var conflict = result as Conflict<ApiError>;
+            conflict.Should().NotBeNull();
+            conflict!.Value!.Code.Should().Be("CONFLICT");
         }
 
         [Fact]
         public async Task Given_InvalidRequest_When_Handle_Then_ReturnsBadRequest()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "ToBeInvalid",
@@ -161,7 +165,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_RequestWithSameValuesAsExistingUser_When_Handle_Then_ReturnsOk_And_SkipsConflictCheck()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Same Name",
@@ -199,7 +203,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_InvalidEmailFormat_When_Handle_Then_ReturnsBadRequest()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Invalid Email User",
@@ -225,7 +229,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_WhitespaceOnlyName_When_Handle_Then_ReturnsBadRequest()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Original Name",
@@ -251,7 +255,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_RoleChangeFromClientToManager_When_Handle_Then_PersistsNewRole()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Role Change User",
@@ -283,7 +287,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_NameExceeds100Chars_When_Handle_Then_ReturnsBadRequest()
         {
             // Arrange
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Original Name",
