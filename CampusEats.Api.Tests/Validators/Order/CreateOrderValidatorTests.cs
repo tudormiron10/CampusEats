@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Order.Request;
+﻿﻿using CampusEats.Api.Features.Order.Request;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Validators.Orders;
@@ -76,15 +76,16 @@ namespace CampusEats.Api.Tests.Validators.Order
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var request = new CreateOrderRequest(userId, new List<Guid>());
+            // Both MenuItemIds and RedeemedMenuItemIds are empty/null - order must have at least one item
+            var request = new CreateOrderRequest(userId, new List<Guid>(), null);
 
             // Act
             var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
-            result.ShouldHaveValidationErrorFor(x => x.MenuItemIds);
-            result.Errors.Should().Contain(e => e.PropertyName == "MenuItemIds" && e.ErrorMessage.IndexOf("at least one product", StringComparison.OrdinalIgnoreCase) >= 0);
+            // Validation is at request level (not property level) since order can have either paid OR redeemed items
+            result.Errors.Should().Contain(e => e.ErrorMessage.IndexOf("at least one product", StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         [Fact]
@@ -92,14 +93,50 @@ namespace CampusEats.Api.Tests.Validators.Order
         {
             // Arrange
             var userId = Guid.NewGuid();
-            var request = new CreateOrderRequest(userId, null!);
+            // Both MenuItemIds and RedeemedMenuItemIds are null - order must have at least one item
+            var request = new CreateOrderRequest(userId, null!, null);
 
             // Act
             var result = _validator.TestValidate(request);
 
             // Assert
             result.IsValid.Should().BeFalse();
-            result.ShouldHaveValidationErrorFor(x => x.MenuItemIds);
+            // Validation is at request level since order can have either paid OR redeemed items
+            result.Errors.Should().Contain(e => e.ErrorMessage.IndexOf("at least one product", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        [Fact]
+        public void Given_OnlyRedeemedItems_When_Validate_Then_ShouldReturnValidResult()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var redeemedItems = new List<Guid> { Guid.NewGuid() };
+            // Order with only redeemed items (no paid items) should be valid
+            var request = new CreateOrderRequest(userId, new List<Guid>(), redeemedItems);
+
+            // Act
+            var result = _validator.TestValidate(request);
+
+            // Assert
+            result.IsValid.Should().BeTrue();
+            result.Errors.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Given_BothPaidAndRedeemedItems_When_Validate_Then_ShouldReturnValidResult()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var paidItems = new List<Guid> { Guid.NewGuid() };
+            var redeemedItems = new List<Guid> { Guid.NewGuid() };
+            var request = new CreateOrderRequest(userId, paidItems, redeemedItems);
+
+            // Act
+            var result = _validator.TestValidate(request);
+
+            // Assert
+            result.IsValid.Should().BeTrue();
+            result.Errors.Should().BeEmpty();
         }
     }
 }

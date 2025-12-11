@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Security.Cryptography;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -6,9 +6,12 @@ using Microsoft.Extensions.Configuration;
 using NSubstitute;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.User.Response;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -71,7 +74,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Login User",
@@ -123,7 +126,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(correctPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "WrongPass User",
@@ -141,7 +144,7 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
+            // Assert - ApiErrors.InvalidCredentials() returns JsonHttpResult with status 401
             result.Should().NotBeNull();
             var statusCodeResult = result as IStatusCodeHttpResult;
             statusCodeResult.Should().NotBeNull();
@@ -157,7 +160,7 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
+            // Assert - ApiErrors.InvalidCredentials() returns status 401
             result.Should().NotBeNull();
             var statusCodeResult = result as IStatusCodeHttpResult;
             statusCodeResult.Should().NotBeNull();
@@ -173,9 +176,11 @@ namespace CampusEats.Api.Tests.Features.User
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
+            // Assert - ApiErrors.ValidationFailed() returns BadRequest<ApiError>
             result.Should().NotBeNull();
-            result.GetType().Name.Should().Contain("BadRequest");
+            var badRequest = result as BadRequest<ApiError>;
+            badRequest.Should().NotBeNull();
+            badRequest!.Value!.Code.Should().Be("VALIDATION_FAILED");
         }
 
         [Fact]
@@ -195,7 +200,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = name,
@@ -248,7 +253,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(storedPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Case Pwd User",
@@ -289,7 +294,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(storedPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Whitespace User",
@@ -329,7 +334,7 @@ namespace CampusEats.Api.Tests.Features.User
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(plainPassword));
             }
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Loyalty Login User",

@@ -1,10 +1,12 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using CampusEats.Api.Features.Categories.Handler;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CampusEats.Api.Tests.Features.Categories
 {
@@ -83,10 +85,11 @@ namespace CampusEats.Api.Tests.Features.Categories
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);
 
-            // Assert
-            var statusCodeResult = result as IStatusCodeHttpResult;
-            statusCodeResult.Should().NotBeNull();
-            statusCodeResult!.StatusCode.Should().Be(404);
+            // Assert - ApiErrors.CategoryNotFound() returns NotFound<ApiError>
+            var notFound = result as NotFound<ApiError>;
+            notFound.Should().NotBeNull();
+            notFound!.Value!.Code.Should().Be("NOT_FOUND");
+            notFound.Value.Message.Should().Contain("Category");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,9 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Xunit;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
+using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.Users;
-using CampusEats.Api.Features.User.Response; // <-- added
+using CampusEats.Api.Features.User.Response;
+using Microsoft.AspNetCore.Http.HttpResults;
+using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
 namespace CampusEats.Api.Tests.Features.User
 {
@@ -80,7 +83,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_UsersWithAndWithoutLoyalty_When_Handle_Then_ReturnsOkWithUsersAndPoints()
         {
             // Arrange
-            var clientUser = new Infrastructure.Persistence.Entities.User
+            var clientUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client One",
@@ -90,7 +93,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 2 }
             };
 
-            var adminUser = new Infrastructure.Persistence.Entities.User
+            var adminUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Admin One",
@@ -155,7 +158,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_MultipleClientsWithDifferentPoints_When_Handle_Then_ReturnsCorrectPointsForEachUser()
         {
             // Arrange
-            var clientA = new Infrastructure.Persistence.Entities.User
+            var clientA = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client A",
@@ -165,7 +168,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 2 }
             };
 
-            var clientB = new Infrastructure.Persistence.Entities.User
+            var clientB = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client B",
@@ -221,7 +224,7 @@ namespace CampusEats.Api.Tests.Features.User
         public async Task Given_ClientWithoutLoyaltyAndManagerUser_When_Handle_Then_ReturnsNullPointsForBoth()
         {
             // Arrange
-            var clientUser = new Infrastructure.Persistence.Entities.User
+            var clientUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Client No Loyalty",
@@ -231,7 +234,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 2 }
             };
 
-            var managerUser = new Infrastructure.Persistence.Entities.User
+            var managerUser = new UserEntity
             {
                 UserId = Guid.NewGuid(),
                 Name = "Manager User",
@@ -270,7 +273,7 @@ namespace CampusEats.Api.Tests.Features.User
             // Arrange
             var knownId = Guid.Parse("11111111-2222-3333-4444-555555555555");
 
-            var user = new Infrastructure.Persistence.Entities.User
+            var user = new UserEntity
             {
                 UserId = knownId,
                 Name = "Known Id User",
