@@ -20,6 +20,19 @@ public record CheckoutSessionResponse(
     string PublishableKey
 );
 
+// Free checkout response (order created without payment)
+public record FreeCheckoutResponse(
+    Guid OrderId,
+    string Message
+);
+
+// Wrapper result for InitiateCheckout to support both paid and free flows
+public class InitiateCheckoutResult
+{
+    public CheckoutSessionResponse? Session { get; set; }
+    public FreeCheckoutResponse? Free { get; set; }
+}
+
 // Payment history item
 public record PaymentHistoryItem(
     Guid PaymentId,
@@ -28,4 +41,3 @@ public record PaymentHistoryItem(
     string Status,
     string? ClientSecret
 );
-

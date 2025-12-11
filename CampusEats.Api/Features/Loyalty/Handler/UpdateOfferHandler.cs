@@ -23,7 +23,6 @@ public class UpdateOfferHandler : IRequestHandler<UpdateOfferRequest, IResult>
             return Results.Forbid();
 
         var offer = await _context.Offers
-            .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.OfferId == request.OfferId, cancellationToken);
 
         if (offer == null)
@@ -53,8 +52,13 @@ public class UpdateOfferHandler : IRequestHandler<UpdateOfferRequest, IResult>
         offer.PointCost = request.PointCost;
         offer.MinimumTier = minimumTier;
 
-        _context.OfferItems.RemoveRange(offer.Items);
-        offer.Items = request.Items.Select(i => new OfferItem
+        // Remove existing OfferItems directly in the database
+        await _context.OfferItems
+            .Where(oi => oi.OfferId == offer.OfferId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        // Create new OfferItem entities and add them to the context
+        var newOfferItems = request.Items.Select(i => new OfferItem
         {
             OfferItemId = Guid.NewGuid(),
             OfferId = offer.OfferId,
@@ -62,25 +66,35 @@ public class UpdateOfferHandler : IRequestHandler<UpdateOfferRequest, IResult>
             Quantity = i.Quantity
         }).ToList();
 
+        await _context.OfferItems.AddRangeAsync(newOfferItems, cancellationToken);
+
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Load the offer with items for response
+        var offerWithItems = await _context.Offers
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.OfferId == offer.OfferId, cancellationToken);
+
+        if (offerWithItems == null)
+            return ApiErrors.NotFound("Offer");
 
         var menuItemNames = await _context.MenuItems
             .Where(m => menuItemIds.Contains(m.MenuItemId))
             .ToDictionaryAsync(m => m.MenuItemId, m => m.Name, cancellationToken);
 
         var response = new OfferResponse(
-            offer.OfferId,
-            offer.Title,
-            offer.Description,
-            offer.ImageUrl,
-            offer.PointCost,
-            offer.MinimumTier,
-            offer.Items.Select(i => new OfferItemResponse(
+            offerWithItems.OfferId,
+            offerWithItems.Title,
+            offerWithItems.Description,
+            offerWithItems.ImageUrl,
+            offerWithItems.PointCost,
+            offerWithItems.MinimumTier,
+            offerWithItems.Items.Select(i => new OfferItemResponse(
                 i.MenuItemId,
                 menuItemNames.GetValueOrDefault(i.MenuItemId, "Unknown"),
                 i.Quantity
             )).ToList(),
-            offer.IsActive
+            offerWithItems.IsActive
         );
 
         return Results.Ok(response);
