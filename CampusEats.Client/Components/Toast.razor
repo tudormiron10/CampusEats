@@ -1,0 +1,122 @@
+@if (IsVisible)
+{
+    <div class="fixed top-4 right-4 z-50 animate-slide-in">
+        <div class="@GetToastClass() px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[300px] max-w-md">
+            @if (Type == ToastType.Success)
+            {
+                <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            }
+            else if (Type == ToastType.Error)
+            {
+                <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </div>
+            }
+            else if (Type == ToastType.Warning)
+            {
+                <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+            }
+            <div class="flex-1">
+                <p class="font-medium">@Message</p>
+            </div>
+            <button @onclick="Hide" class="flex-shrink-0 p-1 hover:bg-white/20 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+}
+
+<style>
+    @@keyframes slide-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-in {
+        animation: slide-in 0.3s ease-out forwards;
+    }
+</style>
+
+@code {
+    private bool IsVisible { get; set; }
+    private string Message { get; set; } = string.Empty;
+    private ToastType Type { get; set; } = ToastType.Success;
+    private System.Timers.Timer? _timer;
+
+    public enum ToastType
+    {
+        Success,
+        Error,
+        Warning
+    }
+
+    public void Show(string message, ToastType type = ToastType.Success, int durationMs = 4000)
+    {
+        Message = message;
+        Type = type;
+        IsVisible = true;
+        StateHasChanged();
+
+        // Auto-hide after duration
+        _timer?.Stop();
+        _timer?.Dispose();
+        _timer = new System.Timers.Timer(durationMs);
+        _timer.Elapsed += (s, e) =>
+        {
+            InvokeAsync(() =>
+            {
+                Hide();
+                StateHasChanged();
+            });
+        };
+        _timer.AutoReset = false;
+        _timer.Start();
+    }
+
+    public void ShowSuccess(string message, int durationMs = 4000) => Show(message, ToastType.Success, durationMs);
+    public void ShowError(string message, int durationMs = 5000) => Show(message, ToastType.Error, durationMs);
+    public void ShowWarning(string message, int durationMs = 4000) => Show(message, ToastType.Warning, durationMs);
+
+    public void Hide()
+    {
+        IsVisible = false;
+        _timer?.Stop();
+        _timer?.Dispose();
+        _timer = null;
+    }
+
+    private string GetToastClass()
+    {
+        return Type switch
+        {
+            ToastType.Success => "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white",
+            ToastType.Error => "bg-gradient-to-r from-red-500 to-red-600 text-white",
+            ToastType.Warning => "bg-gradient-to-r from-amber-500 to-amber-600 text-white",
+            _ => "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white"
+        };
+    }
+
+    public void Dispose()
+    {
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+}

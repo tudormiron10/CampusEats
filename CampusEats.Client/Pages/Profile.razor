@@ -1,0 +1,528 @@
+@page "/profile"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@using CampusEats.Client.Components
+@inject UserService UserService
+@inject AuthService AuthService
+@inject LoyaltyService LoyaltyService
+@inject NavigationManager Navigation
+
+<PageTitle>My Profile - CampusEats</PageTitle>
+
+<Toast @ref="toast" />
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-gradient-to-br from-oxford-blue to-oxford-blue-light rounded-xl">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">My Profile</h1>
+                    <p class="text-slate-500">Manage your account settings</p>
+                </div>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="relative">
+                    <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                    <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                </div>
+                <p class="mt-4 text-slate-500 font-medium">Loading your profile...</p>
+            </div>
+        }
+        else if (profile != null)
+        {
+            <div class="space-y-6">
+                <!-- Profile Info Card -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h2 class="font-semibold text-slate-800">Profile Information</h2>
+                    </div>
+                    <div class="p-6">
+                        <!-- Avatar and Basic Info -->
+                        <div class="flex items-center gap-6 mb-6">
+                            <div class="w-20 h-20 bg-gradient-to-br from-oxford-blue to-oxford-blue-light rounded-full flex items-center justify-center">
+                                <span class="text-3xl font-bold text-white">@GetInitials(profile.Name)</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800">@profile.Name</h3>
+                                <p class="text-slate-500">@profile.Email</p>
+                                <span class="inline-block mt-2 px-3 py-1 bg-oxford-blue/10 text-oxford-blue text-sm font-medium rounded-full">
+                                    @profile.Role
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Edit Form -->
+                        <div class="grid gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                                <input type="text" @bind="editName" @bind:event="oninput" @onfocusout="ValidateName"
+                                       class="@GetInputClass(nameError)" />
+                                @if (!string.IsNullOrEmpty(nameError))
+                                {
+                                    <p class="mt-1 text-xs text-red-500">@nameError</p>
+                                }
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                                <input type="email" @bind="editEmail" @bind:event="oninput" @onfocusout="ValidateEmail"
+                                       class="@GetInputClass(emailError)" />
+                                @if (!string.IsNullOrEmpty(emailError))
+                                {
+                                    <p class="mt-1 text-xs text-red-500">@emailError</p>
+                                }
+                            </div>
+                        </div>
+
+                        @if (HasProfileChanges())
+                        {
+                            <div class="mt-6 flex justify-end gap-3">
+                                <button @onclick="CancelProfileChanges"
+                                        class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium transition-colors">
+                                    Cancel
+                                </button>
+                                <button @onclick="SaveProfileChanges" disabled="@isSavingProfile"
+                                        class="px-6 py-2 bg-oxford-blue text-white font-semibold rounded-lg hover:bg-oxford-blue-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                    @if (isSavingProfile)
+                                    {
+                                        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    }
+                                    Save Changes
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Account Stats Card -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <h2 class="font-semibold text-slate-800">Account Statistics</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-50 rounded-xl p-4">
+                                <p class="text-sm text-slate-500 mb-1">Member Since</p>
+                                <p class="text-lg font-bold text-slate-800">@FormatDate(profile.CreatedAt)</p>
+                            </div>
+                            <a href="/orders" class="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-colors cursor-pointer">
+                                <p class="text-sm text-slate-500 mb-1">Total Orders</p>
+                                <p class="text-lg font-bold text-slate-800">@profile.TotalOrders</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loyalty Summary Card -->
+                @if (loyaltyStatus != null)
+                {
+                    <a href="/loyalty" class="block bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all">
+                        <div class="p-6 text-white">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-white/20 rounded-lg">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium opacity-90">Loyalty Status</p>
+                                        <p class="text-xl font-bold">@loyaltyStatus.Tier Member</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-3xl font-bold">@loyaltyStatus.CurrentPoints.ToString("N0")</p>
+                                    <p class="text-sm opacity-90">points available</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-white/80 text-sm">
+                                <span>View your loyalty rewards</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                }
+
+                <!-- Change Password Card -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        <h2 class="font-semibold text-slate-800">Change Password</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
+                                <input type="password" @bind="currentPassword" @bind:event="oninput" @onfocusout="ValidateCurrentPassword"
+                                       class="@GetInputClass(currentPasswordError)" />
+                                @if (!string.IsNullOrEmpty(currentPasswordError))
+                                {
+                                    <p class="mt-1 text-xs text-red-500">@currentPasswordError</p>
+                                }
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                                <input type="password" @bind="newPassword" @bind:event="oninput" @onfocusout="ValidateNewPassword"
+                                       class="@GetInputClass(newPasswordError)" />
+                                @if (!string.IsNullOrEmpty(newPasswordError))
+                                {
+                                    <p class="mt-1 text-xs text-red-500">@newPasswordError</p>
+                                }
+                                else
+                                {
+                                    <p class="mt-1 text-xs text-slate-400">Minimum 8 characters</p>
+                                }
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
+                                <input type="password" @bind="confirmPassword" @bind:event="oninput" @onfocusout="ValidateConfirmPassword"
+                                       class="@GetInputClass(confirmPasswordError)" />
+                                @if (!string.IsNullOrEmpty(confirmPasswordError))
+                                {
+                                    <p class="mt-1 text-xs text-red-500">@confirmPasswordError</p>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(currentPassword) || !string.IsNullOrEmpty(newPassword) || !string.IsNullOrEmpty(confirmPassword))
+                        {
+                            <div class="mt-6 flex justify-end gap-3">
+                                <button @onclick="CancelPasswordChange"
+                                        class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium transition-colors">
+                                    Cancel
+                                </button>
+                                <button @onclick="ChangePassword" disabled="@isChangingPassword"
+                                        class="px-6 py-2 bg-oxford-blue text-white font-semibold rounded-lg hover:bg-oxford-blue-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                    @if (isChangingPassword)
+                                    {
+                                        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    }
+                                    Change Password
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private Toast? toast;
+    private bool isLoading = true;
+    private bool isSavingProfile = false;
+    private bool isChangingPassword = false;
+
+    private UserProfileResponse? profile;
+    private LoyaltyStatusResponse? loyaltyStatus;
+
+    // Edit fields
+    private string editName = string.Empty;
+    private string editEmail = string.Empty;
+
+    // Password fields
+    private string currentPassword = string.Empty;
+    private string newPassword = string.Empty;
+    private string confirmPassword = string.Empty;
+
+    // Validation errors
+    private string? nameError;
+    private string? emailError;
+    private string? currentPasswordError;
+    private string? newPasswordError;
+    private string? confirmPasswordError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        try
+        {
+            isLoading = true;
+            var userId = await AuthService.GetUserIdAsync();
+            if (userId == null)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            profile = await UserService.GetProfileAsync(userId.Value);
+            if (profile != null)
+            {
+                editName = profile.Name;
+                editEmail = profile.Email;
+            }
+
+            // Also load loyalty status
+            try
+            {
+                loyaltyStatus = await LoyaltyService.GetStatusAsync();
+            }
+            catch
+            {
+                // Loyalty might not be available for all users
+            }
+        }
+        catch (Exception ex)
+        {
+            toast?.ShowError($"Failed to load profile: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool HasProfileChanges()
+    {
+        return profile != null && (editName != profile.Name || editEmail != profile.Email);
+    }
+
+    private void CancelProfileChanges()
+    {
+        if (profile != null)
+        {
+            editName = profile.Name;
+            editEmail = profile.Email;
+        }
+        nameError = null;
+        emailError = null;
+    }
+
+    private async Task SaveProfileChanges()
+    {
+        if (profile == null) return;
+
+        // Run validation and show inline errors
+        if (!ValidateProfileForm())
+        {
+            return;
+        }
+
+        try
+        {
+            isSavingProfile = true;
+
+            var request = new UpdateProfileRequest
+            {
+                Name = editName,
+                Email = editEmail,
+                Role = profile.Role
+            };
+
+            var updated = await UserService.UpdateProfileAsync(profile.UserId, request);
+            if (updated != null)
+            {
+                profile = updated;
+                editName = updated.Name;
+                editEmail = updated.Email;
+
+                // Update the stored user info in AuthService
+                await AuthService.UpdateUserInfoAsync(updated.Name, updated.Email);
+
+                toast?.ShowSuccess("Profile updated successfully!");
+            }
+        }
+        catch (ApiException ex)
+        {
+            toast?.ShowError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            toast?.ShowError($"Failed to update profile: {ex.Message}");
+        }
+        finally
+        {
+            isSavingProfile = false;
+        }
+    }
+
+    private void CancelPasswordChange()
+    {
+        currentPassword = string.Empty;
+        newPassword = string.Empty;
+        confirmPassword = string.Empty;
+        currentPasswordError = null;
+        newPasswordError = null;
+        confirmPasswordError = null;
+    }
+
+    private async Task ChangePassword()
+    {
+        if (profile == null) return;
+
+        // Run validation and show inline errors
+        if (!ValidatePasswordForm())
+        {
+            return;
+        }
+
+        try
+        {
+            isChangingPassword = true;
+
+            var request = new ChangePasswordRequest
+            {
+                CurrentPassword = currentPassword,
+                NewPassword = newPassword
+            };
+
+            await UserService.ChangePasswordAsync(profile.UserId, request);
+
+            // Clear password fields
+            CancelPasswordChange();
+            toast?.ShowSuccess("Password changed successfully!");
+        }
+        catch (ApiException ex)
+        {
+            toast?.ShowError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            toast?.ShowError($"Failed to change password: {ex.Message}");
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        if (date == DateTime.MinValue) return "N/A";
+        return date.ToLocalTime().ToString("MMMM d, yyyy");
+    }
+
+    // Validation methods
+    private void ValidateName()
+    {
+        nameError = string.IsNullOrWhiteSpace(editName) ? "Name is required." : null;
+    }
+
+    private void ValidateEmail()
+    {
+        if (string.IsNullOrWhiteSpace(editEmail))
+            emailError = "Email is required.";
+        else if (!IsValidEmail(editEmail))
+            emailError = "Please enter a valid email address.";
+        else
+            emailError = null;
+    }
+
+    private void ValidateCurrentPassword()
+    {
+        if (!string.IsNullOrEmpty(newPassword) || !string.IsNullOrEmpty(confirmPassword))
+            currentPasswordError = string.IsNullOrWhiteSpace(currentPassword) ? "Current password is required." : null;
+        else
+            currentPasswordError = null;
+    }
+
+    private void ValidateNewPassword()
+    {
+        if (string.IsNullOrWhiteSpace(newPassword))
+            newPasswordError = null; // Don't show error if field is empty and user hasn't started
+        else if (newPassword.Length < 8)
+            newPasswordError = "Password must be at least 8 characters.";
+        else
+            newPasswordError = null;
+
+        // Re-validate confirm password if it has a value
+        if (!string.IsNullOrEmpty(confirmPassword))
+            ValidateConfirmPassword();
+    }
+
+    private void ValidateConfirmPassword()
+    {
+        if (string.IsNullOrWhiteSpace(confirmPassword) && !string.IsNullOrEmpty(newPassword))
+            confirmPasswordError = "Please confirm your new password.";
+        else if (!string.IsNullOrEmpty(confirmPassword) && newPassword != confirmPassword)
+            confirmPasswordError = "Passwords do not match.";
+        else
+            confirmPasswordError = null;
+    }
+
+    private bool ValidateProfileForm()
+    {
+        ValidateName();
+        ValidateEmail();
+        return string.IsNullOrEmpty(nameError) && string.IsNullOrEmpty(emailError);
+    }
+
+    private bool ValidatePasswordForm()
+    {
+        currentPasswordError = string.IsNullOrWhiteSpace(currentPassword) ? "Current password is required." : null;
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+            newPasswordError = "New password is required.";
+        else if (newPassword.Length < 8)
+            newPasswordError = "Password must be at least 8 characters.";
+        else
+            newPasswordError = null;
+
+        if (string.IsNullOrWhiteSpace(confirmPassword))
+            confirmPasswordError = "Please confirm your new password.";
+        else if (newPassword != confirmPassword)
+            confirmPasswordError = "Passwords do not match.";
+        else
+            confirmPasswordError = null;
+
+        return string.IsNullOrEmpty(currentPasswordError) &&
+               string.IsNullOrEmpty(newPasswordError) &&
+               string.IsNullOrEmpty(confirmPasswordError);
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        var atIndex = email.IndexOf('@');
+        if (atIndex <= 0) return false;
+        var dotIndex = email.LastIndexOf('.');
+        return dotIndex > atIndex + 1 && dotIndex < email.Length - 1;
+    }
+
+    private string GetInputClass(string? error)
+    {
+        var baseClass = "w-full px-4 py-2.5 border rounded-lg focus:ring-2 transition-colors";
+        return string.IsNullOrEmpty(error)
+            ? $"{baseClass} border-slate-300 focus:ring-oxford-blue/20 focus:border-oxford-blue"
+            : $"{baseClass} border-red-300 focus:ring-red-200 focus:border-red-500";
+    }
+}

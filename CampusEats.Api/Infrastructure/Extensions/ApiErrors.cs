@@ -28,6 +28,9 @@ public static class ApiErrors
     public static IResult InvalidCredentials() =>
         Results.Json(new ApiError("INVALID_CREDENTIALS", "Invalid email or password."), statusCode: 401);
 
+    public static IResult IncorrectPassword() =>
+        Results.Json(new ApiError("INCORRECT_PASSWORD", "Current password is incorrect."), statusCode: 401);
+
     // 403 Forbidden
     public static IResult Forbidden(string message = "You do not have permission to perform this action.") =>
         Results.Json(new ApiError("FORBIDDEN", message), statusCode: 403);

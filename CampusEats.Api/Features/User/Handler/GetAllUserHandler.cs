@@ -15,13 +15,16 @@ namespace CampusEats.Api.Features.Users
         {
             var usersList = await _context.Users
                 .Include(u => u.Loyalty)
+                .Include(u => u.Orders)
                 .AsNoTracking()
                 .Select(user => new UserResponse(
                     user.UserId,
                     user.Name,
                     user.Email,
                     user.Role.ToString(),
-                    user.Loyalty != null ? (int?)user.Loyalty.CurrentPoints : null
+                    user.Loyalty != null ? (int?)user.Loyalty.CurrentPoints : null,
+                    user.CreatedAt,
+                    user.Orders.Count
                 ))
                 .ToListAsync(cancellationToken);
 
