@@ -41,8 +41,9 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
             Name = request.Name,
             Email = request.Email,
             Role = request.Role,
-            PasswordHash = passwordHash, 
-            PasswordSalt = passwordSalt  
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
@@ -69,8 +70,10 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
             user.UserId,
             user.Name,
             user.Email,
-            user.Role.ToString(), 
-            points 
+            user.Role.ToString(),
+            points,
+            user.CreatedAt,
+            0
         );
         
         

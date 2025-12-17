@@ -144,4 +144,11 @@ public class AuthService
         }
         return null;
     }
+
+    public async Task UpdateUserInfoAsync(string name, string email)
+    {
+        await _localStorage.SetItemAsync("userFullName", name);
+        await _localStorage.SetItemAsync("userEmail", email);
+        OnAuthStateChanged?.Invoke();
+    }
 }

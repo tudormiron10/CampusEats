@@ -28,6 +28,7 @@ namespace CampusEats.Api.Features.Users
 
             var user = await _context.Users
                 .Include(u => u.Loyalty)
+                .Include(u => u.Orders)
                 .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
 
             if (user == null)
@@ -52,7 +53,9 @@ namespace CampusEats.Api.Features.Users
                 user.Name,
                 user.Email,
                 user.Role.ToString(),
-                user.Loyalty?.CurrentPoints
+                user.Loyalty?.CurrentPoints,
+                user.CreatedAt,
+                user.Orders.Count
             );
 
             return Results.Ok(response);

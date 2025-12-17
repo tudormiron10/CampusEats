@@ -33,6 +33,7 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
 
         var user = await _context.Users
             .Include(u => u.Loyalty)
+            .Include(u => u.Orders)
             .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user == null || !VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
@@ -45,7 +46,9 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
             user.Name,
             user.Email,
             user.Role.ToString(),
-            user.Loyalty?.CurrentPoints 
+            user.Loyalty?.CurrentPoints,
+            user.CreatedAt,
+            user.Orders.Count
         );
 
         var loginResponse = new LoginResponse(token, userResponse);

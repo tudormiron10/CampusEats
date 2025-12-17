@@ -665,6 +665,28 @@ app.MapPut("/users/{userId:guid}", async (
 .RequireAuthorization()
 .WithTags("Users");
 
+// Endpoint for changing user password.
+// Users can only change their own password.
+app.MapPatch("/users/{userId:guid}/password", async (
+        Guid userId,
+        ChangePasswordRequest request,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    var currentUserId = httpContext.GetUserId();
+    if (currentUserId == null)
+        return ApiErrors.Unauthorized();
+
+    // Users can only change their own password
+    if (currentUserId != userId)
+        return ApiErrors.Forbidden();
+
+    var requestWithId = request with { UserId = userId };
+    return await mediator.Send(requestWithId);
+})
+.RequireAuthorization()
+.WithTags("Users");
+
 // Endpoint for login (public)
 app.MapPost("/users/login", async (
         LoginRequest request,

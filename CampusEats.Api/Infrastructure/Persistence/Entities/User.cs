@@ -10,6 +10,8 @@ public class User
     public byte[] PasswordHash { get; set; } = null!;
     public byte[] PasswordSalt { get; set; } = null!;
 
+    public DateTime CreatedAt { get; set; }
+
     // 1-to-1 Relationship
     public Loyalty Loyalty { get; set; } = null!;
     // 1-to-many Relationship
