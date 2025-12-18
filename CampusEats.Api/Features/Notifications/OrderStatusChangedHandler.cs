@@ -31,20 +31,23 @@ public class OrderStatusChangedHandler : INotificationHandler<OrderStatusChanged
             notification.ChangedAt
         );
 
-        // Send to the order owner
-        try
+        // Send to the order owner (if user exists)
+        if (notification.UserId.HasValue)
         {
-            await _hubContext.Clients
-                .Group($"user:{notification.UserId}")
-                .OrderStatusChanged(update);
+            try
+            {
+                await _hubContext.Clients
+                    .Group($"user:{notification.UserId}")
+                    .OrderStatusChanged(update);
 
-            _logger.LogDebug("Sent status update to user {UserId} for order {OrderId}: {OldStatus} -> {NewStatus}",
-                notification.UserId, notification.OrderId, notification.OldStatus, notification.NewStatus);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send status update to user {UserId} for order {OrderId}",
-                notification.UserId, notification.OrderId);
+                _logger.LogDebug("Sent status update to user {UserId} for order {OrderId}: {OldStatus} -> {NewStatus}",
+                    notification.UserId, notification.OrderId, notification.OldStatus, notification.NewStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send status update to user {UserId} for order {OrderId}",
+                    notification.UserId, notification.OrderId);
+            }
         }
 
         // Also send to kitchen staff

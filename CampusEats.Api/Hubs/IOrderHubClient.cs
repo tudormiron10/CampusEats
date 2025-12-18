@@ -27,7 +27,7 @@ public interface IOrderHubClient
 /// </summary>
 public record OrderStatusUpdate(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     string Status,
     string? PreviousStatus,
     DateTime UpdatedAt
@@ -39,7 +39,7 @@ public record OrderStatusUpdate(
 /// </summary>
 public record NewOrderNotification(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     string CustomerName,
     string Status,
     decimal TotalAmount,

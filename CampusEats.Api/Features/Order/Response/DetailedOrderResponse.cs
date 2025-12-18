@@ -2,7 +2,7 @@
 
 public record DetailedOrderResponse(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     string Status,
     decimal TotalAmount,
     DateTime OrderDate,

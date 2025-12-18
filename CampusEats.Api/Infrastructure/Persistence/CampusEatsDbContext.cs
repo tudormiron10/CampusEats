@@ -30,6 +30,13 @@ public class CampusEatsDbContext : DbContext
             .WithOne(l => l.User)
             .HasForeignKey<Loyalty>(l => l.UserId);
 
+        // Configure Order-User relationship (SetNull when user is deleted)
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.User)
+            .WithMany(u => u.Orders)
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Configurăm relația 1-la-mulți dintre Order și OrderItem
         modelBuilder.Entity<Order>()
             .HasMany(o => o.Items)

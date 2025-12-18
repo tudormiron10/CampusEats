@@ -1,0 +1,722 @@
+@page "/admin"
+@page "/admin/{Tab}"
+@using CampusEats.Client.Models
+@using CampusEats.Client.Services
+@using CampusEats.Client.Components
+@inject AdminService AdminService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Administration - CampusEats</PageTitle>
+
+<Toast @ref="toast" />
+
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">Administration</h1>
+                    <p class="text-slate-500">Manage users and view system analytics</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
+                <div class="flex gap-2">
+                    <button class="@(activeTab == "dashboard" ? "bg-oxford-blue text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-5 py-2.5 rounded-lg font-medium transition-all duration-200"
+                            @onclick="@(() => SetTab("dashboard"))">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            Dashboard
+                        </span>
+                    </button>
+                    <button class="@(activeTab == "users" ? "bg-oxford-blue text-white shadow-md" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-5 py-2.5 rounded-lg font-medium transition-all duration-200"
+                            @onclick="@(() => SetTab("users"))">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            Users
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="flex flex-col items-center justify-center py-16">
+                <div class="relative">
+                    <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+                    <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                </div>
+                <p class="mt-4 text-slate-500 font-medium">Loading...</p>
+            </div>
+        }
+        else if (error != null)
+        {
+            <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+                <div class="p-2 bg-red-100 rounded-lg shrink-0">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-red-800">Error</h3>
+                    <p class="text-red-600 text-sm mt-1">@error</p>
+                </div>
+            </div>
+        }
+        else if (activeTab == "dashboard")
+        {
+            @if (stats != null)
+            {
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Total Users</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@stats.TotalUsers</p>
+                            </div>
+                            <div class="p-3 bg-blue-100 rounded-xl">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Orders Today</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@stats.OrdersToday</p>
+                            </div>
+                            <div class="p-3 bg-emerald-100 rounded-xl">
+                                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Revenue Today</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@stats.RevenueToday.ToString("C")</p>
+                            </div>
+                            <div class="p-3 bg-amber-100 rounded-xl">
+                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">New This Week</p>
+                                <p class="text-3xl font-bold text-slate-800 mt-1">@stats.NewUsersThisWeek</p>
+                            </div>
+                            <div class="p-3 bg-purple-100 rounded-xl">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Breakdown Cards -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-purple-200 rounded-lg">
+                                <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-purple-800">@stats.AdminCount</p>
+                                <p class="text-sm text-purple-600">Admins</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-200 rounded-lg">
+                                <svg class="w-5 h-5 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-blue-800">@stats.ManagerCount</p>
+                                <p class="text-sm text-blue-600">Managers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-slate-200 rounded-lg">
+                                <svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-slate-800">@stats.ClientCount</p>
+                                <p class="text-sm text-slate-600">Clients</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Users by Role Donut -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Users by Role</h3>
+                        <div id="usersByRoleChart" style="height: 250px;"></div>
+                    </div>
+
+                    <!-- New Users Over Time -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">New Users (Last 30 Days)</h3>
+                        <div id="newUsersChart" style="height: 250px;"></div>
+                    </div>
+                </div>
+
+                <!-- Top Customers Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-800">Top Customers</h3>
+                        <p class="text-sm text-slate-500">By total spend (completed orders)</p>
+                    </div>
+                    @if (stats.TopCustomers.Any())
+                    {
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Rank</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Orders</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Spent</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    @for (var i = 0; i < stats.TopCustomers.Count; i++)
+                                    {
+                                        var customer = stats.TopCustomers[i];
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="@GetRankBadgeClass(i + 1) px-2.5 py-1 rounded-full text-xs font-semibold">
+                                                    #@(i + 1)
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-slate-800">@customer.Name</div>
+                                                <div class="text-sm text-slate-500">@customer.Email</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-slate-600">@customer.TotalOrders</td>
+                                            <td class="px-6 py-4 whitespace-nowrap font-semibold text-slate-800">@customer.TotalSpent.ToString("C")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="px-6 py-12 text-center text-slate-500">
+                            No customer data available yet.
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else if (activeTab == "users")
+        {
+            <!-- Search and Filter -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text"
+                                   class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-oxford-blue focus:border-oxford-blue"
+                                   placeholder="Search by name or email..."
+                                   @bind="searchTerm"
+                                   @bind:event="oninput"
+                                   @onkeyup="HandleSearchKeyUp" />
+                        </div>
+                    </div>
+                    <div class="w-48">
+                        <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-oxford-blue focus:border-oxford-blue"
+                                @bind="roleFilter"
+                                @bind:after="LoadUsers">
+                            <option value="">All Roles</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Client">Client</option>
+                        </select>
+                    </div>
+                    <button class="px-4 py-2.5 bg-oxford-blue text-white rounded-lg hover:bg-oxford-blue-dark transition-colors flex items-center gap-2"
+                            @onclick="LoadUsers">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            @if (usersResponse != null)
+            {
+                <!-- Users Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Orders</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Order</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                @foreach (var user in usersResponse.Users)
+                                {
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-6 py-4">
+                                            <div class="font-medium text-slate-800">@user.Name</div>
+                                            <div class="text-sm text-slate-500">@user.Email</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="@GetRoleBadgeClass(user.Role) px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                                                @user.Role
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                            @user.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                            @user.TotalOrders
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                                            @(user.LastOrderDate?.ToLocalTime().ToString("MMM dd, yyyy") ?? "-")
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit Role"
+                                                        @onclick="@(() => OpenEditRole(user))">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                                <button class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        title="@(user.HasActiveOrders ? "Cannot delete: user has active orders" : "Delete User")"
+                                                        disabled="@user.HasActiveOrders"
+                                                        @onclick="@(() => OpenDeleteConfirm(user))">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                @if (usersResponse.TotalPages > 1)
+                {
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-500">
+                            Showing @((usersResponse.Page - 1) * usersResponse.PageSize + 1) to @Math.Min(usersResponse.Page * usersResponse.PageSize, usersResponse.TotalCount) of @usersResponse.TotalCount users
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <button class="px-3 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled="@(currentPage <= 1)"
+                                    @onclick="PreviousPage">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            @for (var i = Math.Max(1, currentPage - 2); i <= Math.Min(usersResponse.TotalPages, currentPage + 2); i++)
+                            {
+                                var pageNum = i;
+                                <button class="@(pageNum == currentPage ? "bg-oxford-blue text-white" : "bg-white border border-slate-200 hover:bg-slate-50") px-4 py-2 rounded-lg font-medium"
+                                        @onclick="@(() => GoToPage(pageNum))">
+                                    @pageNum
+                                </button>
+                            }
+                            <button class="px-3 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled="@(currentPage >= usersResponse.TotalPages)"
+                                    @onclick="NextPage">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+@if (showEditRoleModal && editingUser != null)
+{
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @onclick="CloseEditRoleModal">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full" @onclick:stopPropagation>
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h3 class="text-lg font-semibold text-slate-800">Edit User Role</h3>
+            </div>
+            <div class="px-6 py-4">
+                <div class="mb-4">
+                    <p class="text-sm text-slate-500">User</p>
+                    <p class="font-medium text-slate-800">@editingUser.Name</p>
+                    <p class="text-sm text-slate-500">@editingUser.Email</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Role</label>
+                    <select class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-oxford-blue focus:border-oxford-blue"
+                            @bind="newRole">
+                        <option value="Admin">Admin</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Client">Client</option>
+                    </select>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+                <button class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                        @onclick="CloseEditRoleModal"
+                        disabled="@isSaving">
+                    Cancel
+                </button>
+                <button class="px-4 py-2 bg-oxford-blue text-white rounded-lg hover:bg-oxford-blue-dark transition-colors disabled:opacity-50"
+                        @onclick="SaveRole"
+                        disabled="@isSaving">
+                    @(isSaving ? "Saving..." : "Save Changes")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirm Modal -->
+<DeleteUserConfirmDialog @ref="deleteDialog" OnConfirm="DeleteUser" />
+
+@code {
+    [Parameter]
+    public string? Tab { get; set; }
+
+    private Toast? toast;
+    private DeleteUserConfirmDialog? deleteDialog;
+
+    private string activeTab = "dashboard";
+    private bool isLoading = true;
+    private string? error;
+
+    // Dashboard state
+    private AdminStatsResponse? stats;
+    private bool shouldRenderCharts = false;
+
+    // Users state
+    private PaginatedUsersResponse? usersResponse;
+    private string searchTerm = "";
+    private string roleFilter = "";
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private System.Timers.Timer? searchDebounceTimer;
+
+    // Edit Role Modal state
+    private bool showEditRoleModal = false;
+    private AdminUserResponse? editingUser;
+    private string newRole = "";
+    private bool isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var role = await AuthService.GetUserRoleAsync();
+        if (role != "Admin")
+        {
+            Navigation.NavigateTo("/menu");
+            return;
+        }
+
+        // Set active tab from URL or default to dashboard
+        activeTab = string.IsNullOrEmpty(Tab) ? "dashboard" : Tab.ToLower();
+
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newTab = string.IsNullOrEmpty(Tab) ? "dashboard" : Tab.ToLower();
+        if (newTab != activeTab)
+        {
+            activeTab = newTab;
+            await LoadData();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        if (activeTab == "dashboard")
+        {
+            await LoadStats();
+        }
+        else if (activeTab == "users")
+        {
+            await LoadUsers();
+        }
+    }
+
+    private async Task LoadStats()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+            shouldRenderCharts = false;
+            StateHasChanged();
+
+            stats = await AdminService.GetStatsAsync();
+            shouldRenderCharts = true;
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load stats: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            isLoading = true;
+            error = null;
+            StateHasChanged();
+
+            usersResponse = await AdminService.GetUsersAsync(currentPage, pageSize, searchTerm, roleFilter);
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to load users: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SetTab(string tab)
+    {
+        Navigation.NavigateTo($"/admin/{tab}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shouldRenderCharts && stats != null)
+        {
+            shouldRenderCharts = false;
+            await RenderCharts();
+        }
+    }
+
+    private async Task RenderCharts()
+    {
+        if (stats == null) return;
+
+        try
+        {
+            // Users by Role Donut Chart
+            if (stats.UsersByRole.Any())
+            {
+                var labels = stats.UsersByRole.Select(r => r.Role).ToArray();
+                var data = stats.UsersByRole.Select(r => (double)r.Count).ToArray();
+                var colors = stats.UsersByRole.Select(r => r.Role switch
+                {
+                    "Admin" => "#9333ea",
+                    "Manager" => "#3b82f6",
+                    "Client" => "#64748b",
+                    _ => "#94a3b8"
+                }).ToArray();
+                await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderDonutChart",
+                    "usersByRoleChart", labels, data, colors);
+            }
+
+            // New Users Area Chart
+            if (stats.NewUsersOverTime.Any())
+            {
+                var categories = stats.NewUsersOverTime.Select(d => d.Date).ToArray();
+                var data = stats.NewUsersOverTime.Select(d => d.Count).ToArray();
+                await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderAreaChart",
+                    "newUsersChart", categories, data, "#6366f1");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Chart render error: {ex.Message}");
+        }
+    }
+
+    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        // Debounce search
+        searchDebounceTimer?.Stop();
+        searchDebounceTimer?.Dispose();
+        searchDebounceTimer = new System.Timers.Timer(1250);
+        searchDebounceTimer.Elapsed += async (s, e) =>
+        {
+            searchDebounceTimer?.Stop();
+            currentPage = 1;
+            await InvokeAsync(async () => await LoadUsers());
+        };
+        searchDebounceTimer.Start();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        currentPage = page;
+        await LoadUsers();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadUsers();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (usersResponse != null && currentPage < usersResponse.TotalPages)
+        {
+            currentPage++;
+            await LoadUsers();
+        }
+    }
+
+    private void OpenEditRole(AdminUserResponse user)
+    {
+        editingUser = user;
+        newRole = user.Role;
+        showEditRoleModal = true;
+    }
+
+    private void CloseEditRoleModal()
+    {
+        showEditRoleModal = false;
+        editingUser = null;
+    }
+
+    private async Task SaveRole()
+    {
+        if (editingUser == null) return;
+
+        try
+        {
+            isSaving = true;
+            await AdminService.UpdateUserRoleAsync(editingUser.UserId, editingUser.Name, editingUser.Email, newRole);
+            toast?.ShowSuccess("Role updated successfully");
+            CloseEditRoleModal();
+            await LoadUsers();
+            // Also reload stats if role changed
+            await LoadStats();
+        }
+        catch (ApiException ex)
+        {
+            toast?.ShowError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            toast?.ShowError($"Failed to update role: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void OpenDeleteConfirm(AdminUserResponse user)
+    {
+        deleteDialog?.Open(user);
+    }
+
+    private async Task DeleteUser(AdminUserResponse user)
+    {
+        try
+        {
+            await AdminService.DeleteUserAsync(user.UserId);
+            toast?.ShowSuccess("User deleted successfully");
+            await LoadUsers();
+            await LoadStats();
+        }
+        catch (ApiException ex)
+        {
+            toast?.ShowError(ex.Message);
+            deleteDialog?.SetError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            var message = $"Failed to delete user: {ex.Message}";
+            toast?.ShowError(message);
+            deleteDialog?.SetError(message);
+        }
+    }
+
+    private string GetRoleBadgeClass(string role) => role switch
+    {
+        "Admin" => "bg-purple-100 text-purple-700 border border-purple-200",
+        "Manager" => "bg-blue-100 text-blue-700 border border-blue-200",
+        "Client" => "bg-slate-100 text-slate-600 border border-slate-200",
+        _ => "bg-slate-100 text-slate-600 border border-slate-200"
+    };
+
+    private string GetRankBadgeClass(int rank) => rank switch
+    {
+        1 => "bg-amber-100 text-amber-700",
+        2 => "bg-slate-200 text-slate-700",
+        3 => "bg-orange-100 text-orange-700",
+        _ => "bg-slate-100 text-slate-600"
+    };
+
+    public void Dispose()
+    {
+        searchDebounceTimer?.Stop();
+        searchDebounceTimer?.Dispose();
+    }
+}

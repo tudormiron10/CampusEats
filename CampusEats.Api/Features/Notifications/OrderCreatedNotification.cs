@@ -8,7 +8,7 @@ namespace CampusEats.Api.Features.Notifications;
 /// </summary>
 public record OrderCreatedNotification(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     string CustomerName,
     decimal TotalAmount,
     DateTime OrderDate,
