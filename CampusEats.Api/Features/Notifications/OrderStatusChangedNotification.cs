@@ -8,7 +8,7 @@ namespace CampusEats.Api.Features.Notifications;
 /// </summary>
 public record OrderStatusChangedNotification(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     string OldStatus,
     string NewStatus,
     DateTime ChangedAt

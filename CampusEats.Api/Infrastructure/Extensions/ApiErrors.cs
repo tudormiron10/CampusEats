@@ -51,4 +51,14 @@ public static class ApiErrors
     public static IResult MenuItemNotFound() => NotFound("Menu item");
     public static IResult CategoryNotFound() => NotFound("Category");
     public static IResult PaymentNotFound() => NotFound("Payment");
+
+    // Admin-specific errors
+    public static IResult UserHasActiveOrders() =>
+        Conflict("Cannot delete user with active orders (Pending, InPreparation, or Ready).");
+
+    public static IResult CannotDeleteLastAdmin() =>
+        Conflict("Cannot delete the last admin user.");
+
+    public static IResult CannotDeleteSelf() =>
+        Conflict("Cannot delete your own account.");
 }

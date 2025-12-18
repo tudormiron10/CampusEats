@@ -7,9 +7,9 @@ public class Order
     public decimal TotalAmount { get; set; }
     public DateTime OrderDate { get; set; }
 
-    // Foreign key for User
-    public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
+    // Foreign key for User (nullable to preserve orders when user is deleted)
+    public Guid? UserId { get; set; }
+    public User? User { get; set; }
 
     // Replace many-to-many items (MenuItem) with order lines
     public List<OrderItem> Items { get; set; } = new();

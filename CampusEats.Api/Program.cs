@@ -19,6 +19,7 @@ using CampusEats.Api.Features.Payments.Handler;
 using CampusEats.Api.Features.User.Request;
 using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Features.Loyalty.Request;
+using CampusEats.Api.Features.Admin.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Infrastructure.Extensions;
@@ -695,6 +696,56 @@ app.MapPost("/users/login", async (
         return await mediator.Send(request);
     })
     .WithTags("Users");
+
+// ====== ADMIN GROUP (Admin only) ======
+
+// Endpoint for retrieving paginated users with search/filter (Admin only).
+app.MapGet("/admin/users", async (
+        int page,
+        int pageSize,
+        string? search,
+        string? role,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsAdmin())
+        return Results.Forbid();
+
+    return await mediator.Send(new GetUsersWithPaginationRequest(page, pageSize, search, role));
+})
+.RequireAuthorization()
+.WithTags("Admin");
+
+// Endpoint for deleting a user (Admin only).
+app.MapDelete("/users/{userId:guid}", async (
+        Guid userId,
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsAdmin())
+        return Results.Forbid();
+
+    var currentUserId = httpContext.GetUserId();
+    if (currentUserId == null)
+        return ApiErrors.Unauthorized();
+
+    return await mediator.Send(new DeleteUserRequest(userId, currentUserId.Value));
+})
+.RequireAuthorization()
+.WithTags("Admin");
+
+// Endpoint for admin dashboard stats (Admin only).
+app.MapGet("/admin/stats", async (
+        HttpContext httpContext,
+        [FromServices] IMediator mediator) =>
+{
+    if (!httpContext.IsAdmin())
+        return Results.Forbid();
+
+    return await mediator.Send(new GetAdminStatsRequest());
+})
+.RequireAuthorization()
+.WithTags("Admin");
 
 // ============================================
 // LOYALTY ENDPOINTS

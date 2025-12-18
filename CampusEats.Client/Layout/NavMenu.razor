@@ -43,6 +43,14 @@
                 Kitchen
             </NavLink>
         }
+        @if (IsAdmin)
+        {
+            <NavLink class="px-4 py-2 rounded-lg text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                     href="admin"
+                     ActiveClass="bg-tan text-oxford-blue font-semibold">
+                Admin
+            </NavLink>
+        }
 
         @if (!string.IsNullOrEmpty(userFullName))
         {
@@ -146,6 +154,17 @@
                 </NavLink>
             </div>
         }
+        @if (IsAdmin)
+        {
+            <div class="px-3 pb-2">
+                <NavLink class="flex items-center h-12 px-3 rounded-md text-tan-light font-medium transition-all hover:bg-tan/20 hover:text-tan no-underline"
+                         href="admin"
+                         ActiveClass="bg-tan text-oxford-blue font-semibold"
+                         @onclick="ToggleNavMenu">
+                    <i class="bi bi-shield-check mr-3 text-lg"></i> Admin
+                </NavLink>
+            </div>
+        }
 
         <hr class="border-tan/30 mx-4 my-2" />
 
@@ -166,6 +185,7 @@
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
     private bool IsStaff => userRole == "Admin" || userRole == "Manager";
+    private bool IsAdmin => userRole == "Admin";
 
     protected override async Task OnInitializedAsync()
     {

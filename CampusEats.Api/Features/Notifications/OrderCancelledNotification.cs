@@ -8,6 +8,6 @@ namespace CampusEats.Api.Features.Notifications;
 /// </summary>
 public record OrderCancelledNotification(
     Guid OrderId,
-    Guid UserId,
+    Guid? UserId,
     DateTime CancelledAt
 ) : INotification;

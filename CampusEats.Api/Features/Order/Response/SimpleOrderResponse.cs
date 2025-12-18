@@ -2,7 +2,7 @@
 {
     public record SimpleOrderResponse(
         Guid OrderId,
-        Guid UserId,
+        Guid? UserId,
         string Status,
         decimal TotalAmount,
         DateTime OrderDate

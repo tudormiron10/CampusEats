@@ -1,0 +1,180 @@
+@using CampusEats.Client.Models
+
+@if (isVisible)
+{
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" @onclick="CloseDialog">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in" @onclick:stopPropagation="true">
+            <div class="p-6">
+                <div class="flex items-start gap-4 mb-6">
+                    <div class="flex-shrink-0 w-16 h-16 bg-red-50 border-2 border-red-200 rounded-full flex items-center justify-center">
+                        <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-1">Delete User</h3>
+                        <p class="text-sm text-gray-500 font-medium">This action cannot be undone</p>
+                    </div>
+                </div>
+
+                @if (userToDelete != null)
+                {
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">@userToDelete.Name</p>
+                                <p class="text-sm text-slate-500">@userToDelete.Email</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="@GetRoleBadgeClass(userToDelete.Role) px-2.5 py-1 rounded-full text-xs font-semibold">
+                                @userToDelete.Role
+                            </span>
+                            <span class="text-slate-500">@userToDelete.TotalOrders orders</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <div class="text-sm">
+                                <p class="font-semibold text-amber-800 mb-1">Warning</p>
+                                <ul class="text-amber-700 space-y-1 list-disc list-inside">
+                                    <li>The user will be permanently deleted</li>
+                                    <li>Their loyalty points and history will be removed</li>
+                                    @if (userToDelete.TotalOrders > 0)
+                                    {
+                                        <li>@userToDelete.TotalOrders past order(s) will be preserved but unlinked</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Type <span class="font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded">@userToDelete.Email</span> to confirm:
+                        </label>
+                        <input type="text"
+                               @bind="confirmationEmail"
+                               @bind:event="oninput"
+                               placeholder="Enter email address"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" />
+                    </div>
+                }
+
+                @if (errorMessage != null)
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-5 shadow-sm">
+                        <span class="text-sm font-medium">@errorMessage</span>
+                    </div>
+                }
+
+                <div class="flex justify-end gap-3">
+                    <button type="button"
+                            class="px-6 py-2.5 border border-gray-300 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all shadow-sm"
+                            @onclick="CloseDialog"
+                            disabled="@isDeleting">
+                        Cancel
+                    </button>
+                    <button type="button"
+                            class="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-semibold hover:shadow-lg hover:from-red-700 hover:to-red-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            @onclick="ConfirmDelete"
+                            disabled="@(!CanDelete)">
+                        @if (isDeleting)
+                        {
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Deleting...</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Delete User</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<AdminUserResponse> OnConfirm { get; set; }
+
+    private bool isVisible = false;
+    private bool isDeleting = false;
+    private string? errorMessage;
+    private AdminUserResponse? userToDelete;
+    private string confirmationEmail = "";
+
+    private bool CanDelete =>
+        !isDeleting &&
+        userToDelete != null &&
+        string.Equals(confirmationEmail.Trim(), userToDelete.Email, StringComparison.OrdinalIgnoreCase);
+
+    public void Open(AdminUserResponse user)
+    {
+        userToDelete = user;
+        confirmationEmail = "";
+        errorMessage = null;
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private void CloseDialog()
+    {
+        isVisible = false;
+        errorMessage = null;
+        confirmationEmail = "";
+        StateHasChanged();
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (userToDelete == null || !CanDelete) return;
+
+        try
+        {
+            isDeleting = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            await OnConfirm.InvokeAsync(userToDelete);
+            CloseDialog();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isDeleting = false;
+            StateHasChanged();
+        }
+    }
+
+    public void SetError(string message)
+    {
+        errorMessage = message;
+        isDeleting = false;
+        StateHasChanged();
+    }
+
+    private string GetRoleBadgeClass(string role) => role switch
+    {
+        "Admin" => "bg-purple-100 text-purple-800",
+        "Manager" => "bg-blue-100 text-blue-800",
+        _ => "bg-slate-100 text-slate-800"
+    };
+}
