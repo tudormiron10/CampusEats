@@ -1,6 +1,5 @@
 using CampusEats.Client.Models;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 
 namespace CampusEats.Client.Services;
 
@@ -51,12 +50,13 @@ public class OrderHubService : IAsyncDisposable
     /// </summary>
     public HubConnectionState ConnectionState => _hubConnection?.State ?? HubConnectionState.Disconnected;
 
-    public OrderHubService(IConfiguration config)
+    /// <summary>
+    /// Creates the OrderHubService with the hub URL.
+    /// </summary>
+    /// <param name="hubUrl">The full URL to the SignalR hub (e.g., https://example.com/hubs/orders)</param>
+    public OrderHubService(string hubUrl)
     {
-        var baseUrl = config["ApiSettings:BaseUrl"]
-            ?? throw new InvalidOperationException("API BaseUrl not configured in appsettings.json");
-
-        _hubUrl = $"{baseUrl}/hubs/orders";
+        _hubUrl = hubUrl;
     }
 
     /// <summary>

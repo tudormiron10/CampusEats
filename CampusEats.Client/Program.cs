@@ -46,6 +46,10 @@ builder.Services.AddScoped<AdminService>();
 builder.Services.AddSingleton<CartService>();
 
 // Singleton: one SignalR connection shared across all pages
-builder.Services.AddSingleton<OrderHubService>();
+// Compute hub URL at registration time (same-origin deployment when BaseUrl is empty)
+var hubBaseUrl = string.IsNullOrEmpty(apiBaseUrl)
+    ? builder.HostEnvironment.BaseAddress.TrimEnd('/')
+    : apiBaseUrl.TrimEnd('/');
+builder.Services.AddSingleton(new OrderHubService($"{hubBaseUrl}/hubs/orders"));
 
 await builder.Build().RunAsync();
