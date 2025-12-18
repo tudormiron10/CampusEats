@@ -7,6 +7,11 @@
       <UserSecretsId>4cda40e9-93b7-4466-8478-a00d3eae60b1</UserSecretsId>
   </PropertyGroup>
 
+    <!-- Reference Blazor Client for combined deployment -->
+    <ItemGroup>
+        <ProjectReference Include="..\CampusEats.Client\CampusEats.Client.csproj" />
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Bogus" Version="35.6.5" />
         <PackageReference Include="FluentValidation" Version="12.0.0" />
@@ -23,6 +28,7 @@
         <PackageReference Include="Stripe.net" Version="50.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.0" />
     </ItemGroup>
 
 </Project>

@@ -135,45 +135,55 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Enable Swagger in all environments for API documentation
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-// Enable CORS
-app.UseCors();
+// Enable CORS only when allowed origins are configured (not needed for same-origin deployment)
+if (allowedOrigins.Length > 0)
+{
+    app.UseCors();
+}
 
 // Enable authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Enable static files for serving uploaded images
+// Enable static files for serving uploaded images and Blazor WASM
 app.UseStaticFiles();
+app.UseBlazorFrameworkFiles();
 
-// --- SEEDER CODE BLOCK ---
-// Run the seeder only in the Development environment
-if (app.Environment.IsDevelopment())
+// --- DATABASE MIGRATION & SEEDING ---
+// Run migrations automatically on startup (for production deployment)
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var db = scope.ServiceProvider.GetRequiredService<CampusEatsDbContext>();
+    db.Database.Migrate();
+}
 
+// Run seeder in Development or when SEED_DATABASE=true environment variable is set
+var shouldSeed = app.Environment.IsDevelopment() ||
+                 Environment.GetEnvironmentVariable("SEED_DATABASE") == "true";
+if (shouldSeed)
+{
     try
     {
-        // Call our static seeding method
         DataSeeder.SeedDatabase(app);
     }
     catch (Exception ex)
     {
-        // Log the error if seeding fails
         var logger = app.Services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred during database seeding.");
     }
 }
 
 // --- Endpoint Mapping ---
+
+// Health check endpoint for Azure monitoring
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+   .WithTags("Health");
 
 // ====== MENU GROUP ======
 
@@ -817,6 +827,9 @@ app.MapPatch("/loyalty/offers/{offerId:guid}/status", async (Guid offerId, Updat
 
 // ====== SIGNALR HUBS ======
 app.MapHub<OrderHub>("/hubs/orders");
+
+// Fallback to Blazor WASM SPA for client-side routing
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
