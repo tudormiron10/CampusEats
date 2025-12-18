@@ -9,8 +9,8 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure API HttpClient from appsettings.json
-var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]
-    ?? throw new InvalidOperationException("API BaseUrl not configured in appsettings.json");
+// Empty or missing BaseUrl means same-origin deployment (use host origin)
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
 
 // Add Blazored LocalStorage (must be before HttpClient registration)
 builder.Services.AddBlazoredLocalStorage();
@@ -23,7 +23,13 @@ builder.Services.AddScoped(sp =>
 {
     var handler = sp.GetRequiredService<AuthTokenHandler>();
     handler.InnerHandler = new HttpClientHandler();
-    return new HttpClient(handler) { BaseAddress = new Uri(apiBaseUrl) };
+
+    // Use configured BaseUrl or fall back to current host origin (same-origin deployment)
+    var baseAddress = string.IsNullOrEmpty(apiBaseUrl)
+        ? new Uri(builder.HostEnvironment.BaseAddress)
+        : new Uri(apiBaseUrl);
+
+    return new HttpClient(handler) { BaseAddress = baseAddress };
 });
 
 // Register our services
