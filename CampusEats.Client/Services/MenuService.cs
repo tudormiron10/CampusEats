@@ -41,7 +41,7 @@ public class MenuService
 
     public async Task<List<MenuItemResponse>> GetMenuAsync(string? category = null, string? dietaryKeyword = null)
     {
-        var url = "/menu";
+        var url = "/api/menu";
         var queryParams = new List<string>();
 
         if (!string.IsNullOrEmpty(category))
@@ -59,26 +59,26 @@ public class MenuService
 
     public async Task<MenuItemResponse?> GetMenuItemAsync(Guid id)
     {
-        return await _http.GetFromJsonAsync<MenuItemResponse>($"/menu/{id}");
+        return await _http.GetFromJsonAsync<MenuItemResponse>($"/api/menu/{id}");
     }
 
     public async Task<MenuItemResponse?> CreateMenuItemAsync(CreateMenuItemRequest request)
     {
-        var response = await _http.PostAsJsonAsync("/menu", request);
+        var response = await _http.PostAsJsonAsync("/api/menu", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<MenuItemResponse>();
     }
 
     public async Task<MenuItemResponse?> UpdateMenuItemAsync(Guid id, UpdateMenuItemRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"/menu/{id}", request);
+        var response = await _http.PutAsJsonAsync($"/api/menu/{id}", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<MenuItemResponse>();
     }
 
     public async Task DeleteMenuItemAsync(Guid id)
     {
-        var response = await _http.DeleteAsync($"/menu/{id}");
+        var response = await _http.DeleteAsync($"/api/menu/{id}");
         await EnsureSuccessOrThrowApiException(response);
     }
 
@@ -89,7 +89,7 @@ public class MenuService
         streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
         content.Add(streamContent, "file", fileName);
 
-        var response = await _http.PostAsync("/upload/image", content);
+        var response = await _http.PostAsync("/api/upload/image", content);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<UploadImageResponse>();
@@ -99,7 +99,7 @@ public class MenuService
     public async Task ReorderMenuItemsAsync(List<Guid> orderedIds)
     {
         var request = new ReorderMenuItemsRequest(orderedIds);
-        var response = await _http.PatchAsJsonAsync("/menu/reorder", request);
+        var response = await _http.PatchAsJsonAsync("/api/menu/reorder", request);
         response.EnsureSuccessStatusCode();
     }
 }

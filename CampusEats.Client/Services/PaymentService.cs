@@ -17,7 +17,7 @@ public class PaymentService
     /// </summary>
     public async Task<InitiateCheckoutResult> InitiateCheckoutAsync(InitiateCheckoutRequest request)
     {
-        var response = await _http.PostAsJsonAsync("/checkout", request);
+        var response = await _http.PostAsJsonAsync("/api/checkout", request);
 
         var result = new InitiateCheckoutResult();
 
@@ -45,7 +45,7 @@ public class PaymentService
     /// </summary>
     public async Task<List<PaymentHistoryItem>> GetPaymentHistoryAsync(Guid userId)
     {
-        var response = await _http.GetFromJsonAsync<List<PaymentHistoryItem>>($"/payments/user/{userId}");
+        var response = await _http.GetFromJsonAsync<List<PaymentHistoryItem>>($"/api/payments/user/{userId}");
         return response ?? new List<PaymentHistoryItem>();
     }
 }

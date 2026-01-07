@@ -14,34 +14,34 @@ public class CategoryService
 
     public async Task<List<CategoryResponse>> GetCategoriesAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<CategoryResponse>>("/categories");
+        var response = await _http.GetFromJsonAsync<List<CategoryResponse>>("/api/categories");
         return response ?? new List<CategoryResponse>();
     }
 
     public async Task<CategoryResponse?> CreateCategoryAsync(CreateCategoryRequest request)
     {
-        var response = await _http.PostAsJsonAsync("/categories", request);
+        var response = await _http.PostAsJsonAsync("/api/categories", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CategoryResponse>();
     }
 
     public async Task<CategoryResponse?> UpdateCategoryAsync(Guid id, UpdateCategoryRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"/categories/{id}", request);
+        var response = await _http.PutAsJsonAsync($"/api/categories/{id}", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CategoryResponse>();
     }
 
     public async Task DeleteCategoryAsync(Guid id)
     {
-        var response = await _http.DeleteAsync($"/categories/{id}");
+        var response = await _http.DeleteAsync($"/api/categories/{id}");
         response.EnsureSuccessStatusCode();
     }
 
     public async Task ReorderCategoriesAsync(List<Guid> orderedIds)
     {
         var request = new ReorderCategoriesRequest(orderedIds);
-        var response = await _http.PatchAsJsonAsync("/categories/reorder", request);
+        var response = await _http.PatchAsJsonAsync("/api/categories/reorder", request);
         response.EnsureSuccessStatusCode();
     }
 }

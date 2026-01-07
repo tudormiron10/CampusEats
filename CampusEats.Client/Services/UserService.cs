@@ -51,7 +51,7 @@ public class UserService
     /// </summary>
     public async Task<UserProfileResponse?> GetProfileAsync(Guid userId)
     {
-        return await _http.GetFromJsonAsync<UserProfileResponse>($"/users/{userId}", _jsonOptions);
+        return await _http.GetFromJsonAsync<UserProfileResponse>($"/api/users/{userId}", _jsonOptions);
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class UserService
     /// </summary>
     public async Task<UserProfileResponse?> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"/users/{userId}", request, _jsonOptions);
+        var response = await _http.PutAsJsonAsync($"/api/users/{userId}", request, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
         return await response.Content.ReadFromJsonAsync<UserProfileResponse>(_jsonOptions);
     }
@@ -69,7 +69,7 @@ public class UserService
     /// </summary>
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
     {
-        var response = await _http.PatchAsJsonAsync($"/users/{userId}/password", request, _jsonOptions);
+        var response = await _http.PatchAsJsonAsync($"/api/users/{userId}/password", request, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
     }
 }

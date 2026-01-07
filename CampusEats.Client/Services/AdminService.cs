@@ -55,7 +55,7 @@ public class AdminService
         string? search = null,
         string? role = null)
     {
-        var url = $"/admin/users?page={page}&pageSize={pageSize}";
+        var url = $"/api/admin/users?page={page}&pageSize={pageSize}";
         if (!string.IsNullOrWhiteSpace(search))
             url += $"&search={Uri.EscapeDataString(search)}";
         if (!string.IsNullOrWhiteSpace(role))
@@ -69,7 +69,7 @@ public class AdminService
     /// </summary>
     public async Task<AdminStatsResponse?> GetStatsAsync()
     {
-        return await _http.GetFromJsonAsync<AdminStatsResponse>("/admin/stats", _jsonOptions);
+        return await _http.GetFromJsonAsync<AdminStatsResponse>("/api/admin/stats", _jsonOptions);
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class AdminService
     /// </summary>
     public async Task UpdateUserRoleAsync(Guid userId, string name, string email, string role)
     {
-        var response = await _http.PutAsJsonAsync($"/users/{userId}", new { name, email, role }, _jsonOptions);
+        var response = await _http.PutAsJsonAsync($"/api/users/{userId}", new { name, email, role }, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
     }
 
@@ -86,7 +86,7 @@ public class AdminService
     /// </summary>
     public async Task DeleteUserAsync(Guid userId)
     {
-        var response = await _http.DeleteAsync($"/users/{userId}");
+        var response = await _http.DeleteAsync($"/api/users/{userId}");
         await EnsureSuccessOrThrowApiException(response);
     }
 }

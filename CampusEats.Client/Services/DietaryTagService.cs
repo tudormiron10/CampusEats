@@ -14,27 +14,27 @@ public class DietaryTagService
 
     public async Task<List<DietaryTagResponse>> GetDietaryTagsAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<DietaryTagResponse>>("/dietary-tags");
+        var response = await _http.GetFromJsonAsync<List<DietaryTagResponse>>("/api/dietary-tags");
         return response ?? new List<DietaryTagResponse>();
     }
 
     public async Task<DietaryTagResponse?> CreateDietaryTagAsync(CreateDietaryTagRequest request)
     {
-        var response = await _http.PostAsJsonAsync("/dietary-tags", request);
+        var response = await _http.PostAsJsonAsync("/api/dietary-tags", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<DietaryTagResponse>();
     }
 
     public async Task<DietaryTagResponse?> UpdateDietaryTagAsync(Guid id, UpdateDietaryTagRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"/dietary-tags/{id}", request);
+        var response = await _http.PutAsJsonAsync($"/api/dietary-tags/{id}", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<DietaryTagResponse>();
     }
 
     public async Task DeleteDietaryTagAsync(Guid id)
     {
-        var response = await _http.DeleteAsync($"/dietary-tags/{id}");
+        var response = await _http.DeleteAsync($"/api/dietary-tags/{id}");
         response.EnsureSuccessStatusCode();
     }
 }
