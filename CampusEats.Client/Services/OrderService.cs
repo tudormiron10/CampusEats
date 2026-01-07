@@ -15,7 +15,7 @@ public class OrderService
     public async Task<OrderResponse?> CreateOrderAsync(CreateOrderRequest request)
     {
         // 1. Create Order
-        var orderResponse = await _http.PostAsJsonAsync("/orders", request);
+        var orderResponse = await _http.PostAsJsonAsync("/api/orders", request);
         orderResponse.EnsureSuccessStatusCode();
         var order = await orderResponse.Content.ReadFromJsonAsync<OrderResponse>();
         
@@ -24,7 +24,7 @@ public class OrderService
 
         // 2. Create Payment (Initiated)
         var paymentRequest = new { OrderId = order.OrderId };
-        var paymentResponse = await _http.PostAsJsonAsync("/payments", paymentRequest);
+        var paymentResponse = await _http.PostAsJsonAsync("/api/payments", paymentRequest);
         
         if (paymentResponse.IsSuccessStatusCode)
         {
@@ -34,7 +34,7 @@ public class OrderService
             {
                 // 3. Confirm Payment (Successful) - This awards loyalty points
                 var confirmRequest = new { PaymentId = payment.PaymentId, NewStatus = "Successful" };
-                await _http.PostAsJsonAsync("/payments/confirmation", confirmRequest);
+                await _http.PostAsJsonAsync("/api/payments/confirmation", confirmRequest);
             }
         }
 
@@ -44,18 +44,18 @@ public class OrderService
     public async Task<List<SimpleOrderResponse>> GetOrdersAsync()
     {
         // Backend returns user's orders (or all for staff) based on JWT
-        var response = await _http.GetFromJsonAsync<List<SimpleOrderResponse>>("/orders");
+        var response = await _http.GetFromJsonAsync<List<SimpleOrderResponse>>("/api/orders");
         return response ?? new List<SimpleOrderResponse>();
     }
 
     public async Task<OrderResponse?> GetOrderByIdAsync(Guid orderId)
     {
-        return await _http.GetFromJsonAsync<OrderResponse>($"/orders/{orderId}");
+        return await _http.GetFromJsonAsync<OrderResponse>($"/api/orders/{orderId}");
     }
 
     public async Task<OrderResponse?> CancelOrderAsync(Guid orderId)
     {
-        var response = await _http.DeleteAsync($"/orders/{orderId}");
+        var response = await _http.DeleteAsync($"/api/orders/{orderId}");
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<OrderResponse>();
     }

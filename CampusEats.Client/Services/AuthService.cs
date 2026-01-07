@@ -21,7 +21,7 @@ public class AuthService
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("/users/login", request);
+            var response = await _http.PostAsJsonAsync("/api/users/login", request);
 
             if (response.IsSuccessStatusCode)
             {
@@ -65,7 +65,7 @@ public class AuthService
                 role = request.Role
             };
 
-            var response = await _http.PostAsJsonAsync("/users", createUserRequest);
+            var response = await _http.PostAsJsonAsync("/api/users", createUserRequest);
 
             if (response.IsSuccessStatusCode)
             {

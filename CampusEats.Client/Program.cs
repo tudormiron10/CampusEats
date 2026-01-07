@@ -50,6 +50,6 @@ builder.Services.AddScoped<CartService>();
 var hubBaseUrl = string.IsNullOrEmpty(apiBaseUrl)
     ? builder.HostEnvironment.BaseAddress.TrimEnd('/')
     : apiBaseUrl.TrimEnd('/');
-builder.Services.AddSingleton(new OrderHubService($"{hubBaseUrl}/hubs/orders"));
+builder.Services.AddSingleton(new OrderHubService($"{hubBaseUrl}/api/hubs/orders"));
 
 await builder.Build().RunAsync();

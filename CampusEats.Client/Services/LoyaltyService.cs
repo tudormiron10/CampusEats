@@ -55,7 +55,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<LoyaltyStatusResponse?> GetStatusAsync()
     {
-        return await _http.GetFromJsonAsync<LoyaltyStatusResponse>("/loyalty", _jsonOptions);
+        return await _http.GetFromJsonAsync<LoyaltyStatusResponse>("/api/loyalty", _jsonOptions);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<LoyaltyTransactionResponse>> GetTransactionsAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<LoyaltyTransactionResponse>>("/loyalty/transactions", _jsonOptions);
+        var response = await _http.GetFromJsonAsync<List<LoyaltyTransactionResponse>>("/api/loyalty/transactions", _jsonOptions);
         return response ?? new List<LoyaltyTransactionResponse>();
     }
 
@@ -72,7 +72,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<OfferResponse>> GetOffersAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers", _jsonOptions);
+        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/api/loyalty/offers", _jsonOptions);
         return response ?? new List<OfferResponse>();
     }
 
@@ -81,7 +81,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<RedeemOfferResponse?> RedeemOfferAsync(Guid offerId)
     {
-        var response = await _http.PostAsync($"/loyalty/offers/{offerId}/redeem", null);
+        var response = await _http.PostAsync($"/api/loyalty/offers/{offerId}/redeem", null);
         await EnsureSuccessOrThrowApiException(response);
         return await response.Content.ReadFromJsonAsync<RedeemOfferResponse>(_jsonOptions);
     }
@@ -96,7 +96,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<List<OfferResponse>> GetAllOffersAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/loyalty/offers/manage", _jsonOptions);
+        var response = await _http.GetFromJsonAsync<List<OfferResponse>>("/api/loyalty/offers/manage", _jsonOptions);
         return response ?? new List<OfferResponse>();
     }
 
@@ -105,7 +105,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<OfferResponse?> CreateOfferAsync(CreateOfferRequest request)
     {
-        var response = await _http.PostAsJsonAsync("/loyalty/offers", request, _jsonOptions);
+        var response = await _http.PostAsJsonAsync("/api/loyalty/offers", request, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
         return await response.Content.ReadFromJsonAsync<OfferResponse>(_jsonOptions);
     }
@@ -115,7 +115,7 @@ public class LoyaltyService
     /// </summary>
     public async Task<OfferResponse?> UpdateOfferAsync(Guid offerId, CreateOfferRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"/loyalty/offers/{offerId}", request, _jsonOptions);
+        var response = await _http.PutAsJsonAsync($"/api/loyalty/offers/{offerId}", request, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
         return await response.Content.ReadFromJsonAsync<OfferResponse>(_jsonOptions);
     }
@@ -125,7 +125,7 @@ public class LoyaltyService
     /// </summary>
     public async Task DeleteOfferAsync(Guid offerId)
     {
-        var response = await _http.DeleteAsync($"/loyalty/offers/{offerId}");
+        var response = await _http.DeleteAsync($"/api/loyalty/offers/{offerId}");
         await EnsureSuccessOrThrowApiException(response);
     }
 
@@ -134,7 +134,7 @@ public class LoyaltyService
     /// </summary>
     public async Task ToggleOfferStatusAsync(Guid offerId, bool isActive)
     {
-        var response = await _http.PatchAsJsonAsync($"/loyalty/offers/{offerId}/status", new { IsActive = isActive }, _jsonOptions);
+        var response = await _http.PatchAsJsonAsync($"/api/loyalty/offers/{offerId}/status", new { IsActive = isActive }, _jsonOptions);
         await EnsureSuccessOrThrowApiException(response);
     }
 }

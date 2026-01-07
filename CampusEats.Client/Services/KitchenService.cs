@@ -14,7 +14,7 @@ public class KitchenService
 
     public async Task<List<KitchenOrderResponse>> GetKitchenOrdersAsync()
     {
-        var response = await _http.GetFromJsonAsync<List<KitchenOrderResponse>>("/kitchen/orders");
+        var response = await _http.GetFromJsonAsync<List<KitchenOrderResponse>>("/api/kitchen/orders");
         return response ?? new List<KitchenOrderResponse>();
     }
 
@@ -35,7 +35,7 @@ public class KitchenService
 
     private async Task UpdateOrderStatusAsync(Guid orderId, string newStatus)
     {
-        var request = new HttpRequestMessage(HttpMethod.Patch, $"/kitchen/orders/{orderId}")
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/kitchen/orders/{orderId}")
         {
             Content = JsonContent.Create(new { newStatus })
         };
@@ -47,7 +47,7 @@ public class KitchenService
     {
         var startDateStr = Uri.EscapeDataString(startDate.ToString("o"));
         var endDateStr = Uri.EscapeDataString(endDate.ToString("o"));
-        var url = $"/kitchen/analytics?startDate={startDateStr}&endDate={endDateStr}&groupBy={groupBy}";
+        var url = $"/api/kitchen/analytics?startDate={startDateStr}&endDate={endDateStr}&groupBy={groupBy}";
         return await _http.GetFromJsonAsync<AnalyticsResponse>(url);
     }
 }
