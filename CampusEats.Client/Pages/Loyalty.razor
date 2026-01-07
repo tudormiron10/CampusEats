@@ -363,6 +363,7 @@
         var role = await AuthService.GetUserRoleAsync();
         isStaff = role == "Manager" || role == "Admin";
 
+        await CartService.InitializeAsync();
         await LoadData();
     }
 
@@ -401,7 +402,7 @@
                 .Select(i => (i.MenuItemId, i.Name, i.Quantity))
                 .ToList();
             
-            CartService.AddPendingOffer(offer.OfferId, offer.Title, offer.PointCost, itemsToAdd);
+            await CartService.AddPendingOfferAsync(offer.OfferId, offer.Title, offer.PointCost, itemsToAdd);
             
             // Navigate to cart
             Navigation.NavigateTo("/cart");

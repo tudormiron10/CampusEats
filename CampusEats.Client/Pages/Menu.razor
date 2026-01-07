@@ -440,9 +440,9 @@
         ApplyFiltersLocal();
     }
 
-    private void AddToCart(MenuItemResponse item)
+    private async Task AddToCart(MenuItemResponse item)
     {
-        CartService.AddItem(item);
+        await CartService.AddItemAsync(item);
     }
 
     private string GetImageUrl(string? imagePath)

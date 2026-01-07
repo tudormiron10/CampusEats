@@ -140,8 +140,9 @@
     private bool isProcessing = false;
     private string? errorMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await CartService.InitializeAsync();
         CartService.OnChange += StateHasChanged;
     }
 
@@ -150,23 +151,23 @@
         CartService.OnChange -= StateHasChanged;
     }
 
-    private void UpdateQuantity(CartItem item, int delta)
+    private async Task UpdateQuantity(CartItem item, int delta)
     {
         var newQuantity = item.Quantity + delta;
         if (newQuantity > 0)
         {
-            CartService.UpdateQuantity(item.MenuItemId, newQuantity);
+            await CartService.UpdateQuantityAsync(item.MenuItemId, newQuantity);
         }
     }
 
-    private void RemoveItem(CartItem item)
+    private async Task RemoveItem(CartItem item)
     {
-        CartService.RemoveCartItem(item);
+        await CartService.RemoveCartItemAsync(item);
     }
 
-    private void ClearCart()
+    private async Task ClearCart()
     {
-        CartService.Clear();
+        await CartService.ClearAsync();
     }
 
     private void ProceedToCheckout()
