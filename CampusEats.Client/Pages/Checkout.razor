@@ -148,8 +148,10 @@
     
     private CheckoutSessionResponse? checkoutSession;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await CartService.InitializeAsync();
+
         // Validate cart is not empty
         if (!CartService.Items.Any())
         {
@@ -218,7 +220,7 @@
                 // Order created, show success to user
                 isLoading = false;
                 paymentSucceeded = true;
-                CartService.Clear();
+                await CartService.ClearAsync();
                 StateHasChanged();
                 // Optionally navigate to orders after a short delay
                 await Task.Delay(1500);
@@ -293,7 +295,7 @@
             {
                 // Payment succeeded!
                 paymentSucceeded = true;
-                CartService.Clear();
+                await CartService.ClearAsync();
                 StateHasChanged();
 
                 // Wait a moment then redirect to orders

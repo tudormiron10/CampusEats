@@ -192,6 +192,7 @@
         CartService.OnChange += StateHasChanged;
         AuthService.OnAuthStateChanged += OnAuthStateChanged;
 
+        await CartService.InitializeAsync();
         await LoadUserInfo();
     }
 

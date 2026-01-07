@@ -43,7 +43,7 @@ builder.Services.AddScoped<LoyaltyService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AdminService>();
-builder.Services.AddSingleton<CartService>();
+builder.Services.AddScoped<CartService>();
 
 // Singleton: one SignalR connection shared across all pages
 // Compute hub URL at registration time (same-origin deployment when BaseUrl is empty)

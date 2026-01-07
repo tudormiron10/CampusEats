@@ -1,12 +1,61 @@
+using Blazored.LocalStorage;
 using CampusEats.Client.Models;
 
 namespace CampusEats.Client.Services;
 
 public class CartService
 {
+    private readonly ILocalStorageService _localStorage;
     private List<CartItem> _items = new();
     private List<PendingOffer> _pendingOffers = new();
+    private bool _isInitialized = false;
+
+    private const string CartItemsKey = "campus_eats_cart_items";
+    private const string PendingOffersKey = "campus_eats_pending_offers";
+
     public event Action? OnChange;
+
+    public CartService(ILocalStorageService localStorage)
+    {
+        _localStorage = localStorage;
+    }
+
+    /// <summary>
+    /// Initialize cart from LocalStorage. Must be called before using the cart.
+    /// Safe to call multiple times - will only load once.
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized) return;
+
+        try
+        {
+            _items = await _localStorage.GetItemAsync<List<CartItem>>(CartItemsKey) ?? new();
+            _pendingOffers = await _localStorage.GetItemAsync<List<PendingOffer>>(PendingOffersKey) ?? new();
+        }
+        catch
+        {
+            // If storage is corrupted, start fresh
+            _items = new();
+            _pendingOffers = new();
+        }
+
+        _isInitialized = true;
+        NotifyStateChanged();
+    }
+
+    private async Task PersistAsync()
+    {
+        try
+        {
+            await _localStorage.SetItemAsync(CartItemsKey, _items);
+            await _localStorage.SetItemAsync(PendingOffersKey, _pendingOffers);
+        }
+        catch
+        {
+            // Silently fail - cart will work in memory
+        }
+    }
 
     public IReadOnlyList<CartItem> Items => _items.AsReadOnly();
     public IReadOnlyList<PendingOffer> PendingOffers => _pendingOffers.AsReadOnly();
@@ -24,7 +73,7 @@ public class CartService
     public bool HasPendingOffers => _pendingOffers.Any();
 
 
-    public void AddItem(MenuItemResponse menuItem)
+    public async Task AddItemAsync(MenuItemResponse menuItem)
     {
         var existing = _items.FirstOrDefault(i => i.MenuItemId == menuItem.MenuItemId && !i.IsRedeemed);
         if (existing != null)
@@ -42,13 +91,14 @@ public class CartService
                 IsRedeemed = false
             });
         }
+        await PersistAsync();
         NotifyStateChanged();
     }
 
     /// <summary>
     /// Add a pending offer to cart (will be redeemed at checkout)
     /// </summary>
-    public void AddPendingOffer(Guid offerId, string offerTitle, int pointCost, List<(Guid MenuItemId, string Name, int Quantity)> items)
+    public async Task AddPendingOfferAsync(Guid offerId, string offerTitle, int pointCost, List<(Guid MenuItemId, string Name, int Quantity)> items)
     {
         // Add pending offer
         _pendingOffers.Add(new PendingOffer
@@ -71,6 +121,7 @@ public class CartService
                 OfferId = offerId
             });
         }
+        await PersistAsync();
         NotifyStateChanged();
     }
 
@@ -82,21 +133,23 @@ public class CartService
     /// <summary>
     /// Clear pending offers after successful checkout
     /// </summary>
-    public void ClearPendingOffers()
+    public async Task ClearPendingOffersAsync()
     {
         _pendingOffers.Clear();
+        await PersistAsync();
     }
 
-    public void RemoveItem(Guid menuItemId)
+    public async Task RemoveItemAsync(Guid menuItemId)
     {
         _items.RemoveAll(i => i.MenuItemId == menuItemId && !i.IsRedeemed);
+        await PersistAsync();
         NotifyStateChanged();
     }
 
-    public void RemoveCartItem(CartItem item)
+    public async Task RemoveCartItemAsync(CartItem item)
     {
         _items.Remove(item);
-        
+
         // If removing a redeemed item, also remove the pending offer if no more items from it
         if (item.IsRedeemed && item.OfferId.HasValue)
         {
@@ -106,11 +159,12 @@ public class CartService
                 _pendingOffers.RemoveAll(o => o.OfferId == item.OfferId);
             }
         }
-        
+
+        await PersistAsync();
         NotifyStateChanged();
     }
 
-    public void UpdateQuantity(Guid menuItemId, int quantity)
+    public async Task UpdateQuantityAsync(Guid menuItemId, int quantity)
     {
         var item = _items.FirstOrDefault(i => i.MenuItemId == menuItemId && !i.IsRedeemed);
         if (item != null)
@@ -120,14 +174,16 @@ public class CartService
             else
                 item.Quantity = quantity;
 
+            await PersistAsync();
             NotifyStateChanged();
         }
     }
 
-    public void Clear()
+    public async Task ClearAsync()
     {
         _items.Clear();
         _pendingOffers.Clear();
+        await PersistAsync();
         NotifyStateChanged();
     }
 
