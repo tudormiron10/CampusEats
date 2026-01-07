@@ -1,0 +1,73 @@
+@using CampusEats.Client.Models
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Total Orders -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm text-slate-500 font-medium">Total Orders</p>
+                <p class="text-3xl font-bold text-slate-800 mt-1">@Summary.TotalOrders</p>
+                @if (Summary.ChangeVsPrevious.HasValue)
+                {
+                    <p class="text-sm mt-2 @(Summary.ChangeVsPrevious >= 0 ? "text-emerald-600" : "text-red-600")">
+                        @(Summary.ChangeVsPrevious >= 0 ? "+" : "")@Summary.ChangeVsPrevious?.ToString("F1")% vs previous
+                    </p>
+                }
+            </div>
+            <div class="p-3 bg-blue-100 rounded-xl">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm text-slate-500 font-medium">Total Revenue</p>
+                <p class="text-3xl font-bold text-slate-800 mt-1">@Summary.TotalRevenue.ToString("C")</p>
+            </div>
+            <div class="p-3 bg-emerald-100 rounded-xl">
+                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avg Order Value -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm text-slate-500 font-medium">Avg Order Value</p>
+                <p class="text-3xl font-bold text-slate-800 mt-1">@Summary.AverageOrderValue.ToString("C")</p>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-xl">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Sold -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <div class="flex items-start justify-between">
+            <div>
+                <p class="text-sm text-slate-500 font-medium">Items Sold</p>
+                <p class="text-3xl font-bold text-slate-800 mt-1">@Summary.TotalItemsSold</p>
+            </div>
+            <div class="p-3 bg-amber-100 rounded-xl">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AnalyticsSummary Summary { get; set; } = default!;
+}

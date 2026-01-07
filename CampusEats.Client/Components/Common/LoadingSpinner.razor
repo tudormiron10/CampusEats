@@ -1,0 +1,16 @@
+@* Centered loading spinner with optional message *@
+
+<div class="flex flex-col items-center justify-center py-16">
+    <div class="relative">
+        <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
+        <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+    </div>
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <p class="mt-4 text-slate-500 font-medium">@Message</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Loading...";
+}

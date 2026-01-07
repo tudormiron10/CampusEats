@@ -1,0 +1,46 @@
+@* Gradient action button with loading state *@
+
+<button class="@GetButtonClass() text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg @GetShadowClass() disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        @onclick="OnClick"
+        disabled="@IsProcessing">
+    @if (IsProcessing)
+    {
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>@ProcessingLabel</span>
+    }
+    else
+    {
+        @ChildContent
+        <span>@Label</span>
+    }
+</button>
+
+@code {
+    [Parameter] public string Color { get; set; } = "blue";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string ProcessingLabel { get; set; } = "Processing...";
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string GetButtonClass() => Color switch
+    {
+        "amber" => "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
+        "blue" => "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
+        "emerald" => "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600",
+        "red" => "bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600",
+        _ => "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700"
+    };
+
+    private string GetShadowClass() => Color switch
+    {
+        "amber" => "shadow-amber-500/25 hover:shadow-amber-500/40",
+        "blue" => "shadow-blue-500/25 hover:shadow-blue-500/40",
+        "emerald" => "shadow-emerald-500/25 hover:shadow-emerald-500/40",
+        "red" => "shadow-red-500/25 hover:shadow-red-500/40",
+        _ => "shadow-slate-500/25 hover:shadow-slate-500/40"
+    };
+}

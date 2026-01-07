@@ -1,0 +1,18 @@
+@* Error message banner with icon *@
+
+<div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+    <div class="p-2 bg-red-100 rounded-lg shrink-0">
+        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+    </div>
+    <div>
+        <h3 class="font-semibold text-red-800">@Title</h3>
+        <p class="text-red-600 text-sm mt-1">@Message</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Error";
+    [Parameter] public string Message { get; set; } = "";
+}
