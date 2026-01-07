@@ -27,6 +27,10 @@ CampusEats.Api/wwwroot/images/menu/
 .DS_Store
 Thumbs.db
 
+# Test coverage
+TestResults/
+coveragereport/
+
 # Misc
 Backup/
 *.http
