@@ -1,6 +1,8 @@
 @page "/kitchen"
 @using CampusEats.Client.Models
 @using CampusEats.Client.Services
+@using CampusEats.Client.Components.Common
+@using CampusEats.Client.Components.Kitchen
 @using Blazored.LocalStorage
 @inject KitchenService KitchenService
 @inject AuthService AuthService
@@ -39,58 +41,34 @@
         @if (!isLoading && error == null)
         {
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-amber-100 rounded-lg">
-                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Pending")</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide">Pending</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-blue-100 rounded-lg">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("InPreparation")</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide">Preparing</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-emerald-100 rounded-lg">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Ready")</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide">Ready</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-slate-100 rounded-lg">
-                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-bold text-slate-800">@GetStatusCount("Completed")</p>
-                            <p class="text-xs text-slate-500 uppercase tracking-wide">Completed</p>
-                        </div>
-                    </div>
-                </div>
+                <StatCard Value="@GetStatusCount("Pending").ToString()" Label="Pending" IconBgClass="bg-amber-100">
+                    <IconContent>
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </IconContent>
+                </StatCard>
+                <StatCard Value="@GetStatusCount("InPreparation").ToString()" Label="Preparing" IconBgClass="bg-blue-100">
+                    <IconContent>
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </IconContent>
+                </StatCard>
+                <StatCard Value="@GetStatusCount("Ready").ToString()" Label="Ready" IconBgClass="bg-emerald-100">
+                    <IconContent>
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </IconContent>
+                </StatCard>
+                <StatCard Value="@GetStatusCount("Completed").ToString()" Label="Completed" IconBgClass="bg-slate-100">
+                    <IconContent>
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </IconContent>
+                </StatCard>
             </div>
         }
 
@@ -139,542 +117,63 @@
         {
             @if (isLoading)
             {
-                <div class="flex flex-col items-center justify-center py-16">
-                    <div class="relative">
-                        <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
-                        <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-                    </div>
-                    <p class="mt-4 text-slate-500 font-medium">Loading orders...</p>
-                </div>
+                <LoadingSpinner Message="Loading orders..." />
             }
             else if (error != null)
             {
-                <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
-                    <div class="p-2 bg-red-100 rounded-lg shrink-0">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-red-800">Error loading orders</h3>
-                        <p class="text-red-600 text-sm mt-1">@error</p>
-                    </div>
-                </div>
+                <ErrorAlert Title="Error loading orders" Message="@error" />
             }
             else if (!filteredOrders.Any())
             {
-                <div class="bg-white rounded-xl border border-slate-200 p-12 text-center">
-                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-slate-700 mb-1">No orders to display</h3>
-                    <p class="text-slate-500">@(showCompleted ? "There are no orders in the system." : "All caught up! No active orders at the moment.")</p>
-                </div>
+                <EmptyState Title="No orders to display"
+                            Description="@(showCompleted ? "There are no orders in the system." : "All caught up! No active orders at the moment.")" />
             }
             else
             {
                 <div class="grid gap-4">
                     @foreach (var order in filteredOrders)
                     {
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200 @(order.Status == "Completed" ? "opacity-75" : "")">
-                            <!-- Order Header -->
-                            <div class="@GetStatusHeaderClass(order.Status) px-6 py-4">
-                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="@GetStatusIconBgClass(order.Status) p-3 rounded-xl">
-                                            @((MarkupString)GetStatusIcon(order.Status))
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center gap-3">
-                                                <h3 class="text-xl font-bold text-slate-800">Order #@GetOrderNumber(order.Id)</h3>
-                                                <span class="@GetStatusBadgeClass(order.Status) px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
-                                                    @FormatStatus(order.Status)
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center gap-2 mt-1 text-slate-500 text-sm">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                @order.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy 'at' HH:mm")
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <div class="text-right">
-                                            <p class="text-xs text-slate-500 uppercase tracking-wide">Total</p>
-                                            <p class="text-2xl font-bold text-slate-800">@GetOrderTotal(order).ToString("C")</p>
-                                        </div>
-                                        @switch (order.Status)
-                                        {
-                                            case "Pending":
-                                                <button class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                        @onclick="@(() => PrepareOrder(order.Id))"
-                                                        disabled="@(processingOrderId == order.Id)">
-                                                    @if (processingOrderId == order.Id)
-                                                    {
-                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                        </svg>
-                                                        <span>Processing...</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
-                                                        </svg>
-                                                        <span>Start Preparing</span>
-                                                    }
-                                                </button>
-                                                break;
-                                            case "InPreparation":
-                                                <button class="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                        @onclick="@(() => ReadyOrder(order.Id))"
-                                                        disabled="@(processingOrderId == order.Id)">
-                                                    @if (processingOrderId == order.Id)
-                                                    {
-                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                        </svg>
-                                                        <span>Processing...</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span>Mark Ready</span>
-                                                    }
-                                                </button>
-                                                break;
-                                            case "Ready":
-                                                <button class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                                        @onclick="@(() => CompleteOrder(order.Id))"
-                                                        disabled="@(processingOrderId == order.Id)">
-                                                    @if (processingOrderId == order.Id)
-                                                    {
-                                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                        </svg>
-                                                        <span>Processing...</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>Complete</span>
-                                                    }
-                                                </button>
-                                                break;
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Order Items -->
-                            <div class="px-6 py-4 bg-slate-50/50">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                                    </svg>
-                                    <h4 class="font-semibold text-slate-700 text-sm uppercase tracking-wide">Order Items</h4>
-                                    <span class="text-xs text-slate-400">(@order.Items.Count @(order.Items.Count == 1 ? "item" : "items"))</span>
-                                </div>
-                                <div class="grid gap-2">
-                                    @foreach (var item in order.Items)
-                                    {
-                                        <div class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-slate-100">
-                                            <div class="flex items-center gap-3">
-                                                <span class="w-8 h-8 bg-oxford-blue/10 text-oxford-blue rounded-lg flex items-center justify-center font-bold text-sm">
-                                                    @item.Quantity
-                                                </span>
-                                                <span class="font-medium text-slate-700">@item.Name</span>
-                                            </div>
-                                            <span class="font-semibold text-slate-800">@((item.UnitPrice * item.Quantity).ToString("C"))</span>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
+                        <KitchenOrderCard Order="@order"
+                                          IsProcessing="@(processingOrderId == order.Id)"
+                                          OnPrepare="PrepareOrder"
+                                          OnReady="ReadyOrder"
+                                          OnComplete="CompleteOrder" />
                     }
                 </div>
             }
         }
         else if (activeSection == "analytics")
         {
-            <!-- Analytics Date Controls -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <!-- Quick Buttons -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button class="@(IsQuickButtonActive("today") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                @onclick="@(() => SetQuickPeriod("today"))">Today</button>
-                        <button class="@(IsQuickButtonActive("week") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                @onclick="@(() => SetQuickPeriod("week"))">This Week</button>
-                        <button class="@(IsQuickButtonActive("month") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                @onclick="@(() => SetQuickPeriod("month"))">This Month</button>
-                        <button class="@(IsQuickButtonActive("year") ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                                @onclick="@(() => SetQuickPeriod("year"))">This Year</button>
-                    </div>
-
-                    <!-- Date Navigation -->
-                    <div class="flex items-center gap-2">
-                        <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="PreviousPeriod">
-                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 min-w-[200px] text-center">
-                            <span class="font-medium text-slate-700">@GetPeriodDisplayText()</span>
-                        </div>
-                        <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="NextPeriod">
-                            <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- View Mode -->
-                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                        <button class="@(analyticsViewMode == "day" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
-                                @onclick="@(() => SetViewMode("day"))">Day</button>
-                        <button class="@(analyticsViewMode == "week" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
-                                @onclick="@(() => SetViewMode("week"))">Week</button>
-                        <button class="@(analyticsViewMode == "month" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
-                                @onclick="@(() => SetViewMode("month"))">Month</button>
-                        <button class="@(analyticsViewMode == "year" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
-                                @onclick="@(() => SetViewMode("year"))">Year</button>
-                    </div>
-                </div>
-            </div>
+            <AnalyticsDateControls QuickPeriod="@quickPeriod"
+                                   ViewMode="@analyticsViewMode"
+                                   PeriodDisplayText="@GetPeriodDisplayText()"
+                                   OnQuickPeriodChange="SetQuickPeriod"
+                                   OnViewModeChange="SetViewMode"
+                                   OnPrevious="PreviousPeriod"
+                                   OnNext="NextPeriod" />
 
             @if (analyticsLoading)
             {
-                <div class="flex flex-col items-center justify-center py-16">
-                    <div class="relative">
-                        <div class="w-16 h-16 border-4 border-slate-200 rounded-full"></div>
-                        <div class="w-16 h-16 border-4 border-oxford-blue border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-                    </div>
-                    <p class="mt-4 text-slate-500 font-medium">Loading analytics...</p>
-                </div>
+                <LoadingSpinner Message="Loading analytics..." />
             }
             else if (analyticsError != null)
             {
-                <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
-                    <div class="p-2 bg-red-100 rounded-lg shrink-0">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-red-800">Error loading analytics</h3>
-                        <p class="text-red-600 text-sm mt-1">@analyticsError</p>
-                    </div>
-                </div>
+                <ErrorAlert Title="Error loading analytics" Message="@analyticsError" />
             }
             else if (analytics != null)
             {
-                <!-- ROW 1: Summary Stats -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-sm text-slate-500 font-medium">Total Orders</p>
-                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalOrders</p>
-                                @if (analytics.Summary.ChangeVsPrevious.HasValue)
-                                {
-                                    <p class="text-sm mt-2 @(analytics.Summary.ChangeVsPrevious >= 0 ? "text-emerald-600" : "text-red-600")">
-                                        @(analytics.Summary.ChangeVsPrevious >= 0 ? "+" : "")@analytics.Summary.ChangeVsPrevious?.ToString("F1")% vs previous
-                                    </p>
-                                }
-                            </div>
-                            <div class="p-3 bg-blue-100 rounded-xl">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-sm text-slate-500 font-medium">Total Revenue</p>
-                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalRevenue.ToString("C")</p>
-                            </div>
-                            <div class="p-3 bg-emerald-100 rounded-xl">
-                                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-sm text-slate-500 font-medium">Avg Order Value</p>
-                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.AverageOrderValue.ToString("C")</p>
-                            </div>
-                            <div class="p-3 bg-purple-100 rounded-xl">
-                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-sm text-slate-500 font-medium">Items Sold</p>
-                                <p class="text-3xl font-bold text-slate-800 mt-1">@analytics.Summary.TotalItemsSold</p>
-                            </div>
-                            <div class="p-3 bg-amber-100 rounded-xl">
-                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <AnalyticsSummaryRow Summary="@analytics.Summary" />
 
-                <!-- ROW 2: Main Chart -->
+                <!-- Main Chart -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
                     <h3 class="text-lg font-semibold text-slate-800 mb-4">Orders & Revenue Over Time</h3>
                     <div id="mainChart" style="height: 350px;"></div>
                 </div>
 
-                <!-- ROW 3: Performance Metrics -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-orange-100 rounded-lg">
-                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Peak Hour</span>
-                        </div>
-                        @if (analytics.Performance.PeakHour != null)
-                        {
-                            <p class="text-2xl font-bold text-slate-800">@FormatHour(analytics.Performance.PeakHour.Hour)</p>
-                            <p class="text-sm text-slate-500 mt-1">@analytics.Performance.PeakHour.OrderCount orders</p>
-                        }
-                        else
-                        {
-                            <p class="text-lg text-slate-400">No data</p>
-                        }
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-indigo-100 rounded-lg">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Best Day</span>
-                        </div>
-                        @if (analytics.Performance.BestDayOfWeek != null)
-                        {
-                            <p class="text-2xl font-bold text-slate-800">@analytics.Performance.BestDayOfWeek.DayName</p>
-                            <p class="text-sm text-slate-500 mt-1">Avg @analytics.Performance.BestDayOfWeek.AvgOrders.ToString("F0") orders</p>
-                        }
-                        else
-                        {
-                            <p class="text-lg text-slate-400">No data</p>
-                        }
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-emerald-100 rounded-lg">
-                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Completion Rate</span>
-                        </div>
-                        <p class="text-2xl font-bold text-slate-800">@analytics.Performance.CompletionRate.ToString("F1")%</p>
-                        <p class="text-sm text-slate-500 mt-1">@analytics.Performance.CompletedOrders completed, @analytics.Performance.CancelledOrders cancelled</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-cyan-100 rounded-lg">
-                                <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Items/Order</span>
-                        </div>
-                        <p class="text-2xl font-bold text-slate-800">@analytics.Performance.AvgItemsPerOrder.ToString("F1")</p>
-                        <p class="text-sm text-slate-500 mt-1">avg basket size</p>
-                    </div>
-                </div>
-
-                <!-- ROW 4: Item Insights -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-2xl">🏆</span>
-                            <span class="text-sm font-medium text-amber-700">Most Sold</span>
-                        </div>
-                        @if (analytics.Items.MostSold != null)
-                        {
-                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.MostSold.Name</p>
-                            <p class="text-sm text-amber-700 mt-1">@analytics.Items.MostSold.Quantity units</p>
-                        }
-                        else
-                        {
-                            <p class="text-slate-400">No data</p>
-                        }
-                    </div>
-                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-5 border border-slate-200">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-2xl">📉</span>
-                            <span class="text-sm font-medium text-slate-600">Least Sold</span>
-                        </div>
-                        @if (analytics.Items.LeastSold != null)
-                        {
-                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.LeastSold.Name</p>
-                            <p class="text-sm text-slate-500 mt-1">@analytics.Items.LeastSold.Quantity units</p>
-                        }
-                        else
-                        {
-                            <p class="text-slate-400">No data</p>
-                        }
-                    </div>
-                    <div class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-5 border border-yellow-200">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-2xl">☀️</span>
-                            <span class="text-sm font-medium text-yellow-700">Morning Best (6-12)</span>
-                        </div>
-                        @if (analytics.Items.MorningBestseller != null)
-                        {
-                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.MorningBestseller.Name</p>
-                            <p class="text-sm text-yellow-700 mt-1">@analytics.Items.MorningBestseller.Quantity units</p>
-                        }
-                        else
-                        {
-                            <p class="text-slate-400">No data</p>
-                        }
-                    </div>
-                    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-200">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="text-2xl">🌙</span>
-                            <span class="text-sm font-medium text-indigo-700">Evening Best (17-22)</span>
-                        </div>
-                        @if (analytics.Items.EveningBestseller != null)
-                        {
-                            <p class="text-lg font-bold text-slate-800 truncate">@analytics.Items.EveningBestseller.Name</p>
-                            <p class="text-sm text-indigo-700 mt-1">@analytics.Items.EveningBestseller.Quantity units</p>
-                        }
-                        else
-                        {
-                            <p class="text-slate-400">No data</p>
-                        }
-                    </div>
-                </div>
-
-                <!-- ROW 5: Revenue Insights -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                    <!-- Revenue by Hour Sparkline -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <h4 class="text-sm font-medium text-slate-500 mb-2">Revenue by Hour</h4>
-                        <div id="revenueSparkline" style="height: 60px;"></div>
-                        @if (analytics.Revenue.RevenueByHour.Any())
-                        {
-                            var peakRevHour = analytics.Revenue.RevenueByHour.OrderByDescending(r => r.Revenue).FirstOrDefault();
-                            if (peakRevHour != null)
-                            {
-                                <p class="text-sm text-slate-600 mt-2">Peak: @peakRevHour.Revenue.ToString("C") at @FormatHour(peakRevHour.Period.Hour)</p>
-                            }
-                        }
-                    </div>
-
-                    <!-- Top 5 Items by Revenue -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <h4 class="text-sm font-medium text-slate-500 mb-3">Top 5 by Revenue</h4>
-                        <div class="space-y-2">
-                            @foreach (var item in analytics.Revenue.TopItemsByRevenue.Take(5))
-                            {
-                                var maxRevenue = analytics.Revenue.TopItemsByRevenue.FirstOrDefault()?.Revenue ?? 1;
-                                var percentage = maxRevenue > 0 ? (item.Revenue / maxRevenue) * 100 : 0;
-                                <div class="flex items-center gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-slate-700 truncate">@item.Name</p>
-                                        <div class="h-1.5 bg-slate-100 rounded-full mt-1">
-                                            <div class="h-1.5 bg-emerald-500 rounded-full" style="width: @percentage%"></div>
-                                        </div>
-                                    </div>
-                                    <span class="text-sm font-semibold text-slate-800 whitespace-nowrap">@item.Revenue.ToString("C")</span>
-                                </div>
-                            }
-                            @if (!analytics.Revenue.TopItemsByRevenue.Any())
-                            {
-                                <p class="text-slate-400 text-sm">No data available</p>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Category Breakdown -->
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <h4 class="text-sm font-medium text-slate-500 mb-3">Category Breakdown</h4>
-                        <div id="categoryDonut" style="height: 200px;"></div>
-                    </div>
-                </div>
-
-                <!-- ROW 6: Customer Insights -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-blue-100 rounded-lg">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Unique Customers</span>
-                        </div>
-                        <p class="text-3xl font-bold text-slate-800">@analytics.Customers.UniqueCustomers</p>
-                        <p class="text-sm text-slate-500 mt-1">in this period</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-purple-100 rounded-lg">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">Orders/Customer</span>
-                        </div>
-                        <p class="text-3xl font-bold text-slate-800">@analytics.Customers.OrdersPerCustomer.ToString("F1")</p>
-                        <p class="text-sm text-slate-500 mt-1">average</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-teal-100 rounded-lg">
-                                <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                            </div>
-                            <span class="text-sm font-medium text-slate-500">New vs Returning</span>
-                        </div>
-                        <div class="space-y-2 mt-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-slate-600">New</span>
-                                <span class="text-sm font-medium text-slate-800">@analytics.Customers.NewCustomers (@analytics.Customers.NewCustomerPercentage.ToString("F0")%)</span>
-                            </div>
-                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-teal-400 to-emerald-500 rounded-full" style="width: @analytics.Customers.NewCustomerPercentage%"></div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-slate-600">Returning</span>
-                                <span class="text-sm font-medium text-slate-800">@analytics.Customers.ReturningCustomers (@((100 - analytics.Customers.NewCustomerPercentage).ToString("F0"))%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <AnalyticsPerformanceRow Performance="@analytics.Performance" />
+                <AnalyticsItemInsights Items="@analytics.Items" />
+                <AnalyticsRevenueInsights Revenue="@analytics.Revenue" />
+                <AnalyticsCustomerInsights Customers="@analytics.Customers" />
             }
         }
     </div>
@@ -693,6 +192,16 @@
             .Where(o => showCompleted || o.Status != "Completed")
             .OrderByDescending(o => o.CreatedAt);
 
+    // Analytics State
+    private AnalyticsResponse? analytics;
+    private bool analyticsLoading = false;
+    private string? analyticsError;
+    private string analyticsViewMode = "day";
+    private DateTime analyticsStartDate = DateTime.Today;
+    private DateTime analyticsEndDate = DateTime.Today.AddDays(1);
+    private string quickPeriod = "today";
+    private bool shouldRenderCharts = false;
+
     protected override async Task OnInitializedAsync()
     {
         var role = await AuthService.GetUserRoleAsync();
@@ -702,13 +211,11 @@
             return;
         }
 
-        // Subscribe to SignalR events
         OrderHubService.OnNewOrder += HandleNewOrder;
         OrderHubService.OnOrderCancelled += HandleOrderCancelled;
         OrderHubService.OnOrderStatusChanged += HandleOrderStatusChanged;
         OrderHubService.OnReconnected += HandleReconnected;
 
-        // Start SignalR connection with token provider delegate
         try
         {
             await OrderHubService.StartAsync(
@@ -717,7 +224,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR connection failed: {ex.Message}");
-            // Continue anyway - page will still work with polling/manual refresh
         }
 
         await LoadOrders();
@@ -727,31 +233,21 @@
     {
         try
         {
-            // Add the new order to our local list (using record positional constructor)
             var newOrder = new KitchenOrderResponse(
                 notification.OrderId,
                 notification.Status,
                 notification.OrderDate,
-                notification.Items.Select(i => new KitchenOrderItemResponse(
-                    i.MenuItemId,
-                    i.Name,
-                    i.Quantity,
-                    i.UnitPrice
-                )).ToList()
+                notification.Items.Select(i => new KitchenOrderItemResponse(i.MenuItemId, i.Name, i.Quantity, i.UnitPrice)).ToList()
             );
 
             orders.Insert(0, newOrder);
             await InvokeAsync(StateHasChanged);
 
-            // Play notification sound
             try
             {
                 await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('newOrderSound').play().catch(() => {})");
             }
-            catch
-            {
-                // Ignore audio playback errors
-            }
+            catch { }
         }
         catch (Exception ex)
         {
@@ -763,7 +259,6 @@
     {
         try
         {
-            // Remove the cancelled order from our local list
             var order = orders.FirstOrDefault(o => o.Id == orderId);
             if (order != null)
             {
@@ -781,7 +276,6 @@
     {
         try
         {
-            // Update the order status in our local list
             var index = orders.FindIndex(o => o.Id == update.OrderId);
             if (index >= 0)
             {
@@ -800,7 +294,6 @@
     {
         try
         {
-            // Refresh orders after reconnection to catch any missed updates
             await InvokeAsync(async () => await LoadOrders());
         }
         catch (Exception ex)
@@ -835,20 +328,9 @@
         }
     }
 
-    private async Task PrepareOrder(Guid orderId)
-    {
-        await UpdateOrderStatus(orderId, () => KitchenService.PrepareOrderAsync(orderId));
-    }
-
-    private async Task ReadyOrder(Guid orderId)
-    {
-        await UpdateOrderStatus(orderId, () => KitchenService.ReadyOrderAsync(orderId));
-    }
-
-    private async Task CompleteOrder(Guid orderId)
-    {
-        await UpdateOrderStatus(orderId, () => KitchenService.CompleteOrderAsync(orderId));
-    }
+    private async Task PrepareOrder(Guid orderId) => await UpdateOrderStatus(orderId, () => KitchenService.PrepareOrderAsync(orderId));
+    private async Task ReadyOrder(Guid orderId) => await UpdateOrderStatus(orderId, () => KitchenService.ReadyOrderAsync(orderId));
+    private async Task CompleteOrder(Guid orderId) => await UpdateOrderStatus(orderId, () => KitchenService.CompleteOrderAsync(orderId));
 
     private async Task UpdateOrderStatus(Guid orderId, Func<Task> action)
     {
@@ -869,71 +351,14 @@
     }
 
     private int GetStatusCount(string status) => orders.Count(o => o.Status == status);
-
-    private string GetStatusBadgeClass(string status) => status switch
-    {
-        "Pending" => "bg-amber-100 text-amber-700 border border-amber-200",
-        "InPreparation" => "bg-blue-100 text-blue-700 border border-blue-200",
-        "Ready" => "bg-emerald-100 text-emerald-700 border border-emerald-200",
-        "Completed" => "bg-slate-100 text-slate-600 border border-slate-200",
-        "Cancelled" => "bg-red-100 text-red-700 border border-red-200",
-        _ => "bg-slate-100 text-slate-600 border border-slate-200"
-    };
-
-    private string GetStatusHeaderClass(string status) => status switch
-    {
-        "Pending" => "bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100",
-        "InPreparation" => "bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100",
-        "Ready" => "bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100",
-        "Completed" => "bg-slate-50 border-b border-slate-100",
-        _ => "bg-slate-50 border-b border-slate-100"
-    };
-
-    private string GetStatusIconBgClass(string status) => status switch
-    {
-        "Pending" => "bg-amber-100",
-        "InPreparation" => "bg-blue-100",
-        "Ready" => "bg-emerald-100",
-        "Completed" => "bg-slate-200",
-        _ => "bg-slate-200"
-    };
-
-    private string GetStatusIcon(string status) => status switch
-    {
-        "Pending" => "<svg class=\"w-6 h-6 text-amber-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>",
-        "InPreparation" => "<svg class=\"w-6 h-6 text-blue-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z\"></path></svg>",
-        "Ready" => "<svg class=\"w-6 h-6 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>",
-        "Completed" => "<svg class=\"w-6 h-6 text-slate-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 13l4 4L19 7\"></path></svg>",
-        _ => "<svg class=\"w-6 h-6 text-slate-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\"></path></svg>"
-    };
-
-    private string GetOrderNumber(Guid orderId) => ((orderId.GetHashCode() & 0x7FFFFFFF) % 1000000).ToString("D6");
-
-    private string FormatStatus(string status) => System.Text.RegularExpressions.Regex.Replace(status, "([a-z])([A-Z])", "$1 $2");
-
-    private decimal GetOrderTotal(KitchenOrderResponse order) => order.Items.Sum(i => i.UnitPrice * i.Quantity);
-
     private void SetOrdersSection() => activeSection = "orders";
-
-    // Analytics State
-    private AnalyticsResponse? analytics;
-    private bool analyticsLoading = false;
-    private string? analyticsError;
-    private string analyticsViewMode = "day"; // day, week, month, year
-    private DateTime analyticsStartDate = DateTime.Today;
-    private DateTime analyticsEndDate = DateTime.Today.AddDays(1);
-    private string quickPeriod = "today";
 
     private async Task SetAnalyticsSection()
     {
         activeSection = "analytics";
         if (analytics == null)
-        {
             await LoadAnalytics();
-        }
     }
-
-    private bool shouldRenderCharts = false;
 
     private async Task LoadAnalytics()
     {
@@ -990,26 +415,20 @@
 
         try
         {
-            // Main chart - Orders & Revenue
             var categories = analytics.TimeSeries.Select(t => FormatTimeSeriesLabel(t.Period)).ToArray();
             var orderData = analytics.TimeSeries.Select(t => t.OrderCount).ToArray();
             var revenueData = analytics.TimeSeries.Select(t => (double)t.Revenue).ToArray();
 
-            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderRevenueChart",
-                "mainChart", categories, orderData, revenueData);
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderRevenueChart", "mainChart", categories, orderData, revenueData);
 
-            // Revenue sparkline
             var sparklineData = analytics.Revenue.RevenueByHour.Select(r => (double)r.Revenue).ToArray();
-            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderSparkline",
-                "revenueSparkline", sparklineData, "#10b981");
+            await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderSparkline", "revenueSparkline", sparklineData, "#10b981");
 
-            // Category donut chart
             if (analytics.Revenue.CategoryBreakdown.Any())
             {
                 var categoryLabels = analytics.Revenue.CategoryBreakdown.Select(c => c.CategoryName).ToArray();
                 var categoryData = analytics.Revenue.CategoryBreakdown.Select(c => (double)c.Revenue).ToArray();
-                await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderDonutChart",
-                    "categoryDonut", categoryLabels, categoryData, (string[]?)null);
+                await JSRuntime.InvokeVoidAsync("apexChartsInterop.renderDonutChart", "categoryDonut", categoryLabels, categoryData, (string[]?)null);
             }
         }
         catch (Exception ex)
@@ -1018,50 +437,28 @@
         }
     }
 
-    private string FormatTimeSeriesLabel(DateTime period)
+    private string FormatTimeSeriesLabel(DateTime period) => analyticsViewMode switch
     {
-        return analyticsViewMode switch
-        {
-            "day" => period.ToString("HH:00"),
-            "week" => period.ToString("ddd"),
-            "month" => period.ToString("MMM d"),
-            "year" => period.ToString("MMM"),
-            _ => period.ToString("HH:00")
-        };
-    }
-
-    private bool IsQuickButtonActive(string period) => quickPeriod == period;
+        "day" => period.ToString("HH:00"),
+        "week" => period.ToString("ddd"),
+        "month" => period.ToString("MMM d"),
+        "year" => period.ToString("MMM"),
+        _ => period.ToString("HH:00")
+    };
 
     private async Task SetQuickPeriod(string period)
     {
         quickPeriod = period;
         var today = DateTime.Today;
 
-        switch (period)
+        (analyticsViewMode, analyticsStartDate, analyticsEndDate) = period switch
         {
-            case "today":
-                analyticsViewMode = "day";
-                analyticsStartDate = today;
-                analyticsEndDate = today.AddDays(1);
-                break;
-            case "week":
-                analyticsViewMode = "week";
-                var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-                if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
-                analyticsStartDate = startOfWeek;
-                analyticsEndDate = startOfWeek.AddDays(7);
-                break;
-            case "month":
-                analyticsViewMode = "month";
-                analyticsStartDate = new DateTime(today.Year, today.Month, 1);
-                analyticsEndDate = analyticsStartDate.AddMonths(1);
-                break;
-            case "year":
-                analyticsViewMode = "year";
-                analyticsStartDate = new DateTime(today.Year, 1, 1);
-                analyticsEndDate = new DateTime(today.Year + 1, 1, 1);
-                break;
-        }
+            "today" => ("day", today, today.AddDays(1)),
+            "week" => ("week", GetStartOfWeek(today), GetStartOfWeek(today).AddDays(7)),
+            "month" => ("month", new DateTime(today.Year, today.Month, 1), new DateTime(today.Year, today.Month, 1).AddMonths(1)),
+            "year" => ("year", new DateTime(today.Year, 1, 1), new DateTime(today.Year + 1, 1, 1)),
+            _ => (analyticsViewMode, analyticsStartDate, analyticsEndDate)
+        };
 
         await LoadAnalytics();
     }
@@ -1069,105 +466,67 @@
     private async Task SetViewMode(string mode)
     {
         analyticsViewMode = mode;
-        quickPeriod = ""; // Clear quick period selection
-
+        quickPeriod = "";
         var today = DateTime.Today;
-        switch (mode)
+
+        (analyticsStartDate, analyticsEndDate) = mode switch
         {
-            case "day":
-                analyticsStartDate = today;
-                analyticsEndDate = today.AddDays(1);
-                break;
-            case "week":
-                var startOfWeek = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
-                if (today.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
-                analyticsStartDate = startOfWeek;
-                analyticsEndDate = startOfWeek.AddDays(7);
-                break;
-            case "month":
-                analyticsStartDate = new DateTime(today.Year, today.Month, 1);
-                analyticsEndDate = analyticsStartDate.AddMonths(1);
-                break;
-            case "year":
-                analyticsStartDate = new DateTime(today.Year, 1, 1);
-                analyticsEndDate = new DateTime(today.Year + 1, 1, 1);
-                break;
-        }
+            "day" => (today, today.AddDays(1)),
+            "week" => (GetStartOfWeek(today), GetStartOfWeek(today).AddDays(7)),
+            "month" => (new DateTime(today.Year, today.Month, 1), new DateTime(today.Year, today.Month, 1).AddMonths(1)),
+            "year" => (new DateTime(today.Year, 1, 1), new DateTime(today.Year + 1, 1, 1)),
+            _ => (analyticsStartDate, analyticsEndDate)
+        };
 
         await LoadAnalytics();
+    }
+
+    private static DateTime GetStartOfWeek(DateTime date)
+    {
+        var startOfWeek = date.AddDays(-(int)date.DayOfWeek + (int)DayOfWeek.Monday);
+        if (date.DayOfWeek == DayOfWeek.Sunday) startOfWeek = startOfWeek.AddDays(-7);
+        return startOfWeek;
     }
 
     private async Task PreviousPeriod()
     {
         quickPeriod = "";
-        switch (analyticsViewMode)
+        (analyticsStartDate, analyticsEndDate) = analyticsViewMode switch
         {
-            case "day":
-                analyticsStartDate = analyticsStartDate.AddDays(-1);
-                analyticsEndDate = analyticsEndDate.AddDays(-1);
-                break;
-            case "week":
-                analyticsStartDate = analyticsStartDate.AddDays(-7);
-                analyticsEndDate = analyticsEndDate.AddDays(-7);
-                break;
-            case "month":
-                analyticsStartDate = analyticsStartDate.AddMonths(-1);
-                analyticsEndDate = analyticsEndDate.AddMonths(-1);
-                break;
-            case "year":
-                analyticsStartDate = analyticsStartDate.AddYears(-1);
-                analyticsEndDate = analyticsEndDate.AddYears(-1);
-                break;
-        }
+            "day" => (analyticsStartDate.AddDays(-1), analyticsEndDate.AddDays(-1)),
+            "week" => (analyticsStartDate.AddDays(-7), analyticsEndDate.AddDays(-7)),
+            "month" => (analyticsStartDate.AddMonths(-1), analyticsEndDate.AddMonths(-1)),
+            "year" => (analyticsStartDate.AddYears(-1), analyticsEndDate.AddYears(-1)),
+            _ => (analyticsStartDate, analyticsEndDate)
+        };
         await LoadAnalytics();
     }
 
     private async Task NextPeriod()
     {
         quickPeriod = "";
-        switch (analyticsViewMode)
+        (analyticsStartDate, analyticsEndDate) = analyticsViewMode switch
         {
-            case "day":
-                analyticsStartDate = analyticsStartDate.AddDays(1);
-                analyticsEndDate = analyticsEndDate.AddDays(1);
-                break;
-            case "week":
-                analyticsStartDate = analyticsStartDate.AddDays(7);
-                analyticsEndDate = analyticsEndDate.AddDays(7);
-                break;
-            case "month":
-                analyticsStartDate = analyticsStartDate.AddMonths(1);
-                analyticsEndDate = analyticsEndDate.AddMonths(1);
-                break;
-            case "year":
-                analyticsStartDate = analyticsStartDate.AddYears(1);
-                analyticsEndDate = analyticsEndDate.AddYears(1);
-                break;
-        }
+            "day" => (analyticsStartDate.AddDays(1), analyticsEndDate.AddDays(1)),
+            "week" => (analyticsStartDate.AddDays(7), analyticsEndDate.AddDays(7)),
+            "month" => (analyticsStartDate.AddMonths(1), analyticsEndDate.AddMonths(1)),
+            "year" => (analyticsStartDate.AddYears(1), analyticsEndDate.AddYears(1)),
+            _ => (analyticsStartDate, analyticsEndDate)
+        };
         await LoadAnalytics();
     }
 
-    private string GetPeriodDisplayText()
+    private string GetPeriodDisplayText() => analyticsViewMode switch
     {
-        return analyticsViewMode switch
-        {
-            "day" => analyticsStartDate.ToString("MMMM d, yyyy"),
-            "week" => $"{analyticsStartDate:MMM d} - {analyticsEndDate.AddDays(-1):MMM d, yyyy}",
-            "month" => analyticsStartDate.ToString("MMMM yyyy"),
-            "year" => analyticsStartDate.ToString("yyyy"),
-            _ => analyticsStartDate.ToString("MMMM d, yyyy")
-        };
-    }
-
-    private string FormatHour(int hour)
-    {
-        var time = new DateTime(2000, 1, 1, hour, 0, 0);
-        return time.ToString("h:mm tt");
-    }
+        "day" => analyticsStartDate.ToString("MMMM d, yyyy"),
+        "week" => $"{analyticsStartDate:MMM d} - {analyticsEndDate.AddDays(-1):MMM d, yyyy}",
+        "month" => analyticsStartDate.ToString("MMMM yyyy"),
+        "year" => analyticsStartDate.ToString("yyyy"),
+        _ => analyticsStartDate.ToString("MMMM d, yyyy")
+    };
 
     public async ValueTask DisposeAsync()
     {
-        // Unsubscribe from SignalR events
         OrderHubService.OnNewOrder -= HandleNewOrder;
         OrderHubService.OnOrderCancelled -= HandleOrderCancelled;
         OrderHubService.OnOrderStatusChanged -= HandleOrderStatusChanged;
@@ -1179,9 +538,6 @@
             await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "revenueSparkline");
             await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "categoryDonut");
         }
-        catch
-        {
-            // Ignore errors during disposal
-        }
+        catch { }
     }
 }

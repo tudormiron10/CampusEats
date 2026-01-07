@@ -1,0 +1,105 @@
+@using CampusEats.Client.Models
+@using CampusEats.Client.Helpers
+@using CampusEats.Client.Components.Common
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow duration-200 @(Order.Status == "Completed" ? "opacity-75" : "")">
+    <!-- Order Header -->
+    <div class="@_style.HeaderClass px-6 py-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="@_style.IconBgClass p-3 rounded-xl">
+                    @((MarkupString)_style.Icon)
+                </div>
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-xl font-bold text-slate-800">Order #@OrderStatusHelper.GetOrderNumber(Order.Id)</h3>
+                        <span class="@_style.BadgeClass px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                            @OrderStatusHelper.FormatStatus(Order.Status)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1 text-slate-500 text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        @Order.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy 'at' HH:mm")
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">Total</p>
+                    <p class="text-2xl font-bold text-slate-800">@GetOrderTotal().ToString("C")</p>
+                </div>
+                @switch (Order.Status)
+                {
+                    case "Pending":
+                        <ActionButton Color="amber" Label="Start Preparing" ProcessingLabel="Processing..."
+                                      IsProcessing="@IsProcessing" OnClick="@(() => OnPrepare.InvokeAsync(Order.Id))">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"></path>
+                            </svg>
+                        </ActionButton>
+                        break;
+                    case "InPreparation":
+                        <ActionButton Color="blue" Label="Mark Ready" ProcessingLabel="Processing..."
+                                      IsProcessing="@IsProcessing" OnClick="@(() => OnReady.InvokeAsync(Order.Id))">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </ActionButton>
+                        break;
+                    case "Ready":
+                        <ActionButton Color="emerald" Label="Complete" ProcessingLabel="Processing..."
+                                      IsProcessing="@IsProcessing" OnClick="@(() => OnComplete.InvokeAsync(Order.Id))">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </ActionButton>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="px-6 py-4 bg-slate-50/50">
+        <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <h4 class="font-semibold text-slate-700 text-sm uppercase tracking-wide">Order Items</h4>
+            <span class="text-xs text-slate-400">(@Order.Items.Count @(Order.Items.Count == 1 ? "item" : "items"))</span>
+        </div>
+        <div class="grid gap-2">
+            @foreach (var item in Order.Items)
+            {
+                <div class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-oxford-blue/10 text-oxford-blue rounded-lg flex items-center justify-center font-bold text-sm">
+                            @item.Quantity
+                        </span>
+                        <span class="font-medium text-slate-700">@item.Name</span>
+                    </div>
+                    <span class="font-semibold text-slate-800">@((item.UnitPrice * item.Quantity).ToString("C"))</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public KitchenOrderResponse Order { get; set; } = default!;
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback<Guid> OnPrepare { get; set; }
+    [Parameter] public EventCallback<Guid> OnReady { get; set; }
+    [Parameter] public EventCallback<Guid> OnComplete { get; set; }
+
+    private OrderStatusHelper.StatusStyle _style = default!;
+
+    protected override void OnParametersSet()
+    {
+        _style = OrderStatusHelper.Get(Order.Status);
+    }
+
+    private decimal GetOrderTotal() => Order.Items.Sum(i => i.UnitPrice * i.Quantity);
+}

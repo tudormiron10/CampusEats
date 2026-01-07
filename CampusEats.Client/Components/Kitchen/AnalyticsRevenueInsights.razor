@@ -1,0 +1,58 @@
+@using CampusEats.Client.Models
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Revenue by Hour Sparkline -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <h4 class="text-sm font-medium text-slate-500 mb-2">Revenue by Hour</h4>
+        <div id="revenueSparkline" style="height: 60px;"></div>
+        @if (Revenue.RevenueByHour.Any())
+        {
+            var peakRevHour = Revenue.RevenueByHour.OrderByDescending(r => r.Revenue).FirstOrDefault();
+            if (peakRevHour != null)
+            {
+                <p class="text-sm text-slate-600 mt-2">Peak: @peakRevHour.Revenue.ToString("C") at @FormatHour(peakRevHour.Period.Hour)</p>
+            }
+        }
+    </div>
+
+    <!-- Top 5 Items by Revenue -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <h4 class="text-sm font-medium text-slate-500 mb-3">Top 5 by Revenue</h4>
+        <div class="space-y-2">
+            @foreach (var item in Revenue.TopItemsByRevenue.Take(5))
+            {
+                var maxRevenue = Revenue.TopItemsByRevenue.FirstOrDefault()?.Revenue ?? 1;
+                var percentage = maxRevenue > 0 ? (item.Revenue / maxRevenue) * 100 : 0;
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-700 truncate">@item.Name</p>
+                        <div class="h-1.5 bg-slate-100 rounded-full mt-1">
+                            <div class="h-1.5 bg-emerald-500 rounded-full" style="width: @percentage%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-slate-800 whitespace-nowrap">@item.Revenue.ToString("C")</span>
+                </div>
+            }
+            @if (!Revenue.TopItemsByRevenue.Any())
+            {
+                <p class="text-slate-400 text-sm">No data available</p>
+            }
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
+        <h4 class="text-sm font-medium text-slate-500 mb-3">Category Breakdown</h4>
+        <div id="categoryDonut" style="height: 200px;"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public RevenueInsights Revenue { get; set; } = default!;
+
+    private static string FormatHour(int hour)
+    {
+        var time = new DateTime(2000, 1, 1, hour, 0, 0);
+        return time.ToString("h:mm tt");
+    }
+}

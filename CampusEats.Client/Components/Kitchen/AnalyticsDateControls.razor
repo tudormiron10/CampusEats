@@ -1,0 +1,56 @@
+@* Date controls for analytics: quick buttons, navigation, view mode selector *@
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <!-- Quick Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+            <button class="@(QuickPeriod == "today" ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    @onclick="@(() => OnQuickPeriodChange.InvokeAsync("today"))">Today</button>
+            <button class="@(QuickPeriod == "week" ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    @onclick="@(() => OnQuickPeriodChange.InvokeAsync("week"))">This Week</button>
+            <button class="@(QuickPeriod == "month" ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    @onclick="@(() => OnQuickPeriodChange.InvokeAsync("month"))">This Month</button>
+            <button class="@(QuickPeriod == "year" ? "bg-oxford-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200") px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    @onclick="@(() => OnQuickPeriodChange.InvokeAsync("year"))">This Year</button>
+        </div>
+
+        <!-- Date Navigation -->
+        <div class="flex items-center gap-2">
+            <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="OnPrevious">
+                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <div class="px-4 py-2 bg-slate-50 rounded-lg border border-slate-200 min-w-[200px] text-center">
+                <span class="font-medium text-slate-700">@PeriodDisplayText</span>
+            </div>
+            <button class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors" @onclick="OnNext">
+                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- View Mode -->
+        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+            <button class="@(ViewMode == "day" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @onclick="@(() => OnViewModeChange.InvokeAsync("day"))">Day</button>
+            <button class="@(ViewMode == "week" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @onclick="@(() => OnViewModeChange.InvokeAsync("week"))">Week</button>
+            <button class="@(ViewMode == "month" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @onclick="@(() => OnViewModeChange.InvokeAsync("month"))">Month</button>
+            <button class="@(ViewMode == "year" ? "bg-white shadow-sm" : "") px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                    @onclick="@(() => OnViewModeChange.InvokeAsync("year"))">Year</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string QuickPeriod { get; set; } = "";
+    [Parameter] public string ViewMode { get; set; } = "day";
+    [Parameter] public string PeriodDisplayText { get; set; } = "";
+    [Parameter] public EventCallback<string> OnQuickPeriodChange { get; set; }
+    [Parameter] public EventCallback<string> OnViewModeChange { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+}
