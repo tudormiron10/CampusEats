@@ -52,20 +52,6 @@
                 </svg>
                 Offers
             </button>
-            <button class="@GetTabClass("missions")" disabled title="Coming Soon">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                </svg>
-                Missions
-                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
-            </button>
-            <button class="@GetTabClass("events")" disabled title="Coming Soon">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Events
-                <span class="ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-500 text-xs rounded-full">Soon</span>
-            </button>
         </div>
 
         @if (isLoading)
@@ -424,10 +410,6 @@
     private string GetTabClass(string tab)
     {
         var baseClass = "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ";
-        if (tab == "missions" || tab == "events")
-        {
-            return baseClass + "text-slate-400 cursor-not-allowed";
-        }
         return activeTab == tab
             ? baseClass + "bg-amber-100 text-amber-700"
             : baseClass + "text-slate-600 hover:bg-slate-100";
