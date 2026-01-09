@@ -61,7 +61,17 @@ jobs:
       run: |
         dotnet test --no-build \
           --collect:"XPlat Code Coverage" \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+          --results-directory ./TestResults \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover \
+             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[CampusEats.Api]*" \
+             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[CampusEats.Client]*"
+
+    - name: List coverage files (debug)
+      run: |
+        echo "Looking for coverage files..."
+        find . -name "*.xml" -path "*/TestResults/*" -type f
+        echo "Coverage file contents preview:"
+        find . -name "coverage.opencover.xml" -exec head -20 {} \;
 
     - name: End SonarQube Analysis
       env:
