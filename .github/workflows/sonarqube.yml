@@ -1,0 +1,58 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install SonarScanner for .NET
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: Install Coverlet
+      run: dotnet tool install --global coverlet.console
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Begin SonarQube Analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        dotnet sonarscanner begin \
+          /k:"tudormiron10_CampusEats" \
+          /o:"tudormiron10" \
+          /d:sonar.token="${SONAR_TOKEN}" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.cs.opencover.reportPaths="**/TestResults/**/coverage.opencover.xml" \
+          /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Run Tests with Coverage
+      run: |
+        dotnet test --no-build \
+          --collect:"XPlat Code Coverage" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+    - name: End SonarQube Analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
