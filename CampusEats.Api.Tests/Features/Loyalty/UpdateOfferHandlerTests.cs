@@ -114,10 +114,180 @@ public class UpdateOfferHandlerTests : IDisposable
 
     #endregion
 
-    // Note: Happy path tests for UpdateOfferHandler are not included because the handler uses
-    // ExecuteDeleteAsync which is not supported by InMemory EF Core provider.
-    // The handler's update logic should be tested via integration tests against a real database.
-    // Error case tests below work because they return early before reaching ExecuteDeleteAsync.
+    #region Happy Path Tests
+
+    [Fact]
+    public async Task Given_ValidRequest_When_UpdateOffer_Then_UpdatesOfferFields()
+    {
+        // Arrange
+        var menuItem = await SeedMenuItem("Burger");
+        var offer = await SeedOffer("Original Title", menuItem);
+        var httpContext = CreateHttpContext("Manager");
+        
+        var request = new UpdateOfferRequest(
+            OfferId: offer.OfferId,
+            Title: "Updated Title",
+            Description: "Updated Description",
+            ImageUrl: "https://example.com/new-image.jpg",
+            PointCost: 200,
+            MinimumTier: "Silver",
+            Items: new List<CreateOfferItemRequest>
+            {
+                new(menuItem.MenuItemId, 2)
+            },
+            HttpContext: httpContext
+        );
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        var ok = result as Ok<OfferResponse>;
+        ok.Should().NotBeNull();
+        ok!.Value.Title.Should().Be("Updated Title");
+        ok!.Value.Description.Should().Be("Updated Description");
+        ok!.Value.ImageUrl.Should().Be("https://example.com/new-image.jpg");
+        ok!.Value.PointCost.Should().Be(200);
+        ok!.Value.MinimumTier.Should().Be(LoyaltyTier.Silver);
+    }
+
+    [Fact]
+    public async Task Given_ValidRequest_When_UpdateOffer_Then_ReplacesOfferItems()
+    {
+        // Arrange
+        var originalItem = await SeedMenuItem("Original Item");
+        var newItem = await SeedMenuItem("New Item");
+        var offer = await SeedOffer("Test Offer", originalItem);
+        var httpContext = CreateHttpContext("Admin");
+        
+        var request = new UpdateOfferRequest(
+            OfferId: offer.OfferId,
+            Title: "Updated Offer",
+            Description: null,
+            ImageUrl: null,
+            PointCost: 150,
+            MinimumTier: null,
+            Items: new List<CreateOfferItemRequest>
+            {
+                new(newItem.MenuItemId, 3)
+            },
+            HttpContext: httpContext
+        );
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        var ok = result as Ok<OfferResponse>;
+        ok.Should().NotBeNull();
+        ok!.Value.Items.Should().HaveCount(1);
+        ok!.Value.Items[0].MenuItemId.Should().Be(newItem.MenuItemId);
+        ok!.Value.Items[0].Quantity.Should().Be(3);
+        ok!.Value.Items[0].Name.Should().Be("New Item");
+    }
+
+    [Fact]
+    public async Task Given_MultipleItems_When_UpdateOffer_Then_AddsAllItems()
+    {
+        // Arrange
+        var item1 = await SeedMenuItem("Item 1");
+        var item2 = await SeedMenuItem("Item 2");
+        var item3 = await SeedMenuItem("Item 3");
+        var offer = await SeedOffer("Multi Item Offer", item1);
+        var httpContext = CreateHttpContext("Manager");
+        
+        var request = new UpdateOfferRequest(
+            OfferId: offer.OfferId,
+            Title: "Multi Item Offer Updated",
+            Description: null,
+            ImageUrl: null,
+            PointCost: 300,
+            MinimumTier: "Gold",
+            Items: new List<CreateOfferItemRequest>
+            {
+                new(item1.MenuItemId, 1),
+                new(item2.MenuItemId, 2),
+                new(item3.MenuItemId, 3)
+            },
+            HttpContext: httpContext
+        );
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        var ok = result as Ok<OfferResponse>;
+        ok.Should().NotBeNull();
+        ok!.Value.Items.Should().HaveCount(3);
+        ok!.Value.MinimumTier.Should().Be(LoyaltyTier.Gold);
+    }
+
+    [Fact]
+    public async Task Given_NullMinimumTier_When_UpdateOffer_Then_SetsMinimumTierToNull()
+    {
+        // Arrange
+        var menuItem = await SeedMenuItem();
+        var offer = await SeedOffer(menuItem: menuItem);
+        // Set initial tier
+        offer.MinimumTier = LoyaltyTier.Gold;
+        await _context.SaveChangesAsync();
+        
+        var httpContext = CreateHttpContext("Manager");
+        var request = new UpdateOfferRequest(
+            OfferId: offer.OfferId,
+            Title: "No Tier Offer",
+            Description: null,
+            ImageUrl: null,
+            PointCost: 50,
+            MinimumTier: null, // Clear the tier
+            Items: new List<CreateOfferItemRequest>
+            {
+                new(menuItem.MenuItemId, 1)
+            },
+            HttpContext: httpContext
+        );
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        var ok = result as Ok<OfferResponse>;
+        ok.Should().NotBeNull();
+        ok!.Value.MinimumTier.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Given_AdminUser_When_UpdateOffer_Then_Succeeds()
+    {
+        // Arrange
+        var menuItem = await SeedMenuItem();
+        var offer = await SeedOffer(menuItem: menuItem);
+        var httpContext = CreateHttpContext("Admin");
+        
+        var request = new UpdateOfferRequest(
+            OfferId: offer.OfferId,
+            Title: "Admin Updated",
+            Description: null,
+            ImageUrl: null,
+            PointCost: 100,
+            MinimumTier: null,
+            Items: new List<CreateOfferItemRequest>
+            {
+                new(menuItem.MenuItemId, 1)
+            },
+            HttpContext: httpContext
+        );
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        var ok = result as Ok<OfferResponse>;
+        ok.Should().NotBeNull();
+        ok!.Value.Title.Should().Be("Admin Updated");
+    }
+
+    #endregion
 
     #region Error Cases
 

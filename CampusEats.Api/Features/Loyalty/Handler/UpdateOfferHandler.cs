@@ -52,10 +52,11 @@ public class UpdateOfferHandler : IRequestHandler<UpdateOfferRequest, IResult>
         offer.PointCost = request.PointCost;
         offer.MinimumTier = minimumTier;
 
-        // Remove existing OfferItems directly in the database
-        await _context.OfferItems
+        // Remove existing OfferItems
+        var existingOfferItems = await _context.OfferItems
             .Where(oi => oi.OfferId == offer.OfferId)
-            .ExecuteDeleteAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        _context.OfferItems.RemoveRange(existingOfferItems);
 
         // Create new OfferItem entities and add them to the context
         var newOfferItems = request.Items.Select(i => new OfferItem
