@@ -59,25 +59,44 @@ jobs:
 
     - name: Run Tests with Coverage
       run: |
-        dotnet test --no-build \
+        dotnet test \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults \
-          --settings ./CampusEats.Api.Tests/coverlet.runsettings
+          --settings ./CampusEats.Api.Tests/coverlet.runsettings \
+          --logger "trx;LogFileName=test-results.trx"
 
+    - name: List all generated files (debug)
+      run: |
+        echo "TestResults directory structure:"
+        find ./TestResults -type f -name "*.xml" -o -name "*.trx"
+        
     - name: Copy Coverage Report
       run: |
-        echo "Looking for coverage files..."
-        find . -name "coverage.opencover.xml" -type f
-        # Copy the coverage file to a predictable location
-        find ./TestResults -name "coverage.opencover.xml" -exec cp {} ./TestResults/coverage.opencover.xml \;
-        echo "Coverage file copied to ./TestResults/coverage.opencover.xml"
+        echo "Looking for coverage.opencover.xml..."
+        # Find the coverage file and copy to predictable location
+        COVERAGE_FILE=$(find ./TestResults -name "coverage.opencover.xml" -type f | head -n 1)
+        if [ -n "$COVERAGE_FILE" ]; then
+          cp "$COVERAGE_FILE" ./TestResults/coverage.opencover.xml
+          echo "SUCCESS: Coverage file found and copied to ./TestResults/coverage.opencover.xml"
+          echo "File size: $(du -h "$COVERAGE_FILE" | cut -f1)"
+        else
+          echo "ERROR: coverage.opencover.xml not found!"
+          echo "Available files in TestResults:"
+          find ./TestResults -type f
+          exit 1
+        fi
         
-    - name: List coverage files (debug)
+    - name: Verify Coverage File
       run: |
-        echo "Final coverage file location:"
-        ls -la ./TestResults/
-        echo "Coverage file contents preview:"
-        head -50 ./TestResults/coverage.opencover.xml || echo "File not found"
+        echo "Verifying coverage file..."
+        if [ -f ./TestResults/coverage.opencover.xml ]; then
+          echo "SUCCESS: Coverage file exists"
+          echo "First 30 lines of coverage file:"
+          head -30 ./TestResults/coverage.opencover.xml
+        else
+          echo "ERROR: Coverage file does NOT exist"
+          exit 1
+        fi
 
     - name: End SonarQube Analysis
       env:
