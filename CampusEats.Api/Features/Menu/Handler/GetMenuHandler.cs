@@ -31,11 +31,12 @@ namespace CampusEats.Api.Features.Menu.Handler
 
             if (!string.IsNullOrEmpty(request.DietaryKeyword))
             {
-                // Search in both description and dietary tags (case-insensitive using PostgreSQL ILIKE)
+                // Search in both description and dietary tags (case-insensitive)
+                var keyword = request.DietaryKeyword.ToLower();
                 query = query.Where(mi =>
-                    EF.Functions.ILike(mi.Description, $"%{request.DietaryKeyword}%") ||
+                    mi.Description.ToLower().Contains(keyword) ||
                     mi.MenuItemDietaryTags.Any(mdt =>
-                        EF.Functions.ILike(mdt.DietaryTag.Name, $"%{request.DietaryKeyword}%")));
+                        mdt.DietaryTag.Name.ToLower().Contains(keyword)));
             }
 
             var menuItems = await query
