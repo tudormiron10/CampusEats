@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,6 +47,7 @@ namespace CampusEats.Api.Tests.Features.Upload
             {
                 // ignore cleanup exceptions in tests
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

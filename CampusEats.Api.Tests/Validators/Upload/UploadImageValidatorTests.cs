@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using NSubstitute;
 using Microsoft.AspNetCore.Http;
@@ -21,6 +21,7 @@ namespace CampusEats.Api.Tests.Validators.Upload
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

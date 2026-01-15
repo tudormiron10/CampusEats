@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
@@ -48,6 +48,7 @@ public class GetAllOrdersByUserIdHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     private async Task<UserEntity> SeedUser(string name = "Test User", string email = "test@example.com")

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.HttpResults;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -42,6 +42,7 @@ public class UpdateMenuItemHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     private async Task<MenuItem> SeedMenuItem(

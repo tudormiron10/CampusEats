@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.HttpResults;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -43,6 +43,7 @@ public class GetPaymentByUserIdHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     private async Task<UserEntity> SeedUser(string name = "Test User", string email = "test@example.com")

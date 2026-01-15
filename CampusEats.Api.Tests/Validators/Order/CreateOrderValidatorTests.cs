@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Features.Order.Request;
+﻿﻿﻿using CampusEats.Api.Features.Order.Request;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Validators.Orders;
@@ -19,6 +19,7 @@ namespace CampusEats.Api.Tests.Validators.Order
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -49,6 +49,7 @@ namespace CampusEats.Api.Tests.Features.User
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

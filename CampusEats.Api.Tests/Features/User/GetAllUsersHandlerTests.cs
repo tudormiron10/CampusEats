@@ -50,6 +50,7 @@ namespace CampusEats.Api.Tests.Features.User
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

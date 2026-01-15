@@ -43,6 +43,7 @@ namespace CampusEats.Api.Tests.Features.User
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
@@ -81,7 +82,8 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
-            var response = ok!.Value;
+            ok!.Value.Should().NotBeNull();
+            var response = ok.Value!;
 
             response.UserId.Should().Be(clientUser.UserId);
             response.Name.Should().Be(clientUser.Name);
@@ -115,7 +117,8 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
-            var response = ok!.Value;
+            ok!.Value.Should().NotBeNull();
+            var response = ok.Value!;
 
             response.UserId.Should().Be(adminUser.UserId);
             response.Name.Should().Be(adminUser.Name);
@@ -167,8 +170,9 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
+            ok!.Value.Should().NotBeNull();
 
-            var response = ok!.Value;
+            var response = ok.Value!;
             response.UserId.Should().Be(clientUser.UserId);
             response.Role.Should().Be(clientUser.Role.ToString());
             response.LoyaltyPoints.Should().BeNull();
@@ -200,8 +204,9 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
+            ok!.Value.Should().NotBeNull();
 
-            var response = ok!.Value;
+            var response = ok.Value!;
             response.UserId.Should().Be(managerUser.UserId);
             response.Role.Should().Be(managerUser.Role.ToString());
             response.LoyaltyPoints.Should().BeNull();
@@ -243,8 +248,9 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
+            ok!.Value.Should().NotBeNull();
 
-            var response = ok!.Value;
+            var response = ok.Value!;
             response.UserId.Should().Be(clientUser.UserId);
             response.Role.Should().Be(clientUser.Role.ToString());
             response.LoyaltyPoints.Should().NotBeNull();
