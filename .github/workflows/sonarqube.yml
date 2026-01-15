@@ -2,9 +2,9 @@ name: SonarQube Analysis
 
 on:
   push:
-    branches: [master, tests/code-coverage-improvements]
+    branches: [master, "release/**"]
   pull_request:
-    branches: [master]
+    branches: [master, "release/**"]
   workflow_dispatch:
 
 jobs:
@@ -46,13 +46,27 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-        dotnet sonarscanner begin \
-          /k:"tudormiron10_CampusEats" \
-          /o:"tudormiron10" \
-          /d:sonar.token="${SONAR_TOKEN}" \
-          /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
-          /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+        BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+        echo "Analyzing branch: $BRANCH_NAME"
+        
+        if [ "$BRANCH_NAME" = "master" ]; then
+          dotnet sonarscanner begin \
+            /k:"tudormiron10_CampusEats" \
+            /o:"tudormiron10" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+        else
+          dotnet sonarscanner begin \
+            /k:"tudormiron10_CampusEats" \
+            /o:"tudormiron10" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.branch.name="$BRANCH_NAME" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+        fi
 
     - name: Build
       run: dotnet build --no-restore
