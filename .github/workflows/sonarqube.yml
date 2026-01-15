@@ -2,7 +2,7 @@ name: SonarQube Analysis
 
 on:
   push:
-    branches: [master]
+    branches: [master, tests/code-coverage-improvements]
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -51,7 +51,7 @@ jobs:
           /o:"tudormiron10" \
           /d:sonar.token="${SONAR_TOKEN}" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportPaths="**/TestResults/**/coverage.opencover.xml" \
+          /d:sonar.cs.opencover.reportsPaths="./TestResults/coverage.opencover.xml" \
           /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
 
     - name: Build
@@ -62,16 +62,22 @@ jobs:
         dotnet test --no-build \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults \
-          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover \
-             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[CampusEats.Api]*" \
-             DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[CampusEats.Client]*"
+          --settings ./CampusEats.Api.Tests/coverlet.runsettings
 
-    - name: List coverage files (debug)
+    - name: Copy Coverage Report
       run: |
         echo "Looking for coverage files..."
-        find . -name "*.xml" -path "*/TestResults/*" -type f
+        find . -name "coverage.opencover.xml" -type f
+        # Copy the coverage file to a predictable location
+        find ./TestResults -name "coverage.opencover.xml" -exec cp {} ./TestResults/coverage.opencover.xml \;
+        echo "Coverage file copied to ./TestResults/coverage.opencover.xml"
+        
+    - name: List coverage files (debug)
+      run: |
+        echo "Final coverage file location:"
+        ls -la ./TestResults/
         echo "Coverage file contents preview:"
-        find . -name "coverage.opencover.xml" -exec head -20 {} \;
+        head -50 ./TestResults/coverage.opencover.xml || echo "File not found"
 
     - name: End SonarQube Analysis
       env:
