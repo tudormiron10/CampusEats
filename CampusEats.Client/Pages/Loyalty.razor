@@ -415,7 +415,7 @@
             : baseClass + "text-slate-600 hover:bg-slate-100";
     }
 
-    private string GetTierCardClass(LoyaltyTier tier) => tier switch
+    private static string GetTierCardClass(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "bg-gradient-to-br from-amber-700 to-amber-900 text-white",
         LoyaltyTier.Silver => "bg-gradient-to-br from-slate-400 to-slate-600 text-white",
@@ -423,7 +423,7 @@
         _ => "bg-gradient-to-br from-slate-400 to-slate-600 text-white"
     };
 
-    private string GetTierIconBgClass(LoyaltyTier tier) => tier switch
+    private static string GetTierIconBgClass(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "bg-amber-600",
         LoyaltyTier.Silver => "bg-slate-300",
@@ -431,7 +431,7 @@
         _ => "bg-slate-300"
     };
 
-    private string GetTierIcon(LoyaltyTier tier) => tier switch
+    private static string GetTierIcon(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "<span class=\"text-2xl\">🥉</span>",
         LoyaltyTier.Silver => "<span class=\"text-2xl\">🥈</span>",
@@ -439,7 +439,7 @@
         _ => "<span class=\"text-2xl\">🎖️</span>"
     };
 
-    private string GetTierBadgeClass(LoyaltyTier tier) => tier switch
+    private static string GetTierBadgeClass(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "bg-amber-100 text-amber-700",
         LoyaltyTier.Silver => "bg-slate-200 text-slate-700",
@@ -447,7 +447,7 @@
         _ => "bg-slate-100 text-slate-600"
     };
 
-    private int GetEarnRate(LoyaltyTier tier) => tier switch
+    private static int GetEarnRate(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => 10,
         LoyaltyTier.Silver => 12,
@@ -455,14 +455,14 @@
         _ => 10
     };
 
-    private string GetNextTier(LoyaltyTier tier) => tier switch
+    private static string GetNextTier(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "Silver",
         LoyaltyTier.Silver => "Gold",
         _ => "Gold"
     };
 
-    private string GetProgressPercentage(LoyaltyStatusResponse status)
+    private static string GetProgressPercentage(LoyaltyStatusResponse status)
     {
         if (status.NextTierThreshold == 0) return "100";
         var previousThreshold = status.Tier switch

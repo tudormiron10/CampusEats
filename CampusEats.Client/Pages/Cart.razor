@@ -137,7 +137,7 @@
 </div>
 
 @code {
-    private bool isProcessing = false;
+    private readonly bool isProcessing = false;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()

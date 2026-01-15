@@ -247,11 +247,14 @@
             {
                 await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('newOrderSound').play().catch(() => {})");
             }
-            catch { }
+            catch
+            {
+                // Ignore audio playback errors - notification sound is optional and shouldn't affect functionality
+            }
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error handling new order: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error handling new order: {ex.Message}");
         }
     }
 
@@ -268,7 +271,7 @@
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error handling order cancellation: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error handling order cancellation: {ex.Message}");
         }
     }
 
@@ -286,7 +289,7 @@
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error handling order status change: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error handling order status change: {ex.Message}");
         }
     }
 
@@ -298,7 +301,7 @@
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error refreshing orders after reconnection: {ex.Message}");
+            await Console.Error.WriteLineAsync($"Error refreshing orders after reconnection: {ex.Message}");
         }
     }
 
@@ -455,8 +458,8 @@
         {
             "today" => ("day", today, today.AddDays(1)),
             "week" => ("week", GetStartOfWeek(today), GetStartOfWeek(today).AddDays(7)),
-            "month" => ("month", new DateTime(today.Year, today.Month, 1), new DateTime(today.Year, today.Month, 1).AddMonths(1)),
-            "year" => ("year", new DateTime(today.Year, 1, 1), new DateTime(today.Year + 1, 1, 1)),
+            "month" => ("month", new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Local), new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Local).AddMonths(1)),
+            "year" => ("year", new DateTime(today.Year, 1, 1, 0, 0, 0, DateTimeKind.Local), new DateTime(today.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Local)),
             _ => (analyticsViewMode, analyticsStartDate, analyticsEndDate)
         };
 
@@ -473,8 +476,8 @@
         {
             "day" => (today, today.AddDays(1)),
             "week" => (GetStartOfWeek(today), GetStartOfWeek(today).AddDays(7)),
-            "month" => (new DateTime(today.Year, today.Month, 1), new DateTime(today.Year, today.Month, 1).AddMonths(1)),
-            "year" => (new DateTime(today.Year, 1, 1), new DateTime(today.Year + 1, 1, 1)),
+            "month" => (new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Local), new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Local).AddMonths(1)),
+            "year" => (new DateTime(today.Year, 1, 1, 0, 0, 0, DateTimeKind.Local), new DateTime(today.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Local)),
             _ => (analyticsStartDate, analyticsEndDate)
         };
 
@@ -538,6 +541,9 @@
             await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "revenueSparkline");
             await JSRuntime.InvokeVoidAsync("apexChartsInterop.destroyChart", "categoryDonut");
         }
-        catch { }
+        catch
+        {
+            // Ignore errors during disposal - charts may already be destroyed or JS runtime may be unavailable
+        }
     }
 }
