@@ -15,6 +15,7 @@ namespace CampusEats.Api.Features.Upload.Handler
     {
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<UploadImageHandler> _logger;
+        private const char UrlPathSeparator = '/';
 
         public UploadImageHandler(IWebHostEnvironment env, ILogger<UploadImageHandler> logger)
         {
@@ -52,8 +53,9 @@ namespace CampusEats.Api.Features.Upload.Handler
                 }
 
                 // Compute a URL path relative to web root, normalize to forward slashes and ensure leading slash
-                var relativePath = Path.GetRelativePath(webRoot, fullPath).Replace('\\', '/');
-                if (!relativePath.StartsWith("/")) relativePath = "/" + relativePath;
+                var relativePath = Path.GetRelativePath(webRoot, fullPath).Replace('\\', UrlPathSeparator);
+                if (!relativePath.StartsWith(UrlPathSeparator)) 
+                    relativePath = UrlPathSeparator + relativePath;
 
                 // Log physical and URL paths for debugging preview 404s
                 _logger.LogInformation("Saved image to physical path: {FullPath}", fullPath);

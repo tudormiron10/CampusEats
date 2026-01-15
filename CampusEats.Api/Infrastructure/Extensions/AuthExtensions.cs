@@ -31,7 +31,7 @@ public static class AuthExtensions
     public static bool IsStaff(this HttpContext httpContext)
     {
         var role = httpContext.GetUserRole();
-        return role is "Manager" or "Admin";
+        return role is "Staff" or "Manager" or "Admin";
     }
 
     public static bool CanAccessUserData(this HttpContext httpContext, Guid targetUserId)

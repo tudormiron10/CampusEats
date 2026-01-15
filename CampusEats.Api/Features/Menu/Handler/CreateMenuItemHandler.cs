@@ -20,9 +20,9 @@ namespace CampusEats.Api.Features.Menu.Handler
         public async Task<IResult> Handle(CreateMenuItemRequest request, CancellationToken cancellationToken)
         {
             var validator = new CreateMenuItemValidator();
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+                return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
             var menuItem = new MenuItem
             {
@@ -37,7 +37,7 @@ namespace CampusEats.Api.Features.Menu.Handler
             };
 
             // Add dietary tags if provided
-            if (request.DietaryTagIds != null && request.DietaryTagIds.Any())
+            if (request.DietaryTagIds != null && request.DietaryTagIds.Count > 0)
             {
                 var dietaryTags = await _context.DietaryTags
                     .Where(dt => request.DietaryTagIds.Contains(dt.DietaryTagId))

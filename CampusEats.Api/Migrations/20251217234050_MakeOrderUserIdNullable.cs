@@ -8,27 +8,32 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class MakeOrderUserIdNullable : Migration
     {
+        private const string ForeignKeyName = "FK_Orders_Users_UserId";
+        private const string UserIdColumnName = "UserId";
+        private const string OrdersTableName = "Orders";
+        private const string UsersTableName = "Users";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Orders_Users_UserId",
-                table: "Orders");
+                name: ForeignKeyName,
+                table: OrdersTableName);
 
             migrationBuilder.AlterColumn<Guid>(
-                name: "UserId",
-                table: "Orders",
+                name: UserIdColumnName,
+                table: OrdersTableName,
                 type: "uuid",
                 nullable: true,
                 oldClrType: typeof(Guid),
                 oldType: "uuid");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Orders_Users_UserId",
-                table: "Orders",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "UserId",
+                name: ForeignKeyName,
+                table: OrdersTableName,
+                column: UserIdColumnName,
+                principalTable: UsersTableName,
+                principalColumn: UserIdColumnName,
                 onDelete: ReferentialAction.SetNull);
         }
 
@@ -36,25 +41,25 @@ namespace CampusEats.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Orders_Users_UserId",
-                table: "Orders");
+                name: ForeignKeyName,
+                table: OrdersTableName);
 
             migrationBuilder.AlterColumn<Guid>(
-                name: "UserId",
-                table: "Orders",
+                name: UserIdColumnName,
+                table: OrdersTableName,
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
+                defaultValue: Guid.Empty,
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
                 oldNullable: true);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Orders_Users_UserId",
-                table: "Orders",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "UserId",
+                name: ForeignKeyName,
+                table: OrdersTableName,
+                column: UserIdColumnName,
+                principalTable: UsersTableName,
+                principalColumn: UserIdColumnName,
                 onDelete: ReferentialAction.Cascade);
         }
     }

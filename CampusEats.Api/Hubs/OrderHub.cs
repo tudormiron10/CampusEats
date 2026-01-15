@@ -46,7 +46,7 @@ public class OrderHub : Hub<IOrderHubClient>
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in OnConnectedAsync for ConnectionId {ConnectionId}", Context.ConnectionId);
-            throw;
+            // Exception is logged; allow base connection to proceed
         }
 
         await base.OnConnectedAsync();

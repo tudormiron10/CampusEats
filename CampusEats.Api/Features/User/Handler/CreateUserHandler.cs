@@ -27,7 +27,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
         
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+            return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
         var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email, cancellationToken);
         if (emailExists)
@@ -81,7 +81,7 @@ public class CreateUserHandler : IRequestHandler<CreateUserRequest, IResult>
     }
     
     
-    private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {
         // Folosim HMACSHA512 pentru hashing. "using" asigură eliberarea resurselor.
         using (var hmac = new HMACSHA512())

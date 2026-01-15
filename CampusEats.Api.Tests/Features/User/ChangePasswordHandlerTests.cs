@@ -9,7 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence.Entities;
 using System.Security.Cryptography;
 using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
-namespace CampusEats.Api.Tests.Features.UserTests;
+namespace CampusEats.Api.Tests.Features.User;
 
 public class ChangePasswordHandlerTests : IDisposable
 {

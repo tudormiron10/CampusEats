@@ -27,9 +27,9 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
     public async Task<IResult> Handle(LoginRequest request, CancellationToken cancellationToken)
     {
         var validator = new LoginValidator();
-        var validationResult = await validator.ValidateAsync(request);
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+            return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
         var user = await _context.Users
             .Include(u => u.Loyalty)
@@ -56,8 +56,7 @@ public class LoginHandler : IRequestHandler<LoginRequest, IResult>
         return Results.Ok(loginResponse);
     }
 
-   
-    private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+    private static bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
     {
         using (var hmac = new HMACSHA512(passwordSalt))
         {

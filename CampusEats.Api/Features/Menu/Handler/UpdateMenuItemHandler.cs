@@ -20,9 +20,9 @@ namespace CampusEats.Api.Features.Menu
         public async Task<IResult> Handle(UpdateMenuItemRequest request, CancellationToken cancellationToken)
         {
             var validator = new UpdateMenuItemValidator();
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+                return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
             var item = await _context.MenuItems
                 .Include(m => m.MenuItemDietaryTags)
@@ -46,7 +46,7 @@ namespace CampusEats.Api.Features.Menu
                 _context.MenuItemDietaryTags.RemoveRange(item.MenuItemDietaryTags);
 
                 // Add new tags
-                if (request.DietaryTagIds.Any())
+                if (request.DietaryTagIds.Count > 0)
                 {
                     var newTags = request.DietaryTagIds.Select(tagId => new MenuItemDietaryTag
                     {

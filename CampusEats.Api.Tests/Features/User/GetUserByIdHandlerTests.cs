@@ -59,7 +59,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 2 }
             };
 
-            var loyalty = new Loyalty
+            var loyalty = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,
@@ -221,7 +221,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 31 }
             };
 
-            var loyalty = new Loyalty
+            var loyalty = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,

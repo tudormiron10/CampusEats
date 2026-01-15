@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Features.Payments.Request;
+﻿using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.Payments.Response;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -37,25 +37,18 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
 
     public async Task<IResult> Handle(InitiateCheckoutRequest request, CancellationToken cancellationToken)
     {
-        // Get user ID from JWT using the extension method
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext == null)
+        var userIdResult = GetUserIdFromContext();
+        if (userIdResult.Error != null)
         {
-            return Results.Unauthorized();
+            return userIdResult.Error;
         }
         
-        var userIdNullable = httpContext.GetUserId();
-        if (userIdNullable == null)
-        {
-            return Results.Unauthorized();
-        }
-        
-        var userId = userIdNullable.Value;
+        var userId = userIdResult.UserId;
 
         // Validate request - must have either paid items or redeemed items
-        var hasPaidItems = request.Items != null && request.Items.Any();
-        var hasRedeemedItems = request.RedeemedMenuItemIds != null && request.RedeemedMenuItemIds.Any();
-        var hasOffers = request.PendingOfferIds != null && request.PendingOfferIds.Any();
+        var hasPaidItems = request.Items != null && request.Items.Count > 0;
+        var hasRedeemedItems = request.RedeemedMenuItemIds != null && request.RedeemedMenuItemIds.Count > 0;
+        var hasOffers = request.PendingOfferIds != null && request.PendingOfferIds.Count > 0;
 
         if (!hasPaidItems && !hasRedeemedItems)
         {
@@ -63,35 +56,10 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
         }
 
         // Calculate total from paid items
-        decimal totalAmount = 0;
-        var itemsData = new List<CheckoutItemData>();
-
-        if (hasPaidItems)
+        var (totalAmount, itemsData, error) = await CalculateTotalAndItemsData(request, hasPaidItems, cancellationToken);
+        if (error != null)
         {
-            // Fetch menu items to get prices
-            var menuItemIds = request.Items!.Select(i => i.MenuItemId).ToList();
-            var menuItems = await _context.MenuItems
-                .Where(m => menuItemIds.Contains(m.MenuItemId))
-                .ToDictionaryAsync(m => m.MenuItemId, cancellationToken);
-
-            // Validate all items exist
-            var missingItems = menuItemIds.Except(menuItems.Keys).ToList();
-            if (missingItems.Any())
-            {
-                return Results.BadRequest($"Menu items not found: {string.Join(", ", missingItems)}");
-            }
-
-            // Build items data with prices for storage
-            itemsData = request.Items!.Select(i => new CheckoutItemData
-            {
-                MenuItemId = i.MenuItemId,
-                Quantity = i.Quantity,
-                UnitPrice = menuItems[i.MenuItemId].Price,
-                Name = menuItems[i.MenuItemId].Name
-            }).ToList();
-
-            // Calculate total (paid items only)
-            totalAmount = itemsData.Sum(i => i.UnitPrice * i.Quantity);
+            return error;
         }
 
         // FREE CHECKOUT FLOW - Only redeemed items, no payment needed
@@ -106,6 +74,71 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
             return Results.BadRequest("Total amount must be greater than zero for paid checkout.");
         }
 
+        return await CreatePaidCheckout(userId, totalAmount, itemsData, request, cancellationToken);
+    }
+
+    private (Guid UserId, IResult? Error) GetUserIdFromContext()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            return (Guid.Empty, Results.Unauthorized());
+        }
+        
+        var userIdNullable = httpContext.GetUserId();
+        if (userIdNullable == null)
+        {
+            return (Guid.Empty, Results.Unauthorized());
+        }
+        
+        return (userIdNullable.Value, null);
+    }
+
+    private async Task<(decimal TotalAmount, List<CheckoutItemData> ItemsData, IResult? Error)> CalculateTotalAndItemsData(
+        InitiateCheckoutRequest request,
+        bool hasPaidItems,
+        CancellationToken cancellationToken)
+    {
+        if (!hasPaidItems)
+        {
+            return (0, new List<CheckoutItemData>(), null);
+        }
+
+        // Fetch menu items to get prices
+        var menuItemIds = request.Items!.Select(i => i.MenuItemId).ToList();
+        var menuItems = await _context.MenuItems
+            .Where(m => menuItemIds.Contains(m.MenuItemId))
+            .ToDictionaryAsync(m => m.MenuItemId, cancellationToken);
+
+        // Validate all items exist
+        var missingItems = menuItemIds.Except(menuItems.Keys).ToList();
+        if (missingItems.Count > 0)
+        {
+            return (0, new List<CheckoutItemData>(), Results.BadRequest($"Menu items not found: {string.Join(", ", missingItems)}"));
+        }
+
+        // Build items data with prices for storage
+        var itemsData = request.Items!.Select(i => new CheckoutItemData
+        {
+            MenuItemId = i.MenuItemId,
+            Quantity = i.Quantity,
+            UnitPrice = menuItems[i.MenuItemId].Price,
+            Name = menuItems[i.MenuItemId].Name
+        }).ToList();
+
+        // Calculate total (paid items only)
+        var totalAmount = itemsData.Sum(i => i.UnitPrice * i.Quantity);
+
+        return (totalAmount, itemsData, null);
+    }
+
+    private async Task<IResult> CreatePaidCheckout(
+        Guid userId,
+        decimal totalAmount,
+        List<CheckoutItemData> itemsData,
+        InitiateCheckoutRequest request,
+        CancellationToken cancellationToken)
+    {
         // Configure Stripe
         StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
 
@@ -227,13 +260,11 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
 
         // Validate tier requirements for each offer
         var userTier = LoyaltyHelpers.CalculateTier(user.Loyalty.LifetimePoints);
-        foreach (var offer in offers)
+        var invalidTierOffer = offers.FirstOrDefault(o => !LoyaltyHelpers.MeetsTierRequirement(userTier, o.MinimumTier));
+        if (invalidTierOffer != null)
         {
-            if (!LoyaltyHelpers.MeetsTierRequirement(userTier, offer.MinimumTier))
-            {
-                return Results.BadRequest(
-                    $"You don't have the required tier for offer '{offer.Title}'. Required: {offer.MinimumTier}, Your tier: {userTier}");
-            }
+            return Results.BadRequest(
+                $"You don't have the required tier for offer '{invalidTierOffer.Title}'. Required: {invalidTierOffer.MinimumTier}, Your tier: {userTier}");
         }
 
         // Validate redeemed menu items exist
@@ -242,7 +273,7 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
             .ToDictionaryAsync(m => m.MenuItemId, cancellationToken);
 
         var missingMenuItems = redeemedMenuItemIds.Except(redeemedMenuItems.Keys).ToList();
-        if (missingMenuItems.Any())
+        if (missingMenuItems.Count > 0)
         {
             return Results.BadRequest($"Menu items not found: {string.Join(", ", missingMenuItems)}");
         }

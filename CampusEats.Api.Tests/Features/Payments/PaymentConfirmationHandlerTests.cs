@@ -55,7 +55,7 @@ public class PaymentConfirmationHandlerTests : IDisposable
             Role = UserRole.Client,
             PasswordHash = new byte[64],
             PasswordSalt = new byte[128],
-            Loyalty = new Loyalty
+            Loyalty = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 CurrentPoints = 100,

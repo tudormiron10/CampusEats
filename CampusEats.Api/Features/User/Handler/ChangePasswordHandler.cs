@@ -22,7 +22,7 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordRequest, IRes
         var validator = new ChangePasswordValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+            return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken);
@@ -43,14 +43,14 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordRequest, IRes
         return Results.Ok(new { message = "Password changed successfully" });
     }
 
-    private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+    private static bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
     {
         using var hmac = new HMACSHA512(passwordSalt);
         var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
         return computedHash.SequenceEqual(passwordHash);
     }
 
-    private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {
         using var hmac = new HMACSHA512();
         passwordSalt = hmac.Key;

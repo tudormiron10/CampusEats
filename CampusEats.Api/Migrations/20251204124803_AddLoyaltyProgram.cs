@@ -8,18 +8,22 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class AddLoyaltyProgram : Migration
     {
+        private const string LoyaltiesTableName = "Loyalties";
+        private const string IntegerType = "integer";
+        private const string OfferItemsTableName = "OfferItems";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
                 name: "Points",
-                table: "Loyalties",
+                table: LoyaltiesTableName,
                 newName: "LifetimePoints");
 
             migrationBuilder.AddColumn<int>(
                 name: "CurrentPoints",
-                table: "Loyalties",
-                type: "integer",
+                table: LoyaltiesTableName,
+                type: IntegerType,
                 nullable: false,
                 defaultValue: 0);
 
@@ -30,7 +34,7 @@ namespace CampusEats.Api.Migrations
                     TransactionId = table.Column<Guid>(type: "uuid", nullable: false),
                     LoyaltyId = table.Column<Guid>(type: "uuid", nullable: false),
                     OrderId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Points = table.Column<int>(type: "integer", nullable: false),
+                    Points = table.Column<int>(type: IntegerType, nullable: false),
                     Type = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -41,7 +45,7 @@ namespace CampusEats.Api.Migrations
                     table.ForeignKey(
                         name: "FK_LoyaltyTransactions_Loyalties_LoyaltyId",
                         column: x => x.LoyaltyId,
-                        principalTable: "Loyalties",
+                        principalTable: LoyaltiesTableName,
                         principalColumn: "LoyaltyId",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -54,7 +58,7 @@ namespace CampusEats.Api.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     ImageUrl = table.Column<string>(type: "text", nullable: true),
-                    PointCost = table.Column<int>(type: "integer", nullable: false),
+                    PointCost = table.Column<int>(type: IntegerType, nullable: false),
                     MinimumTier = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -65,11 +69,11 @@ namespace CampusEats.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OfferItems",
+                name: OfferItemsTableName,
                 columns: table => new
                 {
                     OfferItemId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    Quantity = table.Column<int>(type: IntegerType, nullable: false),
                     OfferId = table.Column<Guid>(type: "uuid", nullable: false),
                     MenuItemId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -97,12 +101,12 @@ namespace CampusEats.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_OfferItems_MenuItemId",
-                table: "OfferItems",
+                table: OfferItemsTableName,
                 column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OfferItems_OfferId",
-                table: "OfferItems",
+                table: OfferItemsTableName,
                 column: "OfferId");
         }
 
@@ -113,18 +117,18 @@ namespace CampusEats.Api.Migrations
                 name: "LoyaltyTransactions");
 
             migrationBuilder.DropTable(
-                name: "OfferItems");
+                name: OfferItemsTableName);
 
             migrationBuilder.DropTable(
                 name: "Offers");
 
             migrationBuilder.DropColumn(
                 name: "CurrentPoints",
-                table: "Loyalties");
+                table: LoyaltiesTableName);
 
             migrationBuilder.RenameColumn(
                 name: "LifetimePoints",
-                table: "Loyalties",
+                table: LoyaltiesTableName,
                 newName: "Points");
         }
     }

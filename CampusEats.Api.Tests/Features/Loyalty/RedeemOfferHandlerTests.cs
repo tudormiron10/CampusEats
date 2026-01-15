@@ -9,7 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 
-namespace CampusEats.Api.Tests.Features.LoyaltyTests;
+namespace CampusEats.Api.Tests.Features.Loyalty;
 
 public class RedeemOfferHandlerTests : IDisposable
 {

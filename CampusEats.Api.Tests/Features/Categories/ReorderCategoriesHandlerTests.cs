@@ -7,7 +7,7 @@ using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 
-namespace CampusEats.Api.Tests.Features.CategoriesTests;
+namespace CampusEats.Api.Tests.Features.Categories;
 
 public class ReorderCategoriesHandlerTests : IDisposable
 {
