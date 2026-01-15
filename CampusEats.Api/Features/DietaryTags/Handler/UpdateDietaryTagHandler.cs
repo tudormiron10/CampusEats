@@ -18,7 +18,7 @@ public class UpdateDietaryTagHandler : IRequestHandler<UpdateDietaryTagRequest, 
 
     public async Task<IResult> Handle(UpdateDietaryTagRequest request, CancellationToken cancellationToken)
     {
-        var dietaryTag = await _context.DietaryTags.FindAsync(request.DietaryTagId);
+        var dietaryTag = await _context.DietaryTags.FindAsync(new object[] { request.DietaryTagId }, cancellationToken);
         if (dietaryTag == null)
             return ApiErrors.NotFound("Dietary tag");
 

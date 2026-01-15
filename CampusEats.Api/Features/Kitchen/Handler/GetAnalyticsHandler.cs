@@ -52,7 +52,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         var summary = BuildSummary(ordersInPeriod, prevOrders);
 
         // Performance metrics
-        var performance = BuildPerformanceMetrics(ordersInPeriod, startDate, endDate);
+        var performance = BuildPerformanceMetrics(ordersInPeriod);
 
         // Item insights
         var itemInsights = BuildItemInsights(ordersInPeriod);
@@ -75,7 +75,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         return Results.Ok(response);
     }
 
-    private List<TimeSeriesDataPoint> BuildTimeSeries(List<OrderEntity> orders, DateTime start, DateTime end, string groupBy)
+    private static List<TimeSeriesDataPoint> BuildTimeSeries(List<OrderEntity> orders, DateTime start, DateTime end, string groupBy)
     {
         var result = new List<TimeSeriesDataPoint>();
 
@@ -109,7 +109,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
                 break;
 
             case "month":
-                for (var month = new DateTime(start.Year, start.Month, 1); month < end; month = month.AddMonths(1))
+                for (var month = new DateTime(start.Year, start.Month, 1, 0, 0, 0, DateTimeKind.Utc); month < end; month = month.AddMonths(1))
                 {
                     var monthEnd = month.AddMonths(1);
                     var monthOrders = orders.Where(o => o.OrderDate >= month && o.OrderDate < monthEnd).ToList();
@@ -125,7 +125,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         return result;
     }
 
-    private AnalyticsSummary BuildSummary(List<OrderEntity> orders, List<OrderEntity> prevOrders)
+    private static AnalyticsSummary BuildSummary(List<OrderEntity> orders, List<OrderEntity> prevOrders)
     {
         var totalOrders = orders.Count;
         var totalRevenue = orders.Sum(o => o.TotalAmount);
@@ -134,13 +134,10 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
 
         // Calculate % change vs previous period
         decimal? changeVsPrevious = null;
-        if (prevOrders.Any())
+        if (prevOrders.Count > 0)
         {
             var prevTotal = prevOrders.Count;
-            if (prevTotal > 0)
-            {
-                changeVsPrevious = ((decimal)(totalOrders - prevTotal) / prevTotal) * 100;
-            }
+            changeVsPrevious = ((decimal)(totalOrders - prevTotal) / prevTotal) * 100;
         }
 
         return new AnalyticsSummary(
@@ -152,17 +149,17 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         );
     }
 
-    private PerformanceMetrics BuildPerformanceMetrics(List<OrderEntity> orders, DateTime start, DateTime end)
+    private static PerformanceMetrics BuildPerformanceMetrics(List<OrderEntity> orders)
     {
         // Peak hour
         PeakHour? peakHour = null;
-        if (orders.Any())
+        if (orders.Count > 0)
         {
             var hourGroups = orders
                 .GroupBy(o => o.OrderDate.Hour)
                 .Select(g => new { Hour = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
-                .FirstOrDefault();
+                .First();
 
             if (hourGroups != null)
             {
@@ -172,13 +169,13 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
 
         // Best day of week
         BestDay? bestDay = null;
-        if (orders.Any())
+        if (orders.Count > 0)
         {
             var dayGroups = orders
                 .GroupBy(o => o.OrderDate.DayOfWeek)
                 .Select(g => new { Day = g.Key, AvgOrders = (decimal)g.Count() })
                 .OrderByDescending(g => g.AvgOrders)
-                .FirstOrDefault();
+                .First();
 
             if (dayGroups != null)
             {
@@ -194,7 +191,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
 
         // Avg items per order
         var totalItems = orders.SelectMany(o => o.Items).Sum(i => i.Quantity);
-        var avgItemsPerOrder = orders.Any() ? (decimal)totalItems / orders.Count : 0;
+        var avgItemsPerOrder = orders.Count > 0 ? (decimal)totalItems / orders.Count : 0;
 
         return new PerformanceMetrics(
             peakHour,
@@ -206,7 +203,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         );
     }
 
-    private ItemInsights BuildItemInsights(List<OrderEntity> orders)
+    private static ItemInsights BuildItemInsights(List<OrderEntity> orders)
     {
         var allItems = orders
             .SelectMany(o => o.Items.Select(i => new
@@ -236,7 +233,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         ItemInsight? morningBest = null;
         ItemInsight? eveningBest = null;
 
-        if (itemGroups.Any())
+        if (itemGroups.Count > 0)
         {
             var most = itemGroups.OrderByDescending(g => g.TotalQuantity).First();
             mostSold = new ItemInsight(most.MenuItemId, most.Name, most.TotalQuantity);
@@ -245,14 +242,14 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
             leastSold = new ItemInsight(least.MenuItemId, least.Name, least.TotalQuantity);
 
             var morningItems = itemGroups.Where(g => g.MorningQty > 0).ToList();
-            if (morningItems.Any())
+            if (morningItems.Count > 0)
             {
                 var mBest = morningItems.OrderByDescending(g => g.MorningQty).First();
                 morningBest = new ItemInsight(mBest.MenuItemId, mBest.Name, mBest.MorningQty);
             }
 
             var eveningItems = itemGroups.Where(g => g.EveningQty > 0).ToList();
-            if (eveningItems.Any())
+            if (eveningItems.Count > 0)
             {
                 var eBest = eveningItems.OrderByDescending(g => g.EveningQty).First();
                 eveningBest = new ItemInsight(eBest.MenuItemId, eBest.Name, eBest.EveningQty);
@@ -262,7 +259,7 @@ public class GetAnalyticsHandler : IRequestHandler<GetAnalyticsRequest, IResult>
         return new ItemInsights(mostSold, leastSold, morningBest, eveningBest);
     }
 
-    private RevenueInsights BuildRevenueInsights(List<OrderEntity> orders)
+    private static RevenueInsights BuildRevenueInsights(List<OrderEntity> orders)
     {
         // Revenue by hour (24 hours)
         var revenueByHour = Enumerable.Range(0, 24)

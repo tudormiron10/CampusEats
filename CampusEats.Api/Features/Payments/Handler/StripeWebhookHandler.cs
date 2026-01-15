@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -95,7 +95,7 @@ public class StripeWebhookHandler
 
         // Parse items from JSON
         var itemsData = JsonSerializer.Deserialize<List<CheckoutItemData>>(pendingCheckout.ItemsJson);
-        if (itemsData == null || !itemsData.Any())
+        if (itemsData == null || itemsData.Count == 0)
         {
             _logger.LogError("Failed to parse items for PendingCheckout {CheckoutId}", pendingCheckout.PendingCheckoutId);
             return;
@@ -177,7 +177,7 @@ public class StripeWebhookHandler
         if (!string.IsNullOrEmpty(pendingCheckout.PendingOfferIdsJson) && user?.Loyalty != null)
         {
             var pendingOfferIds = JsonSerializer.Deserialize<List<Guid>>(pendingCheckout.PendingOfferIdsJson);
-            if (pendingOfferIds != null && pendingOfferIds.Any())
+            if (pendingOfferIds != null && pendingOfferIds.Count > 0)
             {
                 var offers = await _context.Offers
                     .Where(o => pendingOfferIds.Contains(o.OfferId))

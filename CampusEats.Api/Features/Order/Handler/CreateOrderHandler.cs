@@ -26,7 +26,7 @@ namespace CampusEats.Api.Features.Orders
             var validator = new CreateOrderValidator();
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+                return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
             var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null)
@@ -39,7 +39,7 @@ namespace CampusEats.Api.Features.Orders
             // Combine all IDs to fetch menu items
             var allIds = paidIds.Concat(redeemedIds).Distinct().ToList();
             
-            if (!allIds.Any())
+            if (allIds.Count == 0)
                 return ApiErrors.ValidationFailed("Order must contain at least one item.");
 
             var menuItems = await _context.MenuItems

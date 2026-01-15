@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Features.Payments.Request;
+﻿using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.Payments.Response;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -53,9 +53,9 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
         var userId = userIdNullable.Value;
 
         // Validate request - must have either paid items or redeemed items
-        var hasPaidItems = request.Items != null && request.Items.Any();
-        var hasRedeemedItems = request.RedeemedMenuItemIds != null && request.RedeemedMenuItemIds.Any();
-        var hasOffers = request.PendingOfferIds != null && request.PendingOfferIds.Any();
+        var hasPaidItems = request.Items != null && request.Items.Count > 0;
+        var hasRedeemedItems = request.RedeemedMenuItemIds != null && request.RedeemedMenuItemIds.Count > 0;
+        var hasOffers = request.PendingOfferIds != null && request.PendingOfferIds.Count > 0;
 
         if (!hasPaidItems && !hasRedeemedItems)
         {
@@ -76,7 +76,7 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
 
             // Validate all items exist
             var missingItems = menuItemIds.Except(menuItems.Keys).ToList();
-            if (missingItems.Any())
+            if (missingItems.Count > 0)
             {
                 return Results.BadRequest($"Menu items not found: {string.Join(", ", missingItems)}");
             }
@@ -227,13 +227,11 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
 
         // Validate tier requirements for each offer
         var userTier = LoyaltyHelpers.CalculateTier(user.Loyalty.LifetimePoints);
-        foreach (var offer in offers)
+        var invalidTierOffer = offers.FirstOrDefault(o => !LoyaltyHelpers.MeetsTierRequirement(userTier, o.MinimumTier));
+        if (invalidTierOffer != null)
         {
-            if (!LoyaltyHelpers.MeetsTierRequirement(userTier, offer.MinimumTier))
-            {
-                return Results.BadRequest(
-                    $"You don't have the required tier for offer '{offer.Title}'. Required: {offer.MinimumTier}, Your tier: {userTier}");
-            }
+            return Results.BadRequest(
+                $"You don't have the required tier for offer '{invalidTierOffer.Title}'. Required: {invalidTierOffer.MinimumTier}, Your tier: {userTier}");
         }
 
         // Validate redeemed menu items exist
@@ -242,7 +240,7 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
             .ToDictionaryAsync(m => m.MenuItemId, cancellationToken);
 
         var missingMenuItems = redeemedMenuItemIds.Except(redeemedMenuItems.Keys).ToList();
-        if (missingMenuItems.Any())
+        if (missingMenuItems.Count > 0)
         {
             return Results.BadRequest($"Menu items not found: {string.Join(", ", missingMenuItems)}");
         }

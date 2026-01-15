@@ -8,37 +8,39 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class AddStripeIntegrationToPayments : Migration
     {
+        private const string PaymentsTableName = "Payments";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
                 name: "ClientSecret",
-                table: "Payments",
+                table: PaymentsTableName,
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedAt",
-                table: "Payments",
+                table: PaymentsTableName,
                 type: "timestamp with time zone",
                 nullable: false,
                 defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<string>(
                 name: "StripeEventId",
-                table: "Payments",
+                table: PaymentsTableName,
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "StripePaymentIntentId",
-                table: "Payments",
+                table: PaymentsTableName,
                 type: "text",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "UpdatedAt",
-                table: "Payments",
+                table: PaymentsTableName,
                 type: "timestamp with time zone",
                 nullable: true);
         }
@@ -48,23 +50,23 @@ namespace CampusEats.Api.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "ClientSecret",
-                table: "Payments");
+                table: PaymentsTableName);
 
             migrationBuilder.DropColumn(
                 name: "CreatedAt",
-                table: "Payments");
+                table: PaymentsTableName);
 
             migrationBuilder.DropColumn(
                 name: "StripeEventId",
-                table: "Payments");
+                table: PaymentsTableName);
 
             migrationBuilder.DropColumn(
                 name: "StripePaymentIntentId",
-                table: "Payments");
+                table: PaymentsTableName);
 
             migrationBuilder.DropColumn(
                 name: "UpdatedAt",
-                table: "Payments");
+                table: PaymentsTableName);
         }
     }
 }

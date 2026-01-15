@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Features.Orders.Requests;
 using CampusEats.Api.Features.Orders.Response;
@@ -13,12 +12,10 @@ namespace CampusEats.Api.Features.Order.Handler
     public class GetAllOrdersByUserIdHandler : IRequestHandler<GetAllOrdersByUserIdRequest, IResult>
     {
         private readonly CampusEatsDbContext _db;
-        private readonly ILogger<GetAllOrdersByUserIdHandler> _logger;
 
-        public GetAllOrdersByUserIdHandler(CampusEatsDbContext db, ILogger<GetAllOrdersByUserIdHandler> logger)
+        public GetAllOrdersByUserIdHandler(CampusEatsDbContext db)
         {
             _db = db;
-            _logger = logger;
         }
 
         public async Task<IResult> Handle(GetAllOrdersByUserIdRequest request, CancellationToken cancellationToken)

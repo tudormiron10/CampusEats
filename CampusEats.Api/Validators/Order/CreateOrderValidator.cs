@@ -11,8 +11,8 @@ public class CreateOrderValidator : AbstractValidator<CreateOrderRequest>
         
         // Order must have at least one item (paid OR redeemed)
         RuleFor(x => x)
-            .Must(x => (x.MenuItemIds != null && x.MenuItemIds.Any()) || 
-                       (x.RedeemedMenuItemIds != null && x.RedeemedMenuItemIds.Any()))
+            .Must(x => (x.MenuItemIds != null && x.MenuItemIds.Count > 0) || 
+                       (x.RedeemedMenuItemIds != null && x.RedeemedMenuItemIds.Count > 0))
             .WithMessage("The order must contain at least one product.");
     }
 }
