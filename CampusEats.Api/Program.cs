@@ -163,21 +163,6 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-// Run seeder in Development or when SEED_DATABASE=true environment variable is set
-var shouldSeed = app.Environment.IsDevelopment() ||
-                 Environment.GetEnvironmentVariable("SEED_DATABASE") == "true";
-if (shouldSeed)
-{
-    try
-    {
-        DataSeeder.SeedDatabase(app);
-    }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred during database seeding.");
-    }
-}
 
 // --- Endpoint Mapping ---
 

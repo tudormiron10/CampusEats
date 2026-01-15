@@ -7,7 +7,7 @@ using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 
-namespace CampusEats.Api.Tests.Features.MenuTests;
+namespace CampusEats.Api.Tests.Features.Menu;
 
 public class ReorderMenuItemsHandlerTests : IDisposable
 {

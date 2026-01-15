@@ -103,7 +103,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 4 }
             };
 
-            var loyalty = new Loyalty
+            var loyalty = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientUser.UserId,
@@ -178,7 +178,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = new byte[] { 4 }
             };
 
-            var loyaltyA = new Loyalty
+            var loyaltyA = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientA.UserId,
@@ -186,7 +186,7 @@ namespace CampusEats.Api.Tests.Features.User
                 LifetimePoints = 10
             };
 
-            var loyaltyB = new Loyalty
+            var loyaltyB = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = clientB.UserId,

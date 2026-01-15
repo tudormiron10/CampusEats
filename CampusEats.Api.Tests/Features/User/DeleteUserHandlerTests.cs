@@ -9,7 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence.Entities;
 using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 using OrderEntity = CampusEats.Api.Infrastructure.Persistence.Entities.Order;
 
-namespace CampusEats.Api.Tests.Features.UserTests;
+namespace CampusEats.Api.Tests.Features.User;
 
 public class DeleteUserHandlerTests : IDisposable
 {
@@ -82,9 +82,9 @@ public class DeleteUserHandlerTests : IDisposable
         return order;
     }
 
-    private async Task<Loyalty> SeedLoyalty(UserEntity user)
+    private async Task<Infrastructure.Persistence.Entities.Loyalty> SeedLoyalty(UserEntity user)
     {
-        var loyalty = new Loyalty
+        var loyalty = new Infrastructure.Persistence.Entities.Loyalty
         {
             LoyaltyId = Guid.NewGuid(),
             UserId = user.UserId,

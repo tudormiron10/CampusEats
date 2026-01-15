@@ -9,7 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence.Entities;
 using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 using OrderEntity = CampusEats.Api.Infrastructure.Persistence.Entities.Order;
 
-namespace CampusEats.Api.Tests.Features.KitchenTests;
+namespace CampusEats.Api.Tests.Features.Kitchen;
 
 public class GetAnalyticsHandlerTests : IDisposable
 {
@@ -137,7 +137,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Summary.TotalOrders.Should().Be(0);
+        ok.Value!.Summary.TotalOrders.Should().Be(0);
         ok.Value.Summary.TotalRevenue.Should().Be(0);
     }
 
@@ -161,7 +161,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Summary.TotalOrders.Should().Be(2);
+        ok.Value!.Summary.TotalOrders.Should().Be(2);
         ok.Value.Summary.TotalRevenue.Should().Be(30m); // (2*10) + (1*10)
         ok.Value.Summary.TotalItemsSold.Should().Be(3);
     }
@@ -185,7 +185,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TimeSeries.Should().NotBeEmpty();
+        ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Performance.CompletedOrders.Should().Be(2);
+        ok.Value!.Performance.CompletedOrders.Should().Be(2);
         ok.Value.Performance.CancelledOrders.Should().Be(1);
         // Completion rate should be 2/(2+1) = 66.67%
         ok.Value.Performance.CompletionRate.Should().BeApproximately(66.67m, 0.1m);
@@ -236,7 +236,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Items.MostSold.Should().NotBeNull();
+        ok.Value!.Items.MostSold.Should().NotBeNull();
         ok.Value.Items.MostSold!.Name.Should().Be("Pizza");
         ok.Value.Items.MostSold.Quantity.Should().Be(5);
         ok.Value.Items.LeastSold!.Name.Should().Be("Burger");
@@ -263,7 +263,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Customers.UniqueCustomers.Should().Be(2);
+        ok.Value!.Customers.UniqueCustomers.Should().Be(2);
         ok.Value.Customers.OrdersPerCustomer.Should().Be(1);
     }
 
@@ -275,10 +275,10 @@ public class GetAnalyticsHandlerTests : IDisposable
         var newUser = await SeedUser();
         var menuItem = await SeedMenuItem();
 
-        // Returning user has order before period
+        // Returning user has the order before the period
         await SeedOrder(returningUser, OrderStatus.Completed, DateTime.UtcNow.AddDays(-30), (menuItem, 1));
 
-        // Both users have orders in period
+        // Both users have the orders in the period
         var orderDate = DateTime.UtcNow.AddDays(-1);
         await SeedOrder(returningUser, OrderStatus.Completed, orderDate, (menuItem, 1));
         await SeedOrder(newUser, OrderStatus.Completed, orderDate, (menuItem, 1));
@@ -293,7 +293,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Customers.ReturningCustomers.Should().Be(1);
+        ok.Value!.Customers.ReturningCustomers.Should().Be(1);
         ok.Value.Customers.NewCustomers.Should().Be(1);
     }
 
@@ -317,7 +317,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Revenue.TopItemsByRevenue.Should().NotBeEmpty();
+        ok.Value!.Revenue.TopItemsByRevenue.Should().NotBeEmpty();
         ok.Value.Revenue.CategoryBreakdown.Should().NotBeEmpty();
     }
 
@@ -344,7 +344,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TimeSeries.Should().NotBeEmpty();
+        ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -366,7 +366,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TimeSeries.Should().NotBeEmpty();
+        ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
     #endregion

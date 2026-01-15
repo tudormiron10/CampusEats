@@ -5,26 +5,25 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Loyalty.Handler;
 using CampusEats.Api.Features.Loyalty.Request;
-using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 
-namespace CampusEats.Api.Tests.Features.LoyaltyTests;
+namespace CampusEats.Api.Tests.Features.Loyalty;
 
-public class UpdateOfferStatusHandlerTests : IDisposable
+public class DeleteOfferHandlerTests : IDisposable
 {
     private readonly string _dbName;
     private CampusEatsDbContext _context = null!;
-    private UpdateOfferStatusHandler _handler = null!;
+    private DeleteOfferHandler _handler = null!;
 
-    public UpdateOfferStatusHandlerTests()
+    public DeleteOfferHandlerTests()
     {
         _dbName = Guid.NewGuid().ToString();
         _handler = CreateSUT();
     }
 
-    private UpdateOfferStatusHandler CreateSUT()
+    private DeleteOfferHandler CreateSUT()
     {
         var options = new DbContextOptionsBuilder<CampusEatsDbContext>()
             .UseInMemoryDatabase(_dbName)
@@ -33,7 +32,7 @@ public class UpdateOfferStatusHandlerTests : IDisposable
         _context = new CampusEatsDbContext(options);
         _context.Database.EnsureCreated();
 
-        return new UpdateOfferStatusHandler(_context);
+        return new DeleteOfferHandler(_context);
     }
 
     public void Dispose()
@@ -63,15 +62,15 @@ public class UpdateOfferStatusHandlerTests : IDisposable
         return context;
     }
 
-    private async Task<Offer> SeedOffer(bool isActive = true)
+    private async Task<Offer> SeedOffer(string title = "Test Offer")
     {
         var offer = new Offer
         {
             OfferId = Guid.NewGuid(),
-            Title = "Test Offer",
+            Title = title,
             Description = "Test description",
             PointCost = 100,
-            IsActive = isActive,
+            IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -86,62 +85,36 @@ public class UpdateOfferStatusHandlerTests : IDisposable
     #region Happy Path Tests
 
     [Fact]
-    public async Task Given_ActiveOffer_When_SetToInactive_Then_UpdatesStatusAndReturnsOffer()
+    public async Task Given_ExistingOffer_When_Handle_Then_DeletesOfferAndReturnsNoContent()
     {
         // Arrange
-        var offer = await SeedOffer(isActive: true);
+        var offer = await SeedOffer();
         var httpContext = CreateHttpContext("Manager");
-        var request = new UpdateOfferStatusRequest(offer.OfferId, false, httpContext);
+        var request = new DeleteOfferRequest(offer.OfferId, httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
-        var ok = result as Ok<OfferResponse>;
-        ok.Should().NotBeNull();
-        ok!.Value!.IsActive.Should().BeFalse();
+        result.Should().BeOfType<NoContent>();
 
-        // Verify in database
-        var updatedOffer = await _context.Offers.FindAsync(offer.OfferId);
-        updatedOffer!.IsActive.Should().BeFalse();
+        var deletedOffer = await _context.Offers.FindAsync(offer.OfferId);
+        deletedOffer.Should().BeNull();
     }
 
     [Fact]
-    public async Task Given_InactiveOffer_When_SetToActive_Then_UpdatesStatusAndReturnsOffer()
+    public async Task Given_AdminUser_When_Handle_Then_DeletesOffer()
     {
         // Arrange
-        var offer = await SeedOffer(isActive: false);
-        var httpContext = CreateHttpContext("Manager");
-        var request = new UpdateOfferStatusRequest(offer.OfferId, true, httpContext);
-
-        // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        var ok = result as Ok<OfferResponse>;
-        ok.Should().NotBeNull();
-        ok!.Value!.IsActive.Should().BeTrue();
-
-        // Verify in database
-        var updatedOffer = await _context.Offers.FindAsync(offer.OfferId);
-        updatedOffer!.IsActive.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Given_AdminUser_When_Handle_Then_UpdatesStatus()
-    {
-        // Arrange
-        var offer = await SeedOffer(isActive: true);
+        var offer = await SeedOffer();
         var httpContext = CreateHttpContext("Admin");
-        var request = new UpdateOfferStatusRequest(offer.OfferId, false, httpContext);
+        var request = new DeleteOfferRequest(offer.OfferId, httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
-        var ok = result as Ok<OfferResponse>;
-        ok.Should().NotBeNull();
-        ok!.Value!.IsActive.Should().BeFalse();
+        result.Should().BeOfType<NoContent>();
     }
 
     #endregion
@@ -153,7 +126,7 @@ public class UpdateOfferStatusHandlerTests : IDisposable
     {
         // Arrange
         var httpContext = CreateHttpContext("Manager");
-        var request = new UpdateOfferStatusRequest(Guid.NewGuid(), true, httpContext);
+        var request = new DeleteOfferRequest(Guid.NewGuid(), httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -170,13 +143,17 @@ public class UpdateOfferStatusHandlerTests : IDisposable
         // Arrange
         var offer = await SeedOffer();
         var httpContext = CreateHttpContext("Client");
-        var request = new UpdateOfferStatusRequest(offer.OfferId, false, httpContext);
+        var request = new DeleteOfferRequest(offer.OfferId, httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         result.Should().BeOfType<ForbidHttpResult>();
+
+        // Verify offer was not deleted
+        var existingOffer = await _context.Offers.FindAsync(offer.OfferId);
+        existingOffer.Should().NotBeNull();
     }
 
     [Fact]
@@ -185,7 +162,7 @@ public class UpdateOfferStatusHandlerTests : IDisposable
         // Arrange
         var offer = await SeedOffer();
         var httpContext = CreateHttpContext(null);
-        var request = new UpdateOfferStatusRequest(offer.OfferId, false, httpContext);
+        var request = new DeleteOfferRequest(offer.OfferId, httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);

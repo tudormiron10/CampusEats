@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;

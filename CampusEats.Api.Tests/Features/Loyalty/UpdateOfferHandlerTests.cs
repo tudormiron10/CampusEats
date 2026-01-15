@@ -9,7 +9,7 @@ using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 
-namespace CampusEats.Api.Tests.Features.LoyaltyTests;
+namespace CampusEats.Api.Tests.Features.Loyalty;
 
 public class UpdateOfferHandlerTests : IDisposable
 {

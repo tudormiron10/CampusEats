@@ -9,7 +9,7 @@ using CampusEats.Api.Infrastructure.Persistence.Entities;
 using UserEntity = CampusEats.Api.Infrastructure.Persistence.Entities.User;
 using OrderEntity = CampusEats.Api.Infrastructure.Persistence.Entities.Order;
 
-namespace CampusEats.Api.Tests.Features.KitchenTests;
+namespace CampusEats.Api.Tests.Features.Kitchen;
 
 public class GetKitchenOrdersHandlerTests : IDisposable
 {

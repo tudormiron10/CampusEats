@@ -8,7 +8,7 @@ using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Features.DietaryTags.Response;
 using CampusEats.Api.Features.DietaryTags.Handler;
 
-namespace CampusEats.Api.Tests.Features.DietaryTags;
+namespace CampusEats.Api.Tests.Features.Dietary;
 
 public class UpdateDietaryTagHandlerTests : IDisposable
 {

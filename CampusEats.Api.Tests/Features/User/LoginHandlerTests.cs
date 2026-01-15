@@ -344,7 +344,7 @@ namespace CampusEats.Api.Tests.Features.User
                 PasswordSalt = passwordSalt
             };
 
-            var loyalty = new Loyalty
+            var loyalty = new Infrastructure.Persistence.Entities.Loyalty
             {
                 LoyaltyId = Guid.NewGuid(),
                 UserId = user.UserId,
