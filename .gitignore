@@ -30,6 +30,7 @@ Thumbs.db
 # Test coverage
 TestResults/
 coveragereport/
+coverage.opencover.xml
 
 # Misc
 Backup/

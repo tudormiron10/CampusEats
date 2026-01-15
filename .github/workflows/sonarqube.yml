@@ -12,96 +12,89 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Full history for better analysis
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-    - name: Setup Node.js (for TailwindCSS)
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node.js (for TailwindCSS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Build Tailwind CSS
-      working-directory: ./CampusEats.Client
-      run: |
-        npm install
-        npm run css:build
+      - name: Build Tailwind CSS
+        working-directory: ./CampusEats.Client
+        run: |
+          npm install
+          npm run css:build
 
-    - name: Install SonarScanner for .NET
-      run: dotnet tool install --global dotnet-sonarscanner
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+      
+      
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Install Coverlet
-      run: dotnet tool install --global coverlet.console
+      - name: Begin SonarQube Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Analyzing branch: $BRANCH_NAME"
+          
+          
+          if [ "$BRANCH_NAME" = "master" ]; then
+            dotnet sonarscanner begin \
+              /k:"tudormiron10_CampusEats" \
+              /o:"tudormiron10" \
+              /d:sonar.token="${SONAR_TOKEN}" \
+              /d:sonar.host.url="https://sonarcloud.io" \
+              /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+              /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+          else
+            dotnet sonarscanner begin \
+              /k:"tudormiron10_CampusEats" \
+              /o:"tudormiron10" \
+              /d:sonar.token="${SONAR_TOKEN}" \
+              /d:sonar.host.url="https://sonarcloud.io" \
+              /d:sonar.branch.name="$BRANCH_NAME" \
+              /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+              /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
+          fi
 
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Begin SonarQube Analysis
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-        echo "Analyzing branch: $BRANCH_NAME"
-        
-        if [ "$BRANCH_NAME" = "master" ]; then
-          dotnet sonarscanner begin \
-            /k:"tudormiron10_CampusEats" \
-            /o:"tudormiron10" \
-            /d:sonar.token="${SONAR_TOKEN}" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
-            /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
-        else
-          dotnet sonarscanner begin \
-            /k:"tudormiron10_CampusEats" \
-            /o:"tudormiron10" \
-            /d:sonar.token="${SONAR_TOKEN}" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.branch.name="$BRANCH_NAME" \
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
-            /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
-        fi
-
-    - name: Build
-      run: dotnet build --no-restore
-
-    - name: Run Tests with Coverage
-      run: |
-        dotnet test \
-          --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults \
-          --settings ./CampusEats.Api.Tests/coverlet.runsettings \
-          --logger "trx;LogFileName=test-results.trx"
-
-    - name: List all generated files (debug)
-      run: |
-        echo "TestResults directory structure:"
-        find ./TestResults -type f -name "*.xml" -o -name "*.trx"
-        echo ""
-        echo "Coverage files found:"
-        find ./TestResults -name "coverage.opencover.xml" -type f
-        
-    - name: Verify Coverage File Content
-      run: |
-        COVERAGE_FILE=$(find ./TestResults -name "coverage.opencover.xml" -type f | head -n 1)
-        if [ -n "$COVERAGE_FILE" ]; then
-          echo "SUCCESS: Coverage file found at: $COVERAGE_FILE"
-          echo "File size: $(du -h "$COVERAGE_FILE" | cut -f1)"
+      - name: Build
+        run: dotnet build --no-restore
+      
+      - name: Run Tests with Coverage
+        run: |
+          dotnet test \
+            --no-build \
+            --verbosity normal \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=../coverage.opencover.xml \
+            /p:Exclude="[CampusEats.Client]*"
+      
+      - name: Check if coverage file exists
+        run: |
+          echo "Looking for coverage files..."
+          find . -name "coverage.opencover.xml" -type f
           echo ""
-          echo "First 50 lines of coverage file:"
-          head -50 "$COVERAGE_FILE"
-        else
-          echo "ERROR: coverage.opencover.xml not found!"
-          exit 1
-        fi
+          echo "Coverage file content (first 30 lines):"
+          COVERAGE_FILE=$(find . -name "coverage.opencover.xml" -type f | head -n 1)
+          if [ -n "$COVERAGE_FILE" ]; then
+            head -n 30 "$COVERAGE_FILE"
+          else
+            echo "ERROR: No coverage file found!"
+            exit 1
+          fi
 
-    - name: End SonarQube Analysis
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+      - name: End SonarQube Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
