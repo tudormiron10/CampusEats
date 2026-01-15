@@ -24,7 +24,7 @@ namespace CampusEats.Api.Features.Users
             var validator = new UpdateUserValidator();
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+                return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
             var user = await _context.Users
                 .Include(u => u.Loyalty)
