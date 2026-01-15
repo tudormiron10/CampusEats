@@ -17,7 +17,7 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
 
     public async Task<IResult> Handle(DeleteMenuItemRequest request, CancellationToken cancellationToken)
     {
-        var menuItem = await _context.MenuItems.FindAsync(request.MenuItemId);
+        var menuItem = await _context.MenuItems.FindAsync(new object[] { request.MenuItemId }, cancellationToken);
         if (menuItem == null)
             return ApiErrors.MenuItemNotFound();
 
@@ -37,7 +37,7 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
             return ApiErrors.Conflict("Cannot delete menu item as it is part of an active order.");
 
         _context.MenuItems.Remove(menuItem);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
         return Results.NoContent();
     }

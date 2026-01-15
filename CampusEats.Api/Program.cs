@@ -28,6 +28,18 @@ using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- API Tag Constants ---
+const string TagCategories = "Categories";
+const string TagMenu = "Menu";
+const string TagDietaryTags = "DietaryTags";
+const string TagUpload = "Upload";
+const string TagOrders = "Orders";
+const string TagPayments = "Payments";
+const string TagKitchen = "Kitchen";
+const string TagUsers = "Users";
+const string TagAdmin = "Admin";
+const string TagLoyalty = "Loyalty";
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<CampusEats.Api.Infrastructure.Persistence.CampusEatsDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -160,7 +172,7 @@ app.UseBlazorFrameworkFiles();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CampusEatsDbContext>();
-    db.Database.Migrate();
+    await db.Database.MigrateAsync();
 }
 
 
@@ -187,7 +199,7 @@ api.MapPost("/menu", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // Endpoint for retrieving the menu, with optional filtering (public).
 api.MapGet("/menu", async (
@@ -196,7 +208,7 @@ api.MapGet("/menu", async (
 {
     return await mediator.Send(request);
 })
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // Endpoint for retrieving a specific menu item by ID (public).
 api.MapGet("/menu/{menuItemId:guid}", async (
@@ -205,7 +217,7 @@ api.MapGet("/menu/{menuItemId:guid}", async (
 {
     return await mediator.Send(new GetMenuItemByIdRequest(menuItemId));
 })
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // Endpoint for updating a specific menu item (Staff: Manager/Admin).
 api.MapPut("/menu/{menuItemId:guid}", async (
@@ -221,7 +233,7 @@ api.MapPut("/menu/{menuItemId:guid}", async (
     return await mediator.Send(requestWithId);
 })
 .RequireAuthorization()
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // Endpoint for deleting a specific menu item (Staff: Manager/Admin).
 api.MapDelete("/menu/{menuItemId:guid}", async (
@@ -235,7 +247,7 @@ api.MapDelete("/menu/{menuItemId:guid}", async (
     return await mediator.Send(new DeleteMenuItemRequest(menuItemId));
 })
 .RequireAuthorization()
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // Endpoint for reordering menu items (Staff: Manager/Admin).
 api.MapPatch("/menu/reorder", async (
@@ -249,7 +261,7 @@ api.MapPatch("/menu/reorder", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Menu");
+.WithTags(TagMenu);
 
 // ====== CATEGORIES GROUP ======
 
@@ -257,7 +269,7 @@ api.MapPatch("/menu/reorder", async (
 api.MapGet("/categories", async ([FromServices] IMediator mediator) =>
     await mediator.Send(new GetCategoriesRequest())
 )
-.WithTags("Categories");
+.WithTags(TagCategories);
 
 // Endpoint for creating a new category (Staff: Manager/Admin).
 api.MapPost("/categories", async (
@@ -271,7 +283,7 @@ api.MapPost("/categories", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Categories");
+.WithTags(TagCategories);
 
 // Endpoint for updating a category (Staff: Manager/Admin).
 api.MapPut("/categories/{categoryId:guid}", async (
@@ -287,7 +299,7 @@ api.MapPut("/categories/{categoryId:guid}", async (
     return await mediator.Send(requestWithId);
 })
 .RequireAuthorization()
-.WithTags("Categories");
+.WithTags(TagCategories);
 
 // Endpoint for deleting a category (Staff: Manager/Admin).
 api.MapDelete("/categories/{categoryId:guid}", async (
@@ -301,7 +313,7 @@ api.MapDelete("/categories/{categoryId:guid}", async (
     return await mediator.Send(new DeleteCategoryRequest(categoryId));
 })
 .RequireAuthorization()
-.WithTags("Categories");
+.WithTags(TagCategories);
 
 // Endpoint for reordering categories (Staff: Manager/Admin).
 api.MapPatch("/categories/reorder", async (
@@ -315,7 +327,7 @@ api.MapPatch("/categories/reorder", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Categories");
+.WithTags(TagCategories);
 
 // ====== DIETARY TAGS GROUP ======
 
@@ -323,7 +335,7 @@ api.MapPatch("/categories/reorder", async (
 api.MapGet("/dietary-tags", async ([FromServices] IMediator mediator) =>
     await mediator.Send(new GetDietaryTagsRequest())
 )
-.WithTags("DietaryTags");
+.WithTags(TagDietaryTags);
 
 // Endpoint for creating a new dietary tag (Staff: Manager/Admin).
 api.MapPost("/dietary-tags", async (
@@ -337,7 +349,7 @@ api.MapPost("/dietary-tags", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("DietaryTags");
+.WithTags(TagDietaryTags);
 
 // Endpoint for updating a dietary tag (Staff: Manager/Admin).
 api.MapPut("/dietary-tags/{dietaryTagId:guid}", async (
@@ -353,7 +365,7 @@ api.MapPut("/dietary-tags/{dietaryTagId:guid}", async (
     return await mediator.Send(requestWithId);
 })
 .RequireAuthorization()
-.WithTags("DietaryTags");
+.WithTags(TagDietaryTags);
 
 // Endpoint for deleting a dietary tag (Staff: Manager/Admin).
 api.MapDelete("/dietary-tags/{dietaryTagId:guid}", async (
@@ -367,7 +379,7 @@ api.MapDelete("/dietary-tags/{dietaryTagId:guid}", async (
     return await mediator.Send(new DeleteDietaryTagRequest(dietaryTagId));
 })
 .RequireAuthorization()
-.WithTags("DietaryTags");
+.WithTags(TagDietaryTags);
 
 // ====== UPLOAD GROUP ======
 
@@ -386,12 +398,12 @@ api.MapPost("/upload/image", async (
 
     var validationResult = await validator.ValidateAsync(request, ct);
     if (!validationResult.IsValid)
-        return ApiErrors.ValidationFailed(validationResult.Errors.First().ErrorMessage);
+        return ApiErrors.ValidationFailed(validationResult.Errors[0].ErrorMessage);
 
     return await mediator.Send(request, ct);
 })
 .RequireAuthorization()
-.WithTags("Upload")
+.WithTags(TagUpload)
 .DisableAntiforgery();
 
 // ====== ORDERS GROUP ======
@@ -410,7 +422,7 @@ api.MapPost("/orders", async (
     return await mediator.Send(secureRequest);
 })
 .RequireAuthorization()
-.WithTags("Orders");
+.WithTags(TagOrders);
 
 // Endpoint for canceling an order (with ownership check).
 api.MapDelete("/orders/{orderId:guid}", async (
@@ -434,7 +446,7 @@ api.MapDelete("/orders/{orderId:guid}", async (
     return await mediator.Send(new CancelOrderRequest(orderId));
 })
 .RequireAuthorization()
-.WithTags("Orders");
+.WithTags(TagOrders);
 
 // Endpoint for retrieving a specific order by ID (with ownership check).
 api.MapGet("/orders/{orderId:guid}", async (
@@ -458,7 +470,7 @@ api.MapGet("/orders/{orderId:guid}", async (
     return await mediator.Send(new GetOrderByIdRequest(orderId));
 })
 .RequireAuthorization()
-.WithTags("Orders");
+.WithTags(TagOrders);
 
 // Endpoint for retrieving orders (user sees their own, staff sees all).
 api.MapGet("/orders", async (
@@ -477,7 +489,7 @@ api.MapGet("/orders", async (
     return await mediator.Send(new GetAllOrdersByUserIdRequest(userId.Value));
 })
 .RequireAuthorization()
-.WithTags("Orders");
+.WithTags(TagOrders);
 
 // ====== PAYMENTS GROUP ======
 
@@ -489,7 +501,7 @@ api.MapPost("/checkout", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Payments");
+.WithTags(TagPayments);
 
 // Endpoint for initiating a payment for an order (legacy - kept for backward compatibility).
 api.MapPost("/payments", async (
@@ -498,7 +510,7 @@ api.MapPost("/payments", async (
 {
     return await mediator.Send(request);
 })
-.WithTags("Payments");
+.WithTags(TagPayments);
 
 // Endpoint for retrieving the payment history for a specific user.
 api.MapGet("/payments/user/{userId:guid}", async (
@@ -507,7 +519,7 @@ api.MapGet("/payments/user/{userId:guid}", async (
 {
     return await mediator.Send(new GetPaymentByUserIdRequest(userId));
 })
-.WithTags("Payments");
+.WithTags(TagPayments);
 
 // Endpoint for handling payment confirmations (webhook).
 api.MapPost("/payments/confirmation", async (
@@ -516,7 +528,7 @@ api.MapPost("/payments/confirmation", async (
     {
         return await mediator.Send(request);
     })
-.WithTags("Payments");
+.WithTags(TagPayments);
 
 // Endpoint for Stripe webhook events (NO authentication - Stripe calls this).
 api.MapPost("/payments/webhook", async (
@@ -525,7 +537,7 @@ api.MapPost("/payments/webhook", async (
 {
     return await webhookHandler.HandleWebhook(request);
 })
-.WithTags("Payments")
+.WithTags(TagPayments)
 .ExcludeFromDescription(); // Hide from Swagger (external webhook)
 
 // ====== KITCHEN GROUP (Manager/Admin only) ======
@@ -541,7 +553,7 @@ api.MapGet("/kitchen/orders", async (
     return await mediator.Send(new GetKitchenOrdersRequest());
 })
 .RequireAuthorization()
-.WithTags("Kitchen");
+.WithTags(TagKitchen);
 
 // Consolidated endpoint to update order status (resource-centric PATCH)
 api.MapPatch("/kitchen/orders/{orderId:guid}", async (
@@ -557,7 +569,7 @@ api.MapPatch("/kitchen/orders/{orderId:guid}", async (
     return await mediator.Send(request);
 })
 .RequireAuthorization()
-.WithTags("Kitchen");
+.WithTags(TagKitchen);
 
 
 // Endpoint to get kitchen analytics.
@@ -574,7 +586,7 @@ api.MapGet("/kitchen/analytics", async (
     return await mediator.Send(new GetAnalyticsRequest(startDate, endDate, groupBy));
 })
 .RequireAuthorization()
-.WithTags("Kitchen");
+.WithTags(TagKitchen);
 
 // ====== USER GROUP ======
 
@@ -596,7 +608,7 @@ api.MapPost("/users", async (
 
     return await mediator.Send(request);
 })
-.WithTags("Users");
+.WithTags(TagUsers);
 
 // Endpoint for retrieving all users (Admin only).
 api.MapGet("/users", async (
@@ -609,7 +621,7 @@ api.MapGet("/users", async (
     return await mediator.Send(new GetAllUserRequest());
 })
 .RequireAuthorization()
-.WithTags("Users");
+.WithTags(TagUsers);
 
 // Endpoint for retrieving a specific user by ID (own data or Admin).
 api.MapGet("/users/{userId:guid}", async (
@@ -623,7 +635,7 @@ api.MapGet("/users/{userId:guid}", async (
     return await mediator.Send(new GetUserByIdRequest(userId));
 })
 .RequireAuthorization()
-.WithTags("Users");
+.WithTags(TagUsers);
 
 // Endpoint for updating a user's information.
 api.MapPut("/users/{userId:guid}", async (
@@ -660,7 +672,7 @@ api.MapPut("/users/{userId:guid}", async (
     return await mediator.Send(requestWithId);
 })
 .RequireAuthorization()
-.WithTags("Users");
+.WithTags(TagUsers);
 
 // Endpoint for changing user password.
 api.MapPatch("/users/{userId:guid}/password", async (
@@ -681,7 +693,7 @@ api.MapPatch("/users/{userId:guid}/password", async (
     return await mediator.Send(requestWithId);
 })
 .RequireAuthorization()
-.WithTags("Users");
+.WithTags(TagUsers);
 
 // Endpoint for login (public)
 api.MapPost("/users/login", async (
@@ -690,7 +702,7 @@ api.MapPost("/users/login", async (
     {
         return await mediator.Send(request);
     })
-    .WithTags("Users");
+    .WithTags(TagUsers);
 
 // ====== ADMIN GROUP (Admin only) ======
 
@@ -709,7 +721,7 @@ api.MapGet("/admin/users", async (
     return await mediator.Send(new GetUsersWithPaginationRequest(page, pageSize, search, role));
 })
 .RequireAuthorization()
-.WithTags("Admin");
+.WithTags(TagAdmin);
 
 // Endpoint for deleting a user (Admin only).
 api.MapDelete("/users/{userId:guid}", async (
@@ -727,7 +739,7 @@ api.MapDelete("/users/{userId:guid}", async (
     return await mediator.Send(new DeleteUserRequest(userId, currentUserId.Value));
 })
 .RequireAuthorization()
-.WithTags("Admin");
+.WithTags(TagAdmin);
 
 // Endpoint for admin dashboard stats (Admin only).
 api.MapGet("/admin/stats", async (
@@ -740,7 +752,7 @@ api.MapGet("/admin/stats", async (
     return await mediator.Send(new GetAdminStatsRequest());
 })
 .RequireAuthorization()
-.WithTags("Admin");
+.WithTags(TagAdmin);
 
 // ============================================
 // LOYALTY ENDPOINTS
@@ -750,28 +762,28 @@ api.MapGet("/admin/stats", async (
 api.MapGet("/loyalty", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new GetLoyaltyStatusRequest(httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapGet("/loyalty/transactions", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new GetTransactionsRequest(httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapGet("/loyalty/offers", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new GetOffersRequest(httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapPost("/loyalty/offers/{offerId:guid}/redeem", async (Guid offerId, HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new RedeemOfferRequest(offerId, httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 // Manager endpoints (require Manager or Admin role)
 api.MapGet("/loyalty/offers/manage", async (HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new GetAllOffersRequest(httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapPost("/loyalty/offers", async (CreateOfferRequestBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new CreateOfferRequest(
@@ -784,7 +796,7 @@ api.MapPost("/loyalty/offers", async (CreateOfferRequestBody body, HttpContext h
         httpContext
     )))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapPut("/loyalty/offers/{offerId:guid}", async (Guid offerId, CreateOfferRequestBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new UpdateOfferRequest(
@@ -798,17 +810,17 @@ api.MapPut("/loyalty/offers/{offerId:guid}", async (Guid offerId, CreateOfferReq
         httpContext
     )))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapDelete("/loyalty/offers/{offerId:guid}", async (Guid offerId, HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new DeleteOfferRequest(offerId, httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 api.MapPatch("/loyalty/offers/{offerId:guid}/status", async (Guid offerId, UpdateOfferStatusBody body, HttpContext httpContext, [FromServices] IMediator mediator) =>
     await mediator.Send(new UpdateOfferStatusRequest(offerId, body.IsActive, httpContext)))
     .RequireAuthorization()
-    .WithTags("Loyalty");
+    .WithTags(TagLoyalty);
 
 // ====== SIGNALR HUBS ======
 api.MapHub<OrderHub>("/hubs/orders");
@@ -816,16 +828,19 @@ api.MapHub<OrderHub>("/hubs/orders");
 // Fallback to Blazor WASM SPA for client-side routing
 app.MapFallbackToFile("index.html");
 
-app.Run();
+await app.RunAsync();
 
 // Request body records for minimal API binding (Loyalty)
-public record CreateOfferRequestBody(
-    string Title,
-    string? Description,
-    string? ImageUrl,
-    int PointCost,
-    string? MinimumTier,
-    List<CreateOfferItemRequest> Items
-);
+namespace CampusEats.Api.Features.Loyalty.Request
+{
+    public record CreateOfferRequestBody(
+        string Title,
+        string? Description,
+        string? ImageUrl,
+        int PointCost,
+        string? MinimumTier,
+        List<CreateOfferItemRequest> Items
+    );
 
-public record UpdateOfferStatusBody(bool IsActive);
+    public record UpdateOfferStatusBody(bool IsActive);
+}
