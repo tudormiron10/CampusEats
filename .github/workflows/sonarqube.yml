@@ -51,7 +51,7 @@ jobs:
           /o:"tudormiron10" \
           /d:sonar.token="${SONAR_TOKEN}" \
           /d:sonar.host.url="https://sonarcloud.io" \
-          /d:sonar.cs.opencover.reportsPaths="./TestResults/coverage.opencover.xml" \
+          /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
           /d:sonar.coverage.exclusions="**/CampusEats.Client/**,**/Migrations/**,**/Program.cs"
 
     - name: Build
@@ -69,32 +69,21 @@ jobs:
       run: |
         echo "TestResults directory structure:"
         find ./TestResults -type f -name "*.xml" -o -name "*.trx"
+        echo ""
+        echo "Coverage files found:"
+        find ./TestResults -name "coverage.opencover.xml" -type f
         
-    - name: Copy Coverage Report
+    - name: Verify Coverage File Content
       run: |
-        echo "Looking for coverage.opencover.xml..."
-        # Find the coverage file and copy to predictable location
         COVERAGE_FILE=$(find ./TestResults -name "coverage.opencover.xml" -type f | head -n 1)
         if [ -n "$COVERAGE_FILE" ]; then
-          cp "$COVERAGE_FILE" ./TestResults/coverage.opencover.xml
-          echo "SUCCESS: Coverage file found and copied to ./TestResults/coverage.opencover.xml"
+          echo "SUCCESS: Coverage file found at: $COVERAGE_FILE"
           echo "File size: $(du -h "$COVERAGE_FILE" | cut -f1)"
+          echo ""
+          echo "First 50 lines of coverage file:"
+          head -50 "$COVERAGE_FILE"
         else
           echo "ERROR: coverage.opencover.xml not found!"
-          echo "Available files in TestResults:"
-          find ./TestResults -type f
-          exit 1
-        fi
-        
-    - name: Verify Coverage File
-      run: |
-        echo "Verifying coverage file..."
-        if [ -f ./TestResults/coverage.opencover.xml ]; then
-          echo "SUCCESS: Coverage file exists"
-          echo "First 30 lines of coverage file:"
-          head -30 ./TestResults/coverage.opencover.xml
-        else
-          echo "ERROR: Coverage file does NOT exist"
           exit 1
         fi
 
