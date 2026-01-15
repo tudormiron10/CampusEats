@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
@@ -20,6 +20,7 @@ public class CreatePaymentValidatorTests : IDisposable
     public void Dispose()
     {
         _validator = null!;
+        GC.SuppressFinalize(this);
     }
 
     #region OrderId Validation

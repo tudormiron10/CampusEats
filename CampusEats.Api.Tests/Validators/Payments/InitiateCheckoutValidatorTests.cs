@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Validators.Payments;
@@ -19,6 +19,7 @@ public class InitiateCheckoutValidatorTests : IDisposable
     public void Dispose()
     {
         _validator = null!;
+        GC.SuppressFinalize(this);
     }
 
     #region Items Validation

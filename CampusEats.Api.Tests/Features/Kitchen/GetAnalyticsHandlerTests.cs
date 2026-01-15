@@ -43,6 +43,7 @@ public class GetAnalyticsHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     #region Helper Methods
@@ -137,6 +138,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Summary.TotalOrders.Should().Be(0);
         ok.Value.Summary.TotalRevenue.Should().Be(0);
     }
@@ -161,6 +163,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Summary.TotalOrders.Should().Be(2);
         ok.Value.Summary.TotalRevenue.Should().Be(30m); // (2*10) + (1*10)
         ok.Value.Summary.TotalItemsSold.Should().Be(3);
@@ -185,6 +188,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
@@ -209,6 +213,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Performance.CompletedOrders.Should().Be(2);
         ok.Value.Performance.CancelledOrders.Should().Be(1);
         // Completion rate should be 2/(2+1) = 66.67%
@@ -236,6 +241,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Items.MostSold.Should().NotBeNull();
         ok.Value.Items.MostSold!.Name.Should().Be("Pizza");
         ok.Value.Items.MostSold.Quantity.Should().Be(5);
@@ -263,6 +269,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Customers.UniqueCustomers.Should().Be(2);
         ok.Value.Customers.OrdersPerCustomer.Should().Be(1);
     }
@@ -293,6 +300,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Customers.ReturningCustomers.Should().Be(1);
         ok.Value.Customers.NewCustomers.Should().Be(1);
     }
@@ -317,6 +325,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Revenue.TopItemsByRevenue.Should().NotBeEmpty();
         ok.Value.Revenue.CategoryBreakdown.Should().NotBeEmpty();
     }
@@ -344,6 +353,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
@@ -366,6 +376,7 @@ public class GetAnalyticsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AnalyticsResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.TimeSeries.Should().NotBeEmpty();
     }
 
