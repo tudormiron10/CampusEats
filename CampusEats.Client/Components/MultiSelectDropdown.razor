@@ -102,10 +102,10 @@
         return SelectedItems.Any(s => KeySelector(s)?.Equals(itemKey) == true);
     }
 
-    private string GetOptionClass(bool isSelected) =>
+    private static string GetOptionClass(bool isSelected) =>
         isSelected ? "bg-orange-50" : "";
 
-    private string GetCheckboxClass(bool isSelected) =>
+    private static string GetCheckboxClass(bool isSelected) =>
         isSelected ? "bg-orange-500 border-orange-500" : "border-gray-300";
 
     private void ToggleDropdown()

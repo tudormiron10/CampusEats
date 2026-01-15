@@ -12,7 +12,7 @@ public class MenuService
         _http = http;
     }
 
-    private async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
+    private static async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode)
             return;
@@ -50,7 +50,7 @@ public class MenuService
         if (!string.IsNullOrEmpty(dietaryKeyword))
             queryParams.Add($"dietaryKeyword={Uri.EscapeDataString(dietaryKeyword)}");
 
-        if (queryParams.Any())
+        if (queryParams.Count > 0)
             url += "?" + string.Join("&", queryParams);
 
         var response = await _http.GetFromJsonAsync<List<MenuItemResponse>>(url);

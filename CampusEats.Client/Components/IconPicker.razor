@@ -69,7 +69,7 @@
             ? LucideIcon.AvailableIcons
             : LucideIcon.AvailableIcons.Where(i => i.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
 
-    private string FormatIconName(string iconName)
+    private static string FormatIconName(string iconName)
     {
         return string.Join(" ", iconName.Split('-').Select(w =>
             char.ToUpper(w[0]) + w[1..]));

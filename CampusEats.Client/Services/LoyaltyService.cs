@@ -20,7 +20,7 @@ public class LoyaltyService
         };
     }
 
-    private async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
+    private static async Task EnsureSuccessOrThrowApiException(HttpResponseMessage response)
     {
         if (response.IsSuccessStatusCode)
             return;
