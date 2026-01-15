@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
@@ -15,11 +15,12 @@ namespace CampusEats.Api.Tests.Validators.Payments
             _validator = CreateSUT();
         }
 
-        private PaymentConfirmationValidator CreateSUT() => new();
+        private static PaymentConfirmationValidator CreateSUT() => new();
 
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

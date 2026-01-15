@@ -24,6 +24,6 @@ echo "Open: coveragereport/index.html"
 echo ""
 
 # Show summary
-if [ -f "coveragereport/Summary.txt" ]; then
+if [[ -f "coveragereport/Summary.txt" ]]; then
   cat coveragereport/Summary.txt
 fi

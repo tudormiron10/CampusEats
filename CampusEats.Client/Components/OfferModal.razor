@@ -281,13 +281,10 @@
 
     private void HandleAddItem(ChangeEventArgs e)
     {
-        if (Guid.TryParse(e.Value?.ToString(), out var menuItemId))
+        if (Guid.TryParse(e.Value?.ToString(), out var menuItemId) && !selectedItems.Any(s => s.MenuItemId == menuItemId))
         {
-            if (!selectedItems.Any(s => s.MenuItemId == menuItemId))
-            {
-                selectedItems.Add(new OfferItemRequest(menuItemId, 1));
-                StateHasChanged();
-            }
+            selectedItems.Add(new OfferItemRequest(menuItemId, 1));
+            StateHasChanged();
         }
     }
 

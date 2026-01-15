@@ -43,6 +43,7 @@ namespace CampusEats.Api.Tests.Features.User
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
@@ -69,7 +70,8 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
-            var response = ok!.Value;
+            ok!.Value.Should().NotBeNull();
+            var response = ok.Value!;
             response.UserId.Should().Be(user.UserId);
             response.Name.Should().Be("Updated Name");
             response.Email.Should().Be("updated@example.com");
@@ -185,7 +187,8 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
-            var response = ok!.Value;
+            ok!.Value.Should().NotBeNull();
+            var response = ok.Value!;
             response.UserId.Should().Be(user.UserId);
             response.Name.Should().Be(user.Name);
             response.Email.Should().Be(user.Email);
@@ -275,7 +278,8 @@ namespace CampusEats.Api.Tests.Features.User
             // Assert
             var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<UserResponse>;
             ok.Should().NotBeNull();
-            var response = ok!.Value;
+            ok!.Value.Should().NotBeNull();
+            var response = ok.Value!;
             response.Role.Should().Be(UserRole.Manager.ToString());
 
             var persisted = await _context.Users.FindAsync(user.UserId);

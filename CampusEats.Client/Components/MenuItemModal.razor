@@ -46,9 +46,9 @@
                         <select class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:border-oxford-blue focus:outline-none focus:ring-2 focus:ring-oxford-blue/20 transition-all shadow-sm"
                                 @bind="category">
                             <option value="">Select a category</option>
-                            @foreach (var cat in categories)
+                            @foreach (var categoryName in categories.Select(cat => cat.Name))
                             {
-                                <option value="@cat.Name">@cat.Name</option>
+                                <option value="@categoryName">@categoryName</option>
                             }
                         </select>
                     </div>

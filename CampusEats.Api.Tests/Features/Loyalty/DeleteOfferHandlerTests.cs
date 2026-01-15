@@ -43,6 +43,7 @@ public class DeleteOfferHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     #region Helper Methods

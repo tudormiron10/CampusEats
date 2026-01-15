@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Menu.Request;
 using CampusEats.Api.Validators.Menu;
@@ -14,11 +14,12 @@ namespace CampusEats.Api.Tests.Validators.Menu
             _validator = CreateSUT();
         }
 
-        private UpdateMenuItemValidator CreateSUT() => new();
+        private static UpdateMenuItemValidator CreateSUT() => new();
 
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

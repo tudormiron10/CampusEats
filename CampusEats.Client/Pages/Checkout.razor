@@ -341,11 +341,11 @@
     }
 
     // Helper class for JS interop result
-    private class PaymentResult
+    private sealed class PaymentResult
     {
-        public bool Success { get; set; }
-        public string? Error { get; set; }
-        public string? Status { get; set; }
-        public string? PaymentIntentId { get; set; }
+        public bool Success { get; init; }
+        public string? Error { get; init; }
+        public string? Status { get; init; }
+        public string? PaymentIntentId { get; init; }
     }
 }

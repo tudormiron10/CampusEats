@@ -346,7 +346,7 @@
             : baseClass + "text-slate-600 hover:bg-slate-100";
     }
 
-    private string GetTierBadgeClass(LoyaltyTier tier) => tier switch
+    private static string GetTierBadgeClass(LoyaltyTier tier) => tier switch
     {
         LoyaltyTier.Bronze => "bg-amber-100 text-amber-700",
         LoyaltyTier.Silver => "bg-slate-200 text-slate-700",

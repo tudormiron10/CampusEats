@@ -43,6 +43,7 @@ public class GetAdminStatsHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     #region Helper Methods
@@ -99,7 +100,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TotalUsers.Should().Be(0);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.TotalUsers.Should().Be(0);
         ok.Value.AdminCount.Should().Be(0);
         ok.Value.ManagerCount.Should().Be(0);
         ok.Value.ClientCount.Should().Be(0);
@@ -125,7 +127,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TotalUsers.Should().Be(6);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.TotalUsers.Should().Be(6);
         ok.Value.AdminCount.Should().Be(2);
         ok.Value.ManagerCount.Should().Be(1);
         ok.Value.ClientCount.Should().Be(3);
@@ -146,7 +149,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.NewUsersThisWeek.Should().Be(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.NewUsersThisWeek.Should().Be(2);
         ok.Value.NewUsersThisMonth.Should().Be(3);
     }
 
@@ -167,7 +171,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.OrdersToday.Should().Be(2); // Pending + Completed today
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.OrdersToday.Should().Be(2); // Pending + Completed today
     }
 
     [Fact]
@@ -187,7 +192,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.RevenueToday.Should().Be(40.00m); // 25.50 + 14.50
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.RevenueToday.Should().Be(40.00m); // 25.50 + 14.50
     }
 
     [Fact]
@@ -206,7 +212,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.UsersByRole.Should().HaveCount(3);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.UsersByRole.Should().HaveCount(3);
         ok.Value.UsersByRole.Should().Contain(x => x.Role == "Admin" && x.Count == 1);
         ok.Value.UsersByRole.Should().Contain(x => x.Role == "Manager" && x.Count == 1);
         ok.Value.UsersByRole.Should().Contain(x => x.Role == "Client" && x.Count == 2);
@@ -229,7 +236,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.TopCustomers.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.TopCustomers.Should().HaveCount(2);
         ok.Value.TopCustomers[0].TotalSpent.Should().Be(150.00m);
         ok.Value.TopCustomers[0].TotalOrders.Should().Be(2);
         ok.Value.TopCustomers[1].TotalSpent.Should().Be(75.00m);
@@ -249,7 +257,8 @@ public class GetAdminStatsHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<AdminStatsResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.NewUsersOverTime.Should().HaveCount(31); // 30 days + today
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.NewUsersOverTime.Should().HaveCount(31); // 30 days + today
     }
 
     #endregion

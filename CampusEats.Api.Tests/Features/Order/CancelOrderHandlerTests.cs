@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NSubstitute;
@@ -50,6 +50,7 @@ public class CancelOrderHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     private async Task<UserEntity> SeedUser()

@@ -325,9 +325,7 @@
             var categoriesWithItems = new List<CategoryResponse>();
             foreach (var category in allCategories)
             {
-                var itemsInCategory = menuItems.Count > 0
-                    ? menuItems.Any(i => i.Category == category.Name)
-                    : true; // Load all categories initially
+                var itemsInCategory = menuItems.Count == 0 || menuItems.Any(i => i.Category == category.Name);
 
                 if (itemsInCategory || isManager)
                 {

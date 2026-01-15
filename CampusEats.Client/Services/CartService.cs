@@ -70,7 +70,7 @@ public class CartService
     /// <summary>
     /// Check if cart has any pending offers to redeem
     /// </summary>
-    public bool HasPendingOffers => _pendingOffers.Any();
+    public bool HasPendingOffers => _pendingOffers.Count > 0;
 
 
     public async Task AddItemAsync(MenuItemResponse menuItem)
@@ -254,4 +254,3 @@ public class PendingOffer
     public string Title { get; set; } = string.Empty;
     public int PointCost { get; set; }
 }
-

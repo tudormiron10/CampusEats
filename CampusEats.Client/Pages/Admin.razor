@@ -450,7 +450,7 @@
     private string searchTerm = "";
     private string roleFilter = "";
     private int currentPage = 1;
-    private int pageSize = 10;
+    private readonly int pageSize = 10;
     private System.Timers.Timer? searchDebounceTimer;
 
     // Edit Role Modal state
@@ -698,7 +698,7 @@
         }
     }
 
-    private string GetRoleBadgeClass(string role) => role switch
+    private static string GetRoleBadgeClass(string role) => role switch
     {
         "Admin" => "bg-purple-100 text-purple-700 border border-purple-200",
         "Manager" => "bg-blue-100 text-blue-700 border border-blue-200",
@@ -706,7 +706,7 @@
         _ => "bg-slate-100 text-slate-600 border border-slate-200"
     };
 
-    private string GetRankBadgeClass(int rank) => rank switch
+    private static string GetRankBadgeClass(int rank) => rank switch
     {
         1 => "bg-amber-100 text-amber-700",
         2 => "bg-slate-200 text-slate-700",

@@ -1,10 +1,10 @@
 // ApexCharts JS Interop for Blazor
 
-window.apexChartsInterop = {
+globalThis.apexChartsInterop = {
     charts: {},
 
     renderBarChart: function (elementId, categories, data, title, color) {
-        var element = document.querySelector("#" + elementId);
+        const element = document.querySelector("#" + elementId);
         if (!element) {
             console.warn('Chart element not found:', elementId);
             return false;
@@ -15,7 +15,7 @@ window.apexChartsInterop = {
             this.charts[elementId].destroy();
         }
 
-        var options = {
+        const options = {
             series: [{
                 name: 'Orders',
                 data: data
@@ -109,14 +109,14 @@ window.apexChartsInterop = {
             }
         };
 
-        var chart = new ApexCharts(element, options);
+        const chart = new ApexCharts(element, options);
         chart.render();
         this.charts[elementId] = chart;
         return true;
     },
 
     renderRevenueChart: function (elementId, categories, orderData, revenueData) {
-        var element = document.querySelector("#" + elementId);
+        const element = document.querySelector("#" + elementId);
         if (!element) {
             console.warn('Chart element not found:', elementId);
             return false;
@@ -126,7 +126,7 @@ window.apexChartsInterop = {
             this.charts[elementId].destroy();
         }
 
-        var options = {
+        const options = {
             series: [{
                 name: 'Orders',
                 type: 'column',
@@ -292,14 +292,14 @@ window.apexChartsInterop = {
             }
         };
 
-        var chart = new ApexCharts(element, options);
+        const chart = new ApexCharts(element, options);
         chart.render();
         this.charts[elementId] = chart;
         return true;
     },
 
     renderDonutChart: function (elementId, labels, data, colors) {
-        var element = document.querySelector("#" + elementId);
+        const element = document.querySelector("#" + elementId);
         if (!element) {
             console.warn('Chart element not found:', elementId);
             return false;
@@ -309,7 +309,7 @@ window.apexChartsInterop = {
             this.charts[elementId].destroy();
         }
 
-        var options = {
+        const options = {
             series: data,
             chart: {
                 type: 'donut',
@@ -341,7 +341,7 @@ window.apexChartsInterop = {
                                 fontWeight: 700,
                                 color: '#1e293b',
                                 formatter: function (val) {
-                                    return '$' + parseFloat(val).toFixed(0)
+                                    return '$' + Number.parseFloat(val).toFixed(0)
                                 }
                             },
                             total: {
@@ -390,14 +390,14 @@ window.apexChartsInterop = {
             }
         };
 
-        var chart = new ApexCharts(element, options);
+        const chart = new ApexCharts(element, options);
         chart.render();
         this.charts[elementId] = chart;
         return true;
     },
 
     renderSparkline: function (elementId, data, color) {
-        var element = document.querySelector("#" + elementId);
+        const element = document.querySelector("#" + elementId);
         if (!element) {
             console.warn('Chart element not found:', elementId);
             return false;
@@ -407,7 +407,7 @@ window.apexChartsInterop = {
             this.charts[elementId].destroy();
         }
 
-        var options = {
+        const options = {
             series: [{
                 data: data
             }],
@@ -457,14 +457,14 @@ window.apexChartsInterop = {
             }
         };
 
-        var chart = new ApexCharts(element, options);
+        const chart = new ApexCharts(element, options);
         chart.render();
         this.charts[elementId] = chart;
         return true;
     },
 
     renderAreaChart: function (elementId, categories, data, title, color) {
-        var element = document.querySelector("#" + elementId);
+        const element = document.querySelector("#" + elementId);
         if (!element) {
             console.warn('Chart element not found:', elementId);
             return false;
@@ -474,7 +474,7 @@ window.apexChartsInterop = {
             this.charts[elementId].destroy();
         }
 
-        var options = {
+        const options = {
             series: [{
                 name: title,
                 data: data
@@ -561,7 +561,7 @@ window.apexChartsInterop = {
             }
         };
 
-        var chart = new ApexCharts(element, options);
+        const chart = new ApexCharts(element, options);
         chart.render();
         this.charts[elementId] = chart;
         return true;
@@ -575,7 +575,7 @@ window.apexChartsInterop = {
     },
 
     destroyAllCharts: function() {
-        for (var id in this.charts) {
+        for (const id in this.charts) {
             if (this.charts.hasOwnProperty(id)) {
                 this.charts[id].destroy();
                 delete this.charts[id];

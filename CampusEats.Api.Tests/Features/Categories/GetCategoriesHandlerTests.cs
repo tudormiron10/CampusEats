@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -46,6 +46,7 @@ namespace CampusEats.Api.Tests.Features.Categories
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

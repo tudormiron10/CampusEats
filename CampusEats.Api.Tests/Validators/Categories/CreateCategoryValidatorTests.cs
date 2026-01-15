@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Categories.Request;
 using CampusEats.Api.Validators.Category;
@@ -14,11 +14,12 @@ namespace CampusEats.Api.Tests.Validators.Categories
             _validator = CreateSUT();
         }
 
-        private CreateCategoryValidator CreateSUT() => new();
+        private static CreateCategoryValidator CreateSUT() => new();
 
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

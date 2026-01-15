@@ -15,11 +15,12 @@ namespace CampusEats.Api.Tests.Validators.User
             _validator = CreateSUT();
         }
 
-        private UpdateUserValidator CreateSUT() => new();
+        private static UpdateUserValidator CreateSUT() => new();
 
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

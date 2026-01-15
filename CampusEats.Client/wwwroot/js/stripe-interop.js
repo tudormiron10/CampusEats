@@ -9,7 +9,7 @@ let paymentElement = null;
  * Initialize Stripe with the publishable key
  * @param {string} publishableKey - Stripe publishable key
  */
-window.initializeStripe = function (publishableKey) {
+globalThis.initializeStripe = function (publishableKey) {
     if (!publishableKey) {
         console.error('Stripe publishable key is required');
         return false;
@@ -31,7 +31,7 @@ window.initializeStripe = function (publishableKey) {
  * @param {string} elementId - The DOM element ID to mount to
  * @returns {Promise<boolean>} - True if mounted successfully
  */
-window.mountPaymentElement = async function (clientSecret, elementId) {
+globalThis.mountPaymentElement = async function (clientSecret, elementId) {
     if (!stripe) {
         console.error('Stripe not initialized. Call initializeStripe first.');
         return false;
@@ -127,7 +127,7 @@ window.mountPaymentElement = async function (clientSecret, elementId) {
  * @param {string} returnUrl - URL to redirect to after payment
  * @returns {Promise<object>} - Result object with success/error info
  */
-window.confirmStripePayment = async function (returnUrl) {
+globalThis.confirmStripePayment = async function (returnUrl) {
     if (!stripe || !elements) {
         return { 
             success: false, 
@@ -178,7 +178,7 @@ window.confirmStripePayment = async function (returnUrl) {
 /**
  * Cleanup Stripe elements
  */
-window.destroyStripeElements = function () {
+globalThis.destroyStripeElements = function () {
     if (paymentElement) {
         paymentElement.destroy();
         paymentElement = null;
@@ -190,7 +190,7 @@ window.destroyStripeElements = function () {
 /**
  * Show/hide the payment element and loading indicator
  */
-window.showPaymentElement = function () {
+globalThis.showPaymentElement = function () {
     const loader = document.getElementById('payment-loader');
     const element = document.getElementById('payment-element');
     const payButton = document.getElementById('pay-button');
@@ -199,4 +199,3 @@ window.showPaymentElement = function () {
     if (element) element.style.display = 'block';
     if (payButton) payButton.disabled = false;
 };
-

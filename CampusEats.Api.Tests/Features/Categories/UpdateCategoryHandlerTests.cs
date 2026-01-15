@@ -1,4 +1,4 @@
-﻿﻿using FluentAssertions;
+﻿﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CampusEats.Api.Features.Categories.Handler;
 using CampusEats.Api.Features.Categories.Request;
@@ -43,6 +43,7 @@ namespace CampusEats.Api.Tests.Features.Categories
                 _context.Dispose();
                 _context = null!;
             }
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

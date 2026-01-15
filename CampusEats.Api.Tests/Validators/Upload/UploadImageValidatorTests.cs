@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using NSubstitute;
 using Microsoft.AspNetCore.Http;
@@ -16,11 +16,12 @@ namespace CampusEats.Api.Tests.Validators.Upload
             _validator = CreateSUT();
         }
 
-        private UploadImageValidator CreateSUT() => new();
+        private static UploadImageValidator CreateSUT() => new();
 
         public void Dispose()
         {
             _validator = null!;
+            GC.SuppressFinalize(this);
         }
 
         [Fact]

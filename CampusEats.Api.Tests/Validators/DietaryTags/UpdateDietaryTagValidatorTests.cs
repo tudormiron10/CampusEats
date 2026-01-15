@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.DietaryTags.Request;
 using CampusEats.Api.Validators.DietaryTags;
@@ -14,11 +14,12 @@ public class UpdateDietaryTagValidatorTests : IDisposable
         _validator = CreateSUT();
     }
 
-    private UpdateDietaryTagValidator CreateSUT() => new();
+    private static UpdateDietaryTagValidator CreateSUT() => new();
 
     public void Dispose()
     {
         _validator = null!;
+        GC.SuppressFinalize(this);
     }
 
     #region Valid Request
