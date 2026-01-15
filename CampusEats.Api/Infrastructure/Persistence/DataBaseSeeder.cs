@@ -27,7 +27,7 @@ public static class DataSeeder
         var adminUser = CreateAdminUser(defaultHash, defaultSalt);
         
         // --- 2. Articole de Meniu (Bogus) ---
-        var fakeMenuItems = GenerateMenuItems(faker);
+        var fakeMenuItems = GenerateMenuItems();
 
         // --- 3. Clienți (Bogus) ---
         var fakeClients = GenerateClients(faker, defaultHash, defaultSalt);
@@ -74,7 +74,7 @@ public static class DataSeeder
         };
     }
 
-    private static List<MenuItem> GenerateMenuItems(Faker faker)
+    private static List<MenuItem> GenerateMenuItems()
     {
         var menuCategories = new[] { "Supe", "Salate", "Fel Principal", "Desert", "Băuturi" };
 
