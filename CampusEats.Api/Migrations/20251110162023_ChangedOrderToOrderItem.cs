@@ -8,6 +8,10 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class ChangedOrderToOrderItem : Migration
     {
+        private const string MenuItemIdColumnName = "MenuItemId";
+        private const string OrdersTableName = "Orders";
+        private const string OrderItemsTableName = "OrderItems";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,13 +19,13 @@ namespace CampusEats.Api.Migrations
                 name: "MenuItemOrder");
 
             migrationBuilder.AddColumn<Guid>(
-                name: "MenuItemId",
-                table: "Orders",
+                name: MenuItemIdColumnName,
+                table: OrdersTableName,
                 type: "uuid",
                 nullable: true);
 
             migrationBuilder.CreateTable(
-                name: "OrderItems",
+                name: OrderItemsTableName,
                 columns: table => new
                 {
                     OrderItemId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -37,37 +41,37 @@ namespace CampusEats.Api.Migrations
                         name: "FK_OrderItems_MenuItems_MenuItemId",
                         column: x => x.MenuItemId,
                         principalTable: "MenuItems",
-                        principalColumn: "MenuItemId",
+                        principalColumn: MenuItemIdColumnName,
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrderItems_Orders_OrderId",
                         column: x => x.OrderId,
-                        principalTable: "Orders",
+                        principalTable: OrdersTableName,
                         principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_MenuItemId",
-                table: "Orders",
-                column: "MenuItemId");
+                table: OrdersTableName,
+                column: MenuItemIdColumnName);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_MenuItemId",
-                table: "OrderItems",
-                column: "MenuItemId");
+                table: OrderItemsTableName,
+                column: MenuItemIdColumnName);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
-                table: "OrderItems",
+                table: OrderItemsTableName,
                 column: "OrderId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Orders_MenuItems_MenuItemId",
-                table: "Orders",
-                column: "MenuItemId",
+                table: OrdersTableName,
+                column: MenuItemIdColumnName,
                 principalTable: "MenuItems",
-                principalColumn: "MenuItemId");
+                principalColumn: MenuItemIdColumnName);
         }
 
         /// <inheritdoc />
@@ -75,18 +79,18 @@ namespace CampusEats.Api.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_Orders_MenuItems_MenuItemId",
-                table: "Orders");
+                table: OrdersTableName);
 
             migrationBuilder.DropTable(
-                name: "OrderItems");
+                name: OrderItemsTableName);
 
             migrationBuilder.DropIndex(
                 name: "IX_Orders_MenuItemId",
-                table: "Orders");
+                table: OrdersTableName);
 
             migrationBuilder.DropColumn(
-                name: "MenuItemId",
-                table: "Orders");
+                name: MenuItemIdColumnName,
+                table: OrdersTableName);
 
             migrationBuilder.CreateTable(
                 name: "MenuItemOrder",
@@ -102,12 +106,12 @@ namespace CampusEats.Api.Migrations
                         name: "FK_MenuItemOrder_MenuItems_ItemsMenuItemId",
                         column: x => x.ItemsMenuItemId,
                         principalTable: "MenuItems",
-                        principalColumn: "MenuItemId",
+                        principalColumn: MenuItemIdColumnName,
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_MenuItemOrder_Orders_OrdersOrderId",
                         column: x => x.OrdersOrderId,
-                        principalTable: "Orders",
+                        principalTable: OrdersTableName,
                         principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
                 });

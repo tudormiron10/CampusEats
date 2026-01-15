@@ -37,7 +37,7 @@ public class CreateOfferHandler : IRequestHandler<CreateOfferRequest, IResult>
             .ToListAsync(cancellationToken);
 
         var missingItems = menuItemIds.Except(existingMenuItems).ToList();
-        if (missingItems.Any())
+        if (missingItems.Count > 0)
             return ApiErrors.ValidationFailed($"Menu items not found: {string.Join(", ", missingItems)}");
 
         var offer = new Offer

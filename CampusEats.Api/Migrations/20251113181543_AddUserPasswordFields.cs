@@ -7,22 +7,24 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class AddUserPasswordFields : Migration
     {
+        private const string UsersTableName = "Users";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<byte[]>(
                 name: "PasswordHash",
-                table: "Users",
+                table: UsersTableName,
                 type: "bytea",
                 nullable: false,
-                defaultValue: new byte[0]);
+                defaultValue: Array.Empty<byte>());
 
             migrationBuilder.AddColumn<byte[]>(
                 name: "PasswordSalt",
-                table: "Users",
+                table: UsersTableName,
                 type: "bytea",
                 nullable: false,
-                defaultValue: new byte[0]);
+                defaultValue: Array.Empty<byte>());
         }
 
         /// <inheritdoc />
@@ -30,11 +32,11 @@ namespace CampusEats.Api.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "PasswordHash",
-                table: "Users");
+                table: UsersTableName);
 
             migrationBuilder.DropColumn(
                 name: "PasswordSalt",
-                table: "Users");
+                table: UsersTableName);
         }
     }
 }

@@ -8,6 +8,10 @@ namespace CampusEats.Api.Migrations
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        private const string UsersTableName = "Users";
+        private const string UserIdColumnName = "UserId";
+        private const string OrdersTableName = "Orders";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -28,7 +32,7 @@ namespace CampusEats.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: UsersTableName,
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -54,13 +58,13 @@ namespace CampusEats.Api.Migrations
                     table.ForeignKey(
                         name: "FK_Loyalties_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "UserId",
+                        principalTable: UsersTableName,
+                        principalColumn: UserIdColumnName,
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Orders",
+                name: OrdersTableName,
                 columns: table => new
                 {
                     OrderId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -74,8 +78,8 @@ namespace CampusEats.Api.Migrations
                     table.ForeignKey(
                         name: "FK_Orders_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "UserId",
+                        principalTable: UsersTableName,
+                        principalColumn: UserIdColumnName,
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -98,7 +102,7 @@ namespace CampusEats.Api.Migrations
                     table.ForeignKey(
                         name: "FK_MenuItemOrder_Orders_OrdersOrderId",
                         column: x => x.OrdersOrderId,
-                        principalTable: "Orders",
+                        principalTable: OrdersTableName,
                         principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -118,7 +122,7 @@ namespace CampusEats.Api.Migrations
                     table.ForeignKey(
                         name: "FK_Payments_Orders_OrderId",
                         column: x => x.OrderId,
-                        principalTable: "Orders",
+                        principalTable: OrdersTableName,
                         principalColumn: "OrderId",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -126,7 +130,7 @@ namespace CampusEats.Api.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Loyalties_UserId",
                 table: "Loyalties",
-                column: "UserId",
+                column: UserIdColumnName,
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -136,8 +140,8 @@ namespace CampusEats.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",
-                table: "Orders",
-                column: "UserId");
+                table: OrdersTableName,
+                column: UserIdColumnName);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_OrderId",
@@ -161,10 +165,10 @@ namespace CampusEats.Api.Migrations
                 name: "MenuItems");
 
             migrationBuilder.DropTable(
-                name: "Orders");
+                name: OrdersTableName);
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: UsersTableName);
         }
     }
 }

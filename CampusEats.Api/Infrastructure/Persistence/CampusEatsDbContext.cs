@@ -53,7 +53,7 @@ public class CampusEatsDbContext : DbContext
         // Convertim enumerările în string-uri în baza de date
         modelBuilder.Entity<Order>()
             .Property(o => o.Status)
-            .HasConversion<string>(); //
+            .HasConversion<string>(); 
 
         modelBuilder.Entity<Payment>()
             .Property(p => p.Status)

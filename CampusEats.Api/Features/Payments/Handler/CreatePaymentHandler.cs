@@ -36,7 +36,7 @@ namespace CampusEats.Api.Features.Payments
                 return Results.BadRequest(validationResult.Errors);
             }
 
-            var order = await _context.Orders.FindAsync(request.OrderId);
+            var order = await _context.Orders.FindAsync(new object[] { request.OrderId }, cancellationToken);
             if (order == null)
             {
                 return ApiErrors.OrderNotFound();
