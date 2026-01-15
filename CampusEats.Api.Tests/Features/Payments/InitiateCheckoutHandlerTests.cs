@@ -78,6 +78,7 @@ public class InitiateCheckoutHandlerTests : IDisposable
             _context.Dispose();
             _context = null!;
         }
+        GC.SuppressFinalize(this);
     }
 
     private async Task<UserEntity> SeedUser(bool withLoyalty = true, int loyaltyPoints = 1000)

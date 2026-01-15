@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+﻿﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -51,6 +51,7 @@ public class StripeWebhookHandlerTests : IDisposable
     {
         _context.Database.EnsureDeleted();
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #region Helper Methods
@@ -545,7 +546,7 @@ public class StripeWebhookHandlerTests : IDisposable
         {
             TransactionId = Guid.NewGuid(),
             Date = DateTime.UtcNow,
-            Description = "Order #" + order.OrderId.ToString().Substring(0, 8),
+            Description = string.Concat("Order #", order.OrderId.ToString().AsSpan(0, 8)),
             Type = "Earned",
             Points = 100,
             OrderId = order.OrderId,

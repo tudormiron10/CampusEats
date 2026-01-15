@@ -15,15 +15,13 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
 {
     private readonly string _dbName;
     private CampusEatsDbContext _context = null!;
-    private GetUsersWithPaginationHandler _handler = null!;
 
     public GetUsersWithPaginationHandlerTests()
     {
         _dbName = Guid.NewGuid().ToString();
-        _handler = CreateSUT();
     }
 
-    private GetUsersWithPaginationHandler CreateSUT()
+    private GetUsersWithPaginationHandler CreateSut()
     {
         var options = new DbContextOptionsBuilder<CampusEatsDbContext>()
             .UseInMemoryDatabase(_dbName)
@@ -39,6 +37,7 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     {
         _context.Database.EnsureDeleted();
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #region Helper Methods
@@ -78,9 +77,9 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         return user;
     }
 
-    private async Task<OrderEntity> SeedOrder(
+    private async Task SeedOrder(
         UserEntity user,
-        OrderStatus status = OrderStatus.Completed,
+        OrderStatus status,
         DateTime? orderDate = null)
     {
         var order = new OrderEntity
@@ -94,7 +93,6 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
 
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
-        return order;
     }
 
     #endregion
@@ -105,23 +103,26 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_NoUsers_When_GetUsersWithPagination_Then_ReturnsEmptyList()
     {
         // Arrange
+        var handler = CreateSut();
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Users.Should().BeEmpty();
-        ok!.Value.TotalCount.Should().Be(0);
-        ok!.Value.TotalPages.Should().Be(0);
+        ok.Value.TotalCount.Should().Be(0);
+        ok.Value.TotalPages.Should().Be(0);
     }
 
     [Fact]
     public async Task Given_UsersExist_When_GetUsersWithPagination_Then_ReturnsAllUsers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice", "alice@test.com");
         await SeedUser("Bob", "bob@test.com");
         await SeedUser("Charlie", "charlie@test.com");
@@ -129,20 +130,22 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Users.Should().HaveCount(3);
-        ok!.Value.TotalCount.Should().Be(3);
-        ok!.Value.TotalPages.Should().Be(1);
+        ok.Value.TotalCount.Should().Be(3);
+        ok.Value.TotalPages.Should().Be(1);
     }
 
     [Fact]
     public async Task Given_UsersExist_When_GetUsersWithPagination_Then_UsersAreSortedByName()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Charlie");
         await SeedUser("Alice");
         await SeedUser("Bob");
@@ -150,14 +153,15 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         ok.Value!.Users[0].Name.Should().Be("Alice");
-        ok!.Value.Users[1].Name.Should().Be("Bob");
-        ok!.Value.Users[2].Name.Should().Be("Charlie");
+        ok.Value.Users[1].Name.Should().Be("Bob");
+        ok.Value.Users[2].Name.Should().Be("Charlie");
     }
 
     #endregion
@@ -168,32 +172,34 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_MoreUsersThanPageSize_When_GetUsersWithPagination_Then_ReturnsCorrectPage()
     {
         // Arrange
+        var handler = CreateSut();
         for (int i = 1; i <= 15; i++)
         {
-            await SeedUser($"User{i:D2}"); // User01, User02, etc.
+            await SeedUser($"User{i:D2}");
         }
 
         var request = new GetUsersWithPaginationRequest(2, 5, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(5);
-        ok!.Value.TotalCount.Should().Be(15);
-        ok!.Value.TotalPages.Should().Be(3);
-        ok!.Value.Page.Should().Be(2);
-        ok!.Value.PageSize.Should().Be(5);
-        // Second page should have User06-User10
-        ok!.Value.Users[0].Name.Should().Be("User06");
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(5);
+        ok.Value.TotalCount.Should().Be(15);
+        ok.Value.TotalPages.Should().Be(3);
+        ok.Value.Page.Should().Be(2);
+        ok.Value.PageSize.Should().Be(5);
+        ok.Value.Users[0].Name.Should().Be("User06");
     }
 
     [Fact]
     public async Task Given_LastPage_When_GetUsersWithPagination_Then_ReturnsRemainingUsers()
     {
         // Arrange
+        var handler = CreateSut();
         for (int i = 1; i <= 12; i++)
         {
             await SeedUser($"User{i:D2}");
@@ -202,86 +208,95 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(3, 5, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2); // 12 users, page 3 of 5 = 2 users
-        ok!.Value.TotalCount.Should().Be(12);
-        ok!.Value.TotalPages.Should().Be(3);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
+        ok.Value.TotalCount.Should().Be(12);
+        ok.Value.TotalPages.Should().Be(3);
     }
 
     [Fact]
     public async Task Given_PageZero_When_GetUsersWithPagination_Then_TreatsAsPageOne()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
         await SeedUser("Bob");
 
         var request = new GetUsersWithPaginationRequest(0, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Page.Should().Be(1);
-        ok!.Value.Users.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Page.Should().Be(1);
+        ok.Value.Users.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Given_NegativePage_When_GetUsersWithPagination_Then_TreatsAsPageOne()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
 
         var request = new GetUsersWithPaginationRequest(-5, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Page.Should().Be(1);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Page.Should().Be(1);
     }
 
     [Fact]
     public async Task Given_PageSizeZero_When_GetUsersWithPagination_Then_ClampsToOne()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
         await SeedUser("Bob");
 
         var request = new GetUsersWithPaginationRequest(1, 0, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.PageSize.Should().Be(1);
-        ok!.Value.Users.Should().HaveCount(1);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.PageSize.Should().Be(1);
+        ok.Value.Users.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task Given_PageSizeOver100_When_GetUsersWithPagination_Then_ClampsTo100()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
 
         var request = new GetUsersWithPaginationRequest(1, 500, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.PageSize.Should().Be(100);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.PageSize.Should().Be(100);
     }
 
     #endregion
@@ -292,6 +307,7 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_SearchByName_When_GetUsersWithPagination_Then_FiltersCorrectly()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice Smith");
         await SeedUser("Bob Johnson");
         await SeedUser("Alice Johnson");
@@ -299,20 +315,22 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, "Alice", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
-        ok!.Value.TotalCount.Should().Be(2);
-        ok!.Value.Users.Should().AllSatisfy(u => u.Name.Should().Contain("Alice"));
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
+        ok.Value.TotalCount.Should().Be(2);
+        ok.Value.Users.Should().AllSatisfy(u => u.Name.Should().Contain("Alice"));
     }
 
     [Fact]
     public async Task Given_SearchByEmail_When_GetUsersWithPagination_Then_FiltersCorrectly()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice", "alice@company.com");
         await SeedUser("Bob", "bob@company.com");
         await SeedUser("Charlie", "charlie@other.com");
@@ -320,19 +338,21 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, "company.com", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
-        ok!.Value.Users.Should().AllSatisfy(u => u.Email.Should().Contain("company.com"));
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
+        ok.Value.Users.Should().AllSatisfy(u => u.Email.Should().Contain("company.com"));
     }
 
     [Fact]
     public async Task Given_SearchCaseInsensitive_When_GetUsersWithPagination_Then_MatchesRegardlessOfCase()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("ALICE UPPERCASE");
         await SeedUser("alice lowercase");
         await SeedUser("Bob");
@@ -340,67 +360,74 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, "alice", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Given_SearchNoMatches_When_GetUsersWithPagination_Then_ReturnsEmpty()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
         await SeedUser("Bob");
 
         var request = new GetUsersWithPaginationRequest(1, 10, "Zebra", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().BeEmpty();
-        ok!.Value.TotalCount.Should().Be(0);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().BeEmpty();
+        ok.Value.TotalCount.Should().Be(0);
     }
 
     [Fact]
     public async Task Given_EmptySearch_When_GetUsersWithPagination_Then_ReturnsAllUsers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
         await SeedUser("Bob");
 
         var request = new GetUsersWithPaginationRequest(1, 10, "", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Given_WhitespaceSearch_When_GetUsersWithPagination_Then_ReturnsAllUsers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice");
         await SeedUser("Bob");
 
         var request = new GetUsersWithPaginationRequest(1, 10, "   ", null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
     }
 
     #endregion
@@ -411,6 +438,7 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_RoleFilterClient_When_GetUsersWithPagination_Then_ReturnsOnlyClients()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Client 1", role: UserRole.Client);
         await SeedUser("Client 2", role: UserRole.Client);
         await SeedUser("Admin", role: UserRole.Admin);
@@ -419,19 +447,21 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, "Client");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
-        ok!.Value.Users.Should().AllSatisfy(u => u.Role.Should().Be("Client"));
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
+        ok.Value.Users.Should().AllSatisfy(u => u.Role.Should().Be("Client"));
     }
 
     [Fact]
     public async Task Given_RoleFilterAdmin_When_GetUsersWithPagination_Then_ReturnsOnlyAdmins()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Admin 1", role: UserRole.Admin);
         await SeedUser("Admin 2", role: UserRole.Admin);
         await SeedUser("Client", role: UserRole.Client);
@@ -439,87 +469,96 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, "Admin");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
-        ok!.Value.Users.Should().AllSatisfy(u => u.Role.Should().Be("Admin"));
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
+        ok.Value.Users.Should().AllSatisfy(u => u.Role.Should().Be("Admin"));
     }
 
     [Fact]
     public async Task Given_RoleFilterManager_When_GetUsersWithPagination_Then_ReturnsOnlyManagers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Manager 1", role: UserRole.Manager);
         await SeedUser("Client", role: UserRole.Client);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, "Manager");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(1);
-        ok!.Value.Users[0].Role.Should().Be("Manager");
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].Role.Should().Be("Manager");
     }
 
     [Fact]
     public async Task Given_RoleFilterCaseInsensitive_When_GetUsersWithPagination_Then_MatchesCorrectly()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Admin", role: UserRole.Admin);
         await SeedUser("Client", role: UserRole.Client);
 
-        var request = new GetUsersWithPaginationRequest(1, 10, null, "admin"); // lowercase
+        var request = new GetUsersWithPaginationRequest(1, 10, null, "admin");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(1);
-        ok!.Value.Users[0].Role.Should().Be("Admin");
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].Role.Should().Be("Admin");
     }
 
     [Fact]
     public async Task Given_InvalidRoleFilter_When_GetUsersWithPagination_Then_ReturnsAllUsers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Admin", role: UserRole.Admin);
         await SeedUser("Client", role: UserRole.Client);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, "InvalidRole");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2); // No filter applied
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
     }
 
     [Fact]
     public async Task Given_EmptyRoleFilter_When_GetUsersWithPagination_Then_ReturnsAllUsers()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Admin", role: UserRole.Admin);
         await SeedUser("Client", role: UserRole.Client);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, "");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(2);
     }
 
     #endregion
@@ -530,6 +569,7 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_SearchAndRoleFilter_When_GetUsersWithPagination_Then_AppliesBothFilters()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Alice Admin", role: UserRole.Admin);
         await SeedUser("Alice Client", role: UserRole.Client);
         await SeedUser("Bob Admin", role: UserRole.Admin);
@@ -538,20 +578,22 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, "Alice", "Admin");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(1);
-        ok!.Value.Users[0].Name.Should().Be("Alice Admin");
-        ok!.Value.Users[0].Role.Should().Be("Admin");
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].Name.Should().Be("Alice Admin");
+        ok.Value.Users[0].Role.Should().Be("Admin");
     }
 
     [Fact]
     public async Task Given_SearchRoleAndPagination_When_GetUsersWithPagination_Then_AppliesAllCorrectly()
     {
         // Arrange
+        var handler = CreateSut();
         for (int i = 1; i <= 10; i++)
         {
             await SeedUser($"Client{i:D2}", role: UserRole.Client);
@@ -561,15 +603,16 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(2, 3, "Client", "Client");
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(3);
-        ok!.Value.TotalCount.Should().Be(10);
-        ok!.Value.TotalPages.Should().Be(4); // 10 clients, 3 per page
-        ok!.Value.Page.Should().Be(2);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(3);
+        ok.Value.TotalCount.Should().Be(10);
+        ok.Value.TotalPages.Should().Be(4);
+        ok.Value.Page.Should().Be(2);
     }
 
     #endregion
@@ -580,41 +623,46 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_UserWithLoyalty_When_GetUsersWithPagination_Then_ReturnsLoyaltyPoints()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Loyal User", withLoyalty: true, loyaltyPoints: 500);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users.Should().HaveCount(1);
-        ok!.Value.Users[0].LoyaltyPoints.Should().Be(500);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].LoyaltyPoints.Should().Be(500);
     }
 
     [Fact]
     public async Task Given_UserWithoutLoyalty_When_GetUsersWithPagination_Then_LoyaltyPointsIsNull()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("Regular User", withLoyalty: false);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].LoyaltyPoints.Should().BeNull();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users[0].LoyaltyPoints.Should().BeNull();
     }
 
     [Fact]
     public async Task Given_UserWithOrders_When_GetUsersWithPagination_Then_ReturnsTotalOrders()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Order User");
         await SeedOrder(user, OrderStatus.Completed);
         await SeedOrder(user, OrderStatus.Completed);
@@ -623,35 +671,41 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].TotalOrders.Should().Be(3);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].TotalOrders.Should().Be(3);
     }
 
     [Fact]
     public async Task Given_UserWithNoOrders_When_GetUsersWithPagination_Then_TotalOrdersIsZero()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("No Orders User");
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].TotalOrders.Should().Be(0);
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].TotalOrders.Should().Be(0);
     }
 
     [Fact]
     public async Task Given_UserWithOrders_When_GetUsersWithPagination_Then_ReturnsLastOrderDate()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Active User");
         var oldDate = DateTime.UtcNow.AddDays(-30);
         var recentDate = DateTime.UtcNow.AddDays(-1);
@@ -662,29 +716,34 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].LastOrderDate.Should().BeCloseTo(recentDate, TimeSpan.FromSeconds(1));
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].LastOrderDate.Should().BeCloseTo(recentDate, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
     public async Task Given_UserWithNoOrders_When_GetUsersWithPagination_Then_LastOrderDateIsNull()
     {
         // Arrange
+        var handler = CreateSut();
         await SeedUser("New User");
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].LastOrderDate.Should().BeNull();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].LastOrderDate.Should().BeNull();
     }
 
     #endregion
@@ -695,60 +754,70 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_UserWithPendingOrder_When_GetUsersWithPagination_Then_HasActiveOrdersIsTrue()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Pending User");
         await SeedOrder(user, OrderStatus.Pending);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeTrue();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeTrue();
     }
 
     [Fact]
     public async Task Given_UserWithInPreparationOrder_When_GetUsersWithPagination_Then_HasActiveOrdersIsTrue()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("InPrep User");
         await SeedOrder(user, OrderStatus.InPreparation);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeTrue();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeTrue();
     }
 
     [Fact]
     public async Task Given_UserWithReadyOrder_When_GetUsersWithPagination_Then_HasActiveOrdersIsTrue()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Ready User");
         await SeedOrder(user, OrderStatus.Ready);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeTrue();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeTrue();
     }
 
     [Fact]
     public async Task Given_UserWithOnlyCompletedOrders_When_GetUsersWithPagination_Then_HasActiveOrdersIsFalse()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Completed User");
         await SeedOrder(user, OrderStatus.Completed);
         await SeedOrder(user, OrderStatus.Completed);
@@ -756,50 +825,58 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeFalse();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeFalse();
     }
 
     [Fact]
     public async Task Given_UserWithOnlyCancelledOrders_When_GetUsersWithPagination_Then_HasActiveOrdersIsFalse()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Cancelled User");
         await SeedOrder(user, OrderStatus.Cancelled);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeFalse();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeFalse();
     }
 
     [Fact]
     public async Task Given_UserWithMixedOrderStatuses_When_GetUsersWithPagination_Then_HasActiveOrdersIsTrue()
     {
         // Arrange
+        var handler = CreateSut();
         var user = await SeedUser("Mixed User");
         await SeedOrder(user, OrderStatus.Completed);
         await SeedOrder(user, OrderStatus.Cancelled);
-        await SeedOrder(user, OrderStatus.Pending); // Active!
+        await SeedOrder(user, OrderStatus.Pending);
 
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Users[0].HasActiveOrders.Should().BeTrue();
+        ok!.Value.Should().NotBeNull();
+        ok.Value!.Users.Should().HaveCount(1);
+        ok.Value.Users[0].HasActiveOrders.Should().BeTrue();
     }
 
     #endregion
@@ -810,6 +887,7 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
     public async Task Given_Users_When_GetUsersWithPagination_Then_ReturnsCorrectResponseStructure()
     {
         // Arrange
+        var handler = CreateSut();
         var createdAt = DateTime.UtcNow.AddDays(-10);
         var user = await SeedUser("Full User", "fulluser@test.com", UserRole.Client, true, 250, createdAt);
         await SeedOrder(user, OrderStatus.Completed);
@@ -817,13 +895,14 @@ public class GetUsersWithPaginationHandlerTests : IDisposable
         var request = new GetUsersWithPaginationRequest(1, 10, null, null);
 
         // Act
-        var result = await _handler.Handle(request, CancellationToken.None);
+        var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         var ok = result as Ok<PaginatedUsersResponse>;
         ok.Should().NotBeNull();
+        ok!.Value.Should().NotBeNull();
         
-        var response = ok!.Value;
+        var response = ok.Value!;
         response.TotalCount.Should().Be(1);
         response.Page.Should().Be(1);
         response.PageSize.Should().Be(10);

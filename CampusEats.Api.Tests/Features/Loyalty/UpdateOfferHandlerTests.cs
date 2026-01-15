@@ -144,7 +144,7 @@ public class UpdateOfferHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<OfferResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Title.Should().Be("Updated Title");
+        ok.Value!.Title.Should().Be("Updated Title");
         ok!.Value.Description.Should().Be("Updated Description");
         ok!.Value.ImageUrl.Should().Be("https://example.com/new-image.jpg");
         ok!.Value.PointCost.Should().Be(200);
@@ -180,7 +180,7 @@ public class UpdateOfferHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<OfferResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Items.Should().HaveCount(1);
+        ok.Value!.Items.Should().HaveCount(1);
         ok!.Value.Items[0].MenuItemId.Should().Be(newItem.MenuItemId);
         ok!.Value.Items[0].Quantity.Should().Be(3);
         ok!.Value.Items[0].Name.Should().Be("New Item");
@@ -218,7 +218,7 @@ public class UpdateOfferHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<OfferResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Items.Should().HaveCount(3);
+        ok.Value!.Items.Should().HaveCount(3);
         ok!.Value.MinimumTier.Should().Be(LoyaltyTier.Gold);
     }
 
@@ -253,7 +253,7 @@ public class UpdateOfferHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<OfferResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.MinimumTier.Should().BeNull();
+        ok.Value!.MinimumTier.Should().BeNull();
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class UpdateOfferHandlerTests : IDisposable
         // Assert
         var ok = result as Ok<OfferResponse>;
         ok.Should().NotBeNull();
-        ok!.Value.Title.Should().Be("Admin Updated");
+        ok.Value!.Title.Should().Be("Admin Updated");
     }
 
     #endregion
