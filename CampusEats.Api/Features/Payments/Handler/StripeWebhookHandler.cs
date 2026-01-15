@@ -102,18 +102,60 @@ public class StripeWebhookHandler
         }
 
         // Parse redeemed items if any
-        List<Guid>? redeemedItemIds = null;
-        if (!string.IsNullOrEmpty(pendingCheckout.RedeemedItemsJson))
+        var redeemedItemIds = ParseRedeemedItems(pendingCheckout.RedeemedItemsJson);
+
+        // Create the Order with all items
+        var order = CreateOrderFromCheckout(pendingCheckout, itemsData, redeemedItemIds);
+        _context.Orders.Add(order);
+
+        // Create Payment record linked to the order
+        var payment = CreatePaymentRecord(order.OrderId, pendingCheckout, paymentIntent.Id, eventId);
+        _context.Payments.Add(payment);
+
+        // Mark checkout as processed
+        pendingCheckout.IsProcessed = true;
+
+        // Load user with loyalty for point operations
+        var user = await _context.Users
+            .Include(u => u.Loyalty)
+            .FirstOrDefaultAsync(u => u.UserId == pendingCheckout.UserId);
+
+        // Process loyalty operations
+        await ProcessOfferRedemptions(pendingCheckout, user, order.OrderId);
+        ProcessLoyaltyPointsEarned(user, pendingCheckout, order.OrderId);
+
+        await _context.SaveChangesAsync();
+
+        // Send notification to kitchen
+        await SendKitchenNotification(order, user, itemsData);
+
+        _logger.LogInformation(
+            "Payment succeeded! Created Order {OrderId} from PendingCheckout {CheckoutId}",
+            order.OrderId,
+            pendingCheckout.PendingCheckoutId
+        );
+    }
+
+    private static List<Guid>? ParseRedeemedItems(string? redeemedItemsJson)
+    {
+        if (string.IsNullOrEmpty(redeemedItemsJson))
         {
-            redeemedItemIds = JsonSerializer.Deserialize<List<Guid>>(pendingCheckout.RedeemedItemsJson);
+            return null;
         }
 
-        // Create the Order
+        return JsonSerializer.Deserialize<List<Guid>>(redeemedItemsJson);
+    }
+
+    private static Entities.Order CreateOrderFromCheckout(
+        PendingCheckout pendingCheckout,
+        List<CheckoutItemData> itemsData,
+        List<Guid>? redeemedItemIds)
+    {
         var order = new Entities.Order
         {
             OrderId = Guid.NewGuid(),
             UserId = pendingCheckout.UserId,
-            Status = OrderStatus.Pending, // Staff will move to InPreparation
+            Status = OrderStatus.Pending,
             TotalAmount = pendingCheckout.TotalAmount,
             OrderDate = DateTime.UtcNow,
             Items = new List<OrderItem>()
@@ -148,106 +190,112 @@ public class StripeWebhookHandler
             }
         }
 
-        _context.Orders.Add(order);
+        return order;
+    }
 
-        // Create Payment record linked to the order
-        var payment = new Entities.Payment
+    private static Entities.Payment CreatePaymentRecord(
+        Guid orderId,
+        PendingCheckout pendingCheckout,
+        string paymentIntentId,
+        string eventId)
+    {
+        return new Entities.Payment
         {
             PaymentId = Guid.NewGuid(),
-            OrderId = order.OrderId,
+            OrderId = orderId,
             Amount = pendingCheckout.TotalAmount,
             Status = PaymentStatus.Succeeded,
-            StripePaymentIntentId = paymentIntent.Id,
+            StripePaymentIntentId = paymentIntentId,
             StripeEventId = eventId,
             CreatedAt = pendingCheckout.CreatedAt,
             UpdatedAt = DateTime.UtcNow
         };
+    }
 
-        _context.Payments.Add(payment);
-
-        // Mark checkout as processed
-        pendingCheckout.IsProcessed = true;
-
-        // Load user with loyalty for point operations
-        var user = await _context.Users
-            .Include(u => u.Loyalty)
-            .FirstOrDefaultAsync(u => u.UserId == pendingCheckout.UserId);
-
-        // Redeem pending offers (deduct points) - only after successful payment
-        if (!string.IsNullOrEmpty(pendingCheckout.PendingOfferIdsJson) && user?.Loyalty != null)
+    private async Task ProcessOfferRedemptions(PendingCheckout pendingCheckout, Entities.User? user, Guid orderId)
+    {
+        if (string.IsNullOrEmpty(pendingCheckout.PendingOfferIdsJson) || user?.Loyalty == null)
         {
-            var pendingOfferIds = JsonSerializer.Deserialize<List<Guid>>(pendingCheckout.PendingOfferIdsJson);
-            if (pendingOfferIds != null && pendingOfferIds.Count > 0)
-            {
-                var offers = await _context.Offers
-                    .Where(o => pendingOfferIds.Contains(o.OfferId))
-                    .ToListAsync();
-
-                foreach (var offer in offers)
-                {
-                    // Deduct points for the offer
-                    user.Loyalty.CurrentPoints -= offer.PointCost;
-                    
-                    // Create redemption transaction
-                    var redeemTransaction = new LoyaltyTransaction
-                    {
-                        TransactionId = Guid.NewGuid(),
-                        Date = DateTime.UtcNow,
-                        Description = $"Redeemed: {offer.Title}",
-                        Type = "Redeemed",
-                        Points = -offer.PointCost,
-                        OrderId = order.OrderId,
-                        LoyaltyId = user.Loyalty.LoyaltyId
-                    };
-
-                    _context.LoyaltyTransactions.Add(redeemTransaction);
-
-                    _logger.LogInformation(
-                        "Redeemed offer {OfferId} ({OfferTitle}) for user {UserId}, deducted {Points} points",
-                        offer.OfferId,
-                        offer.Title,
-                        pendingCheckout.UserId,
-                        offer.PointCost
-                    );
-                }
-            }
+            return;
         }
 
-        // Award loyalty points for the paid amount
-        if (user?.Loyalty != null && pendingCheckout.TotalAmount > 0)
+        var pendingOfferIds = JsonSerializer.Deserialize<List<Guid>>(pendingCheckout.PendingOfferIdsJson);
+        if (pendingOfferIds == null || pendingOfferIds.Count == 0)
         {
-            var tier = LoyaltyHelpers.CalculateTier(user.Loyalty.LifetimePoints);
-            var earnRate = LoyaltyHelpers.GetEarnRate(tier);
-            var pointsEarned = (int)(pendingCheckout.TotalAmount * earnRate);
+            return;
+        }
 
-            user.Loyalty.CurrentPoints += pointsEarned;
-            user.Loyalty.LifetimePoints += pointsEarned;
+        var offers = await _context.Offers
+            .Where(o => pendingOfferIds.Contains(o.OfferId))
+            .ToListAsync();
 
-            var orderIdShort = order.OrderId.ToString().Substring(0, 8);
-            var transaction = new LoyaltyTransaction
+        foreach (var offer in offers)
+        {
+            // Deduct points for the offer
+            user.Loyalty.CurrentPoints -= offer.PointCost;
+
+            // Create redemption transaction
+            var redeemTransaction = new LoyaltyTransaction
             {
                 TransactionId = Guid.NewGuid(),
                 Date = DateTime.UtcNow,
-                Description = "Order #" + orderIdShort,
-                Type = "Earned",
-                Points = pointsEarned,
-                OrderId = order.OrderId,
+                Description = $"Redeemed: {offer.Title}",
+                Type = "Redeemed",
+                Points = -offer.PointCost,
+                OrderId = orderId,
                 LoyaltyId = user.Loyalty.LoyaltyId
             };
 
-            _context.LoyaltyTransactions.Add(transaction);
+            _context.LoyaltyTransactions.Add(redeemTransaction);
 
             _logger.LogInformation(
-                "Awarded {Points} loyalty points to user {UserId} for order {OrderId}",
-                pointsEarned,
+                "Redeemed offer {OfferId} ({OfferTitle}) for user {UserId}, deducted {Points} points",
+                offer.OfferId,
+                offer.Title,
                 pendingCheckout.UserId,
-                order.OrderId
+                offer.PointCost
             );
         }
+    }
 
-        await _context.SaveChangesAsync();
+    private void ProcessLoyaltyPointsEarned(Entities.User? user, PendingCheckout pendingCheckout, Guid orderId)
+    {
+        if (user?.Loyalty == null || pendingCheckout.TotalAmount <= 0)
+        {
+            return;
+        }
 
-        // Publish notification to notify kitchen staff of new order via SignalR
+        var tier = LoyaltyHelpers.CalculateTier(user.Loyalty.LifetimePoints);
+        var earnRate = LoyaltyHelpers.GetEarnRate(tier);
+        var pointsEarned = (int)(pendingCheckout.TotalAmount * earnRate);
+
+        user.Loyalty.CurrentPoints += pointsEarned;
+        user.Loyalty.LifetimePoints += pointsEarned;
+
+        var orderIdShort = orderId.ToString().Substring(0, 8);
+        var transaction = new LoyaltyTransaction
+        {
+            TransactionId = Guid.NewGuid(),
+            Date = DateTime.UtcNow,
+            Description = "Order #" + orderIdShort,
+            Type = "Earned",
+            Points = pointsEarned,
+            OrderId = orderId,
+            LoyaltyId = user.Loyalty.LoyaltyId
+        };
+
+        _context.LoyaltyTransactions.Add(transaction);
+
+        _logger.LogInformation(
+            "Awarded {Points} loyalty points to user {UserId} for order {OrderId}",
+            pointsEarned,
+            pendingCheckout.UserId,
+            orderId
+        );
+    }
+
+    private async Task SendKitchenNotification(Entities.Order order, Entities.User? user, List<CheckoutItemData> itemsData)
+    {
         try
         {
             var customerName = user?.Name ?? "Customer";
@@ -275,12 +323,6 @@ public class StripeWebhookHandler
             _logger.LogError(ex, "Failed to send SignalR notification for order {OrderId}", order.OrderId);
             // Don't fail the whole operation if SignalR notification fails
         }
-
-        _logger.LogInformation(
-            "Payment succeeded! Created Order {OrderId} from PendingCheckout {CheckoutId}",
-            order.OrderId,
-            pendingCheckout.PendingCheckoutId
-        );
     }
 
     private async Task HandlePaymentFailed(PaymentIntent paymentIntent)

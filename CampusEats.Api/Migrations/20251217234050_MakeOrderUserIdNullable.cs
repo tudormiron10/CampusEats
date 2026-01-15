@@ -10,17 +10,19 @@ namespace CampusEats.Api.Migrations
     {
         private const string ForeignKeyName = "FK_Orders_Users_UserId";
         private const string UserIdColumnName = "UserId";
+        private const string OrdersTableName = "Orders";
+        private const string UsersTableName = "Users";
 
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
                 name: ForeignKeyName,
-                table: "Orders");
+                table: OrdersTableName);
 
             migrationBuilder.AlterColumn<Guid>(
                 name: UserIdColumnName,
-                table: "Orders",
+                table: OrdersTableName,
                 type: "uuid",
                 nullable: true,
                 oldClrType: typeof(Guid),
@@ -28,9 +30,9 @@ namespace CampusEats.Api.Migrations
 
             migrationBuilder.AddForeignKey(
                 name: ForeignKeyName,
-                table: "Orders",
+                table: OrdersTableName,
                 column: UserIdColumnName,
-                principalTable: "Users",
+                principalTable: UsersTableName,
                 principalColumn: UserIdColumnName,
                 onDelete: ReferentialAction.SetNull);
         }
@@ -40,11 +42,11 @@ namespace CampusEats.Api.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: ForeignKeyName,
-                table: "Orders");
+                table: OrdersTableName);
 
             migrationBuilder.AlterColumn<Guid>(
                 name: UserIdColumnName,
-                table: "Orders",
+                table: OrdersTableName,
                 type: "uuid",
                 nullable: false,
                 defaultValue: Guid.Empty,
@@ -54,9 +56,9 @@ namespace CampusEats.Api.Migrations
 
             migrationBuilder.AddForeignKey(
                 name: ForeignKeyName,
-                table: "Orders",
+                table: OrdersTableName,
                 column: UserIdColumnName,
-                principalTable: "Users",
+                principalTable: UsersTableName,
                 principalColumn: UserIdColumnName,
                 onDelete: ReferentialAction.Cascade);
         }

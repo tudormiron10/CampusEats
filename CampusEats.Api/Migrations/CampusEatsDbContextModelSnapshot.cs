@@ -13,6 +13,8 @@ namespace CampusEats.Api.Migrations
     [DbContext(typeof(CampusEatsDbContext))]
     partial class CampusEatsDbContextModelSnapshot : ModelSnapshot
     {
+        private const string OrdersTable = "Orders";
+        
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
@@ -250,7 +252,7 @@ namespace CampusEats.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable(OrdersTable);
                 });
 
             modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.OrderItem", b =>
@@ -453,11 +455,11 @@ namespace CampusEats.Api.Migrations
             modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.Order", b =>
                 {
                     b.HasOne("CampusEats.Api.Infrastructure.Persistence.Entities.MenuItem", null)
-                        .WithMany("Orders")
+                        .WithMany(OrdersTable)
                         .HasForeignKey("MenuItemId");
 
                     b.HasOne("CampusEats.Api.Infrastructure.Persistence.Entities.User", "User")
-                        .WithMany("Orders")
+                        .WithMany(OrdersTable)
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -519,7 +521,7 @@ namespace CampusEats.Api.Migrations
                 {
                     b.Navigation("MenuItemDietaryTags");
 
-                    b.Navigation("Orders");
+                    b.Navigation(OrdersTable);
                 });
 
             modelBuilder.Entity("CampusEats.Api.Infrastructure.Persistence.Entities.Offer", b =>
@@ -539,7 +541,7 @@ namespace CampusEats.Api.Migrations
                     b.Navigation("Loyalty")
                         .IsRequired();
 
-                    b.Navigation("Orders");
+                    b.Navigation(OrdersTable);
                 });
 #pragma warning restore 612, 618
         }
