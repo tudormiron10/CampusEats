@@ -14,7 +14,7 @@ namespace CampusEats.Api.Tests.Validators.Categories
             _validator = CreateSUT();
         }
 
-        private CreateCategoryValidator CreateSUT() => new();
+        private static CreateCategoryValidator CreateSUT() => new();
 
         public void Dispose()
         {

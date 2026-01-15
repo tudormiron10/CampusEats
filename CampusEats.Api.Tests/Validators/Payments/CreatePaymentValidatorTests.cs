@@ -1,4 +1,4 @@
-﻿﻿using FluentAssertions;
+﻿﻿﻿using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
@@ -15,7 +15,7 @@ public class CreatePaymentValidatorTests : IDisposable
         _validator = CreateSUT();
     }
 
-    private CreatePaymentValidator CreateSUT() => new();
+    private static CreatePaymentValidator CreateSUT() => new();
 
     public void Dispose()
     {

@@ -1,4 +1,4 @@
-﻿﻿﻿using CampusEats.Api.Features.Order.Request;
+﻿﻿﻿﻿using CampusEats.Api.Features.Order.Request;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using CampusEats.Api.Validators.Orders;
@@ -14,7 +14,7 @@ namespace CampusEats.Api.Tests.Validators.Order
             _validator = CreateSUT();
         }
 
-        private CreateOrderValidator CreateSUT() => new();
+        private static CreateOrderValidator CreateSUT() => new();
 
         public void Dispose()
         {
@@ -69,7 +69,7 @@ namespace CampusEats.Api.Tests.Validators.Order
             // Assert
             result.IsValid.Should().BeFalse();
             result.ShouldHaveValidationErrorFor(x => x.UserId);
-            result.Errors.Should().Contain(e => e.PropertyName == "UserId" && e.ErrorMessage.IndexOf("required", StringComparison.OrdinalIgnoreCase) >= 0);
+            result.Errors.Should().Contain(e => e.PropertyName == "UserId" && e.ErrorMessage.Contains("required", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace CampusEats.Api.Tests.Validators.Order
             // Assert
             result.IsValid.Should().BeFalse();
             // Validation is at request level (not property level) since order can have either paid OR redeemed items
-            result.Errors.Should().Contain(e => e.ErrorMessage.IndexOf("at least one product", StringComparison.OrdinalIgnoreCase) >= 0);
+            result.Errors.Should().Contain(e => e.ErrorMessage.Contains("at least one product", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]
@@ -103,7 +103,7 @@ namespace CampusEats.Api.Tests.Validators.Order
             // Assert
             result.IsValid.Should().BeFalse();
             // Validation is at request level since order can have either paid OR redeemed items
-            result.Errors.Should().Contain(e => e.ErrorMessage.IndexOf("at least one product", StringComparison.OrdinalIgnoreCase) >= 0);
+            result.Errors.Should().Contain(e => e.ErrorMessage.Contains("at least one product", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]

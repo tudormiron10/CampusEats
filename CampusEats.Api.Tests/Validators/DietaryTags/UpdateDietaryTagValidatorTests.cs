@@ -14,7 +14,7 @@ public class UpdateDietaryTagValidatorTests : IDisposable
         _validator = CreateSUT();
     }
 
-    private UpdateDietaryTagValidator CreateSUT() => new();
+    private static UpdateDietaryTagValidator CreateSUT() => new();
 
     public void Dispose()
     {
