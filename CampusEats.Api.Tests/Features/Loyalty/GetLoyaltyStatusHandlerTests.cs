@@ -183,7 +183,7 @@ public class GetLoyaltyStatusHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_ReturnsNotFound()
+    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_AutoCreatesLoyaltyAndReturnsStatus()
     {
         // Arrange
         var user = new UserEntity
@@ -204,14 +204,25 @@ public class GetLoyaltyStatusHandlerTests : IDisposable
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
-        // Assert
-        var statusCodeResult = result as IStatusCodeHttpResult;
-        statusCodeResult.Should().NotBeNull();
-        statusCodeResult!.StatusCode.Should().Be(404);
+        // Assert - Handler now auto-creates loyalty record and returns 200 OK
+        var ok = result as Ok<LoyaltyStatusResponse>;
+        ok.Should().NotBeNull();
+
+        var response = ok!.Value;
+        response.Should().NotBeNull();
+        response!.CurrentPoints.Should().Be(0);
+        response.LifetimePoints.Should().Be(0);
+        response.Tier.Should().Be(LoyaltyTier.Bronze);
+
+        // Verify loyalty record was created in database
+        var createdLoyalty = await _context.Loyalties.FirstOrDefaultAsync(l => l.UserId == user.UserId);
+        createdLoyalty.Should().NotBeNull();
+        createdLoyalty!.CurrentPoints.Should().Be(0);
+        createdLoyalty.LifetimePoints.Should().Be(0);
     }
 
     [Fact]
-    public async Task Given_NonExistentUserId_When_Handle_Then_ReturnsNotFound()
+    public async Task Given_NonExistentUserId_When_Handle_Then_AutoCreatesLoyaltyAndReturnsStatus()
     {
         // Arrange
         var nonExistentUserId = Guid.NewGuid();
@@ -221,10 +232,19 @@ public class GetLoyaltyStatusHandlerTests : IDisposable
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
-        // Assert
-        var statusCodeResult = result as IStatusCodeHttpResult;
-        statusCodeResult.Should().NotBeNull();
-        statusCodeResult!.StatusCode.Should().Be(404);
+        // Assert - Handler now auto-creates loyalty record and returns 200 OK
+        var ok = result as Ok<LoyaltyStatusResponse>;
+        ok.Should().NotBeNull();
+
+        var response = ok!.Value;
+        response.Should().NotBeNull();
+        response!.CurrentPoints.Should().Be(0);
+        response.LifetimePoints.Should().Be(0);
+        response.Tier.Should().Be(LoyaltyTier.Bronze);
+
+        // Verify loyalty record was created in database
+        var createdLoyalty = await _context.Loyalties.FirstOrDefaultAsync(l => l.UserId == nonExistentUserId);
+        createdLoyalty.Should().NotBeNull();
     }
 
     #endregion
