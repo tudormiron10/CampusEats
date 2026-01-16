@@ -3,6 +3,7 @@ using System;
 using CampusEats.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CampusEats.Api.Migrations
 {
     [DbContext(typeof(CampusEatsDbContext))]
-    partial class CampusEatsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260116002441_MakeMenuItemIdNullable")]
+    partial class MakeMenuItemIdNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -204,7 +207,7 @@ namespace CampusEats.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("MenuItemId")
+                    b.Property<Guid>("MenuItemId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("OfferId")
@@ -436,7 +439,8 @@ namespace CampusEats.Api.Migrations
                     b.HasOne("CampusEats.Api.Infrastructure.Persistence.Entities.MenuItem", "MenuItem")
                         .WithMany()
                         .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("CampusEats.Api.Infrastructure.Persistence.Entities.Offer", "Offer")
                         .WithMany("Items")

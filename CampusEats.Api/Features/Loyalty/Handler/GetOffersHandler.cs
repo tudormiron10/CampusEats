@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Loyalty.Request;
+﻿﻿using CampusEats.Api.Features.Loyalty.Request;
 using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -23,11 +23,21 @@ public class GetOffersHandler : IRequestHandler<GetOffersRequest, IResult>
             return Results.Unauthorized();
 
         var loyalty = await _context.Loyalties
-            .AsNoTracking()
             .FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
 
+        // Auto-create loyalty record if it doesn't exist
         if (loyalty == null)
-            return ApiErrors.NotFound("Loyalty record");
+        {
+            loyalty = new Infrastructure.Persistence.Entities.Loyalty
+            {
+                LoyaltyId = Guid.NewGuid(),
+                UserId = userId.Value,
+                CurrentPoints = 0,
+                LifetimePoints = 0
+            };
+            _context.Loyalties.Add(loyalty);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         var userTier = LoyaltyHelpers.CalculateTier(loyalty.LifetimePoints);
 
@@ -47,7 +57,7 @@ public class GetOffersHandler : IRequestHandler<GetOffersRequest, IResult>
                 o.MinimumTier,
                 o.Items.Select(i => new OfferItemResponse(
                     i.MenuItemId,
-                    i.MenuItem.Name,
+                    i.MenuItem != null ? i.MenuItem.Name : "Deleted Item",
                     i.Quantity
                 )).ToList(),
                 o.IsActive

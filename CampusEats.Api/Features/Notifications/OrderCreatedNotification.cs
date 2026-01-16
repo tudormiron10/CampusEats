@@ -19,7 +19,7 @@ public record OrderCreatedNotification(
 /// Order item details for the notification.
 /// </summary>
 public record OrderItemNotification(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     int Quantity,
     decimal UnitPrice

@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Infrastructure.Persistence;
+﻿﻿using CampusEats.Api.Infrastructure.Persistence;
 using CampusEats.Api.Infrastructure.Persistence.Entities;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -307,7 +307,7 @@ public class StripeWebhookHandler
                 order.OrderDate,
                 order.Items.Select(oi => new OrderItemNotification(
                     oi.MenuItemId,
-                    itemsData.FirstOrDefault(i => i.MenuItemId == oi.MenuItemId)?.Name ?? string.Empty,
+                    oi.MenuItemId.HasValue ? (itemsData.FirstOrDefault(i => i.MenuItemId == oi.MenuItemId.Value)?.Name ?? string.Empty) : string.Empty,
                     oi.Quantity,
                     oi.UnitPrice
                 )).ToList()

@@ -10,7 +10,7 @@ public record OrderResponse(
 );
 
 public record OrderItemResponse(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     decimal UnitPrice,
     int Quantity

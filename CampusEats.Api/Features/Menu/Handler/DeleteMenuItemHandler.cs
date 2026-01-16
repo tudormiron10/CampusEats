@@ -21,7 +21,7 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
         if (menuItem == null)
             return ApiErrors.MenuItemNotFound();
 
-        // Only block deletion if item is in an active order (Pending, InPreparation, Ready)
+        // Block deletion if item is in an active order (Pending, InPreparation, Ready)
         var activeStatuses = new[]
         {
             Infrastructure.Persistence.Entities.OrderStatus.Pending,
@@ -36,6 +36,36 @@ public class DeleteMenuItemHandler : IRequestHandler<DeleteMenuItemRequest, IRes
         if (usedInActiveOrders)
             return ApiErrors.Conflict("Cannot delete menu item as it is part of an active order.");
 
+        // Block deletion if item is in an active offer
+        var usedInActiveOffers = await _context.OfferItems
+            .AnyAsync(oi => oi.MenuItemId == request.MenuItemId
+                         && oi.Offer.IsActive, cancellationToken);
+
+        if (usedInActiveOffers)
+            return ApiErrors.Conflict("Cannot delete menu item as it is part of an active offer. Please deactivate the offer first.");
+
+        // Set MenuItemId to null in all order items referencing this menu item
+        // This preserves order history (UnitPrice is already stored) while allowing physical delete
+        var orderItemsToUpdate = await _context.OrderItems
+            .Where(oi => oi.MenuItemId == request.MenuItemId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var orderItem in orderItemsToUpdate)
+        {
+            orderItem.MenuItemId = null;
+        }
+
+        // Set MenuItemId to null in all inactive offer items referencing this menu item
+        var offerItemsToUpdate = await _context.OfferItems
+            .Where(oi => oi.MenuItemId == request.MenuItemId && !oi.Offer.IsActive)
+            .ToListAsync(cancellationToken);
+
+        foreach (var offerItem in offerItemsToUpdate)
+        {
+            offerItem.MenuItemId = null;
+        }
+
+        // Now safe to delete the menu item
         _context.MenuItems.Remove(menuItem);
         await _context.SaveChangesAsync(cancellationToken);
 

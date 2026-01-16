@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Payments.Request;
+﻿﻿using CampusEats.Api.Features.Payments.Request;
 using CampusEats.Api.Features.Payments.Response;
 using CampusEats.Api.Features.Loyalty;
 using CampusEats.Api.Features.Notifications;
@@ -345,7 +345,7 @@ public class InitiateCheckoutHandler : IRequestHandler<InitiateCheckoutRequest, 
                 order.OrderDate,
                 order.Items.Select(oi => new OrderItemNotification(
                     oi.MenuItemId,
-                    redeemedMenuItems.GetValueOrDefault(oi.MenuItemId)?.Name ?? string.Empty,
+                    oi.MenuItemId.HasValue ? (redeemedMenuItems.GetValueOrDefault(oi.MenuItemId.Value)?.Name ?? string.Empty) : string.Empty,
                     oi.Quantity,
                     oi.UnitPrice
                 )).ToList()

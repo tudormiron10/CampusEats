@@ -42,7 +42,7 @@ public record ItemInsights(
     ItemInsight? EveningBestseller
 );
 
-public record ItemInsight(Guid MenuItemId, string Name, int Quantity);
+public record ItemInsight(Guid? MenuItemId, string Name, int Quantity);
 
 public record RevenueInsights(
     List<TimeSeriesDataPoint> RevenueByHour,
@@ -50,7 +50,7 @@ public record RevenueInsights(
     List<CategoryRevenue> CategoryBreakdown
 );
 
-public record TopRevenueItem(Guid MenuItemId, string Name, decimal Revenue, int Quantity);
+public record TopRevenueItem(Guid? MenuItemId, string Name, decimal Revenue, int Quantity);
 public record CategoryRevenue(Guid CategoryId, string CategoryName, decimal Revenue, decimal Percentage);
 
 public record CustomerInsights(

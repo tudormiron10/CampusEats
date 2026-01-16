@@ -10,7 +10,7 @@ public record KitchenOrderResponse(
 );
 
 public record KitchenOrderItemResponse(
-    [property: JsonPropertyName("menuItemId")] Guid MenuItemId,
+    [property: JsonPropertyName("menuItemId")] Guid? MenuItemId,
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("quantity")] int Quantity,
     [property: JsonPropertyName("unitPrice")] decimal UnitPrice

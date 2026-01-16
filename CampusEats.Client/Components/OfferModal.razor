@@ -256,7 +256,11 @@
             pointCost = offer.PointCost;
             minimumTier = offer.MinimumTier?.ToString() ?? "";
             imageUrl = offer.ImageUrl;
-            selectedItems = offer.Items.Select(i => new OfferItemRequest(i.MenuItemId, i.Quantity)).ToList();
+            // Filter out items where MenuItem was deleted (MenuItemId is null)
+            selectedItems = offer.Items
+                .Where(i => i.MenuItemId.HasValue)
+                .Select(i => new OfferItemRequest(i.MenuItemId!.Value, i.Quantity))
+                .ToList();
         }
         else
         {

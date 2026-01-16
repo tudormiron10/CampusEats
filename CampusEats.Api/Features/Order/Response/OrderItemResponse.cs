@@ -1,4 +1,4 @@
-﻿namespace CampusEats.Api.Features.Orders.Response
+﻿﻿namespace CampusEats.Api.Features.Orders.Response
 {
-    public record OrderItemResponse(Guid MenuItemId, string Name, decimal UnitPrice, int Quantity);
+    public record OrderItemResponse(Guid? MenuItemId, string Name, decimal UnitPrice, int Quantity);
 }
