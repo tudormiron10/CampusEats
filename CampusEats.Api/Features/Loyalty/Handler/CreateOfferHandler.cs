@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Loyalty.Request;
+﻿﻿using CampusEats.Api.Features.Loyalty.Request;
 using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -74,7 +74,7 @@ public class CreateOfferHandler : IRequestHandler<CreateOfferRequest, IResult>
             offer.MinimumTier,
             offer.Items.Select(i => new OfferItemResponse(
                 i.MenuItemId,
-                menuItemNames.GetValueOrDefault(i.MenuItemId, "Unknown"),
+                i.MenuItemId.HasValue ? menuItemNames.GetValueOrDefault(i.MenuItemId.Value, "Unknown") : "Deleted Item",
                 i.Quantity
             )).ToList(),
             offer.IsActive

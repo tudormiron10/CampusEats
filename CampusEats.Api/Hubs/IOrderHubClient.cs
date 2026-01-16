@@ -51,7 +51,7 @@ public record NewOrderNotification(
 /// DTO for order item information in new order notifications.
 /// </summary>
 public record OrderItemInfo(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     int Quantity,
     decimal UnitPrice

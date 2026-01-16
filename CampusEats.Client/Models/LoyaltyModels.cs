@@ -51,7 +51,7 @@ public record OfferResponse(
 /// An item included in an offer
 /// </summary>
 public record OfferItemResponse(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     int Quantity
 );

@@ -45,7 +45,7 @@ public record ItemInsights(
     ItemInsight? EveningBestseller  // 17:00-22:00
 );
 
-public record ItemInsight(Guid MenuItemId, string Name, int Quantity);
+public record ItemInsight(Guid? MenuItemId, string Name, int Quantity);
 
 // Row 5: Revenue Insights
 public record RevenueInsights(
@@ -54,7 +54,7 @@ public record RevenueInsights(
     List<CategoryRevenue> CategoryBreakdown
 );
 
-public record TopRevenueItem(Guid MenuItemId, string Name, decimal Revenue, int Quantity);
+public record TopRevenueItem(Guid? MenuItemId, string Name, decimal Revenue, int Quantity);
 public record CategoryRevenue(Guid CategoryId, string CategoryName, decimal Revenue, decimal Percentage);
 
 // Row 6: Customer Insights

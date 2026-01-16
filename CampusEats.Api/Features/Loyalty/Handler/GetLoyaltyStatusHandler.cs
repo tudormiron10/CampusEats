@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Features.Loyalty.Request;
+﻿﻿﻿using CampusEats.Api.Features.Loyalty.Request;
 using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -23,11 +23,21 @@ public class GetLoyaltyStatusHandler : IRequestHandler<GetLoyaltyStatusRequest, 
             return Results.Unauthorized();
 
         var loyalty = await _context.Loyalties
-            .AsNoTracking()
             .FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
 
+        // Auto-create loyalty record if it doesn't exist
         if (loyalty == null)
-            return ApiErrors.NotFound("Loyalty record");
+        {
+            loyalty = new Infrastructure.Persistence.Entities.Loyalty
+            {
+                LoyaltyId = Guid.NewGuid(),
+                UserId = userId.Value,
+                CurrentPoints = 0,
+                LifetimePoints = 0
+            };
+            _context.Loyalties.Add(loyalty);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         var tier = LoyaltyHelpers.CalculateTier(loyalty.LifetimePoints);
         var pointsToNextTier = LoyaltyHelpers.GetPointsToNextTier(loyalty.LifetimePoints, tier);

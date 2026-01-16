@@ -1,4 +1,4 @@
-﻿using CampusEats.Api.Features.Loyalty.Request;
+﻿﻿using CampusEats.Api.Features.Loyalty.Request;
 using CampusEats.Api.Features.Loyalty.Response;
 using CampusEats.Api.Infrastructure.Extensions;
 using CampusEats.Api.Infrastructure.Persistence;
@@ -22,17 +22,29 @@ public class GetTransactionsHandler : IRequestHandler<GetTransactionsRequest, IR
         if (userId == null)
             return Results.Unauthorized();
 
-        var loyaltyId = await _context.Loyalties
-            .Where(l => l.UserId == userId)
-            .Select(l => l.LoyaltyId)
-            .FirstOrDefaultAsync(cancellationToken);
+        var loyalty = await _context.Loyalties
+            .FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
 
-        if (loyaltyId == Guid.Empty)
-            return ApiErrors.NotFound("Loyalty record");
+        // Auto-create loyalty record if it doesn't exist
+        if (loyalty == null)
+        {
+            loyalty = new Infrastructure.Persistence.Entities.Loyalty
+            {
+                LoyaltyId = Guid.NewGuid(),
+                UserId = userId.Value,
+                CurrentPoints = 0,
+                LifetimePoints = 0
+            };
+            _context.Loyalties.Add(loyalty);
+            await _context.SaveChangesAsync(cancellationToken);
+            
+            // New loyalty record has no transactions
+            return Results.Ok(new List<LoyaltyTransactionResponse>());
+        }
 
         var transactions = await _context.LoyaltyTransactions
             .AsNoTracking()
-            .Where(t => t.LoyaltyId == loyaltyId)
+            .Where(t => t.LoyaltyId == loyalty.LoyaltyId)
             .OrderByDescending(t => t.Date)
             .Select(t => new LoyaltyTransactionResponse(
                 t.TransactionId,

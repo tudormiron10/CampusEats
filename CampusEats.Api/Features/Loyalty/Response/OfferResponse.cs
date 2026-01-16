@@ -1,4 +1,4 @@
-﻿﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿﻿﻿using CampusEats.Api.Infrastructure.Persistence.Entities;
 
 namespace CampusEats.Api.Features.Loyalty.Response;
 
@@ -14,7 +14,7 @@ public record OfferResponse(
 );
 
 public record OfferItemResponse(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     int Quantity
 );

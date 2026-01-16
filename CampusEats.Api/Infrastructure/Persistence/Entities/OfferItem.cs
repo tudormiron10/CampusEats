@@ -1,4 +1,4 @@
-﻿namespace CampusEats.Api.Infrastructure.Persistence.Entities;
+﻿﻿namespace CampusEats.Api.Infrastructure.Persistence.Entities;
 
 public class OfferItem
 {
@@ -6,6 +6,8 @@ public class OfferItem
     public int Quantity { get; set; }
     public Guid OfferId { get; set; }
     public Offer Offer { get; set; } = null!;
-    public Guid MenuItemId { get; set; }
-    public MenuItem MenuItem { get; set; } = null!;
+    
+    // Nullable to allow menu item deletion while preserving offer history
+    public Guid? MenuItemId { get; set; }
+    public MenuItem? MenuItem { get; set; }
 }

@@ -384,8 +384,10 @@
             }
 
             // Add offer items to cart as pending (will be redeemed at checkout)
+            // Filter out items where MenuItem was deleted (MenuItemId is null)
             var itemsToAdd = offer.Items
-                .Select(i => (i.MenuItemId, i.Name, i.Quantity))
+                .Where(i => i.MenuItemId.HasValue)
+                .Select(i => (i.MenuItemId!.Value, i.Name, i.Quantity))
                 .ToList();
             
             await CartService.AddPendingOfferAsync(offer.OfferId, offer.Title, offer.PointCost, itemsToAdd);

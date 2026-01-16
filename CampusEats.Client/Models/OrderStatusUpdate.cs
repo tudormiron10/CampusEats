@@ -29,7 +29,7 @@ public record NewOrderNotification(
 /// Order item info for new order notifications.
 /// </summary>
 public record OrderItemInfo(
-    Guid MenuItemId,
+    Guid? MenuItemId,
     string Name,
     int Quantity,
     decimal UnitPrice
