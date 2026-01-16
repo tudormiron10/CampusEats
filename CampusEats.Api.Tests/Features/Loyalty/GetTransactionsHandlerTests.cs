@@ -222,7 +222,7 @@ public class GetTransactionsHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_ReturnsNotFound()
+    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_AutoCreatesLoyaltyAndReturnsEmptyList()
     {
         // Arrange
         var user = new UserEntity
@@ -243,10 +243,19 @@ public class GetTransactionsHandlerTests : IDisposable
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
-        // Assert
-        var statusCodeResult = result as IStatusCodeHttpResult;
-        statusCodeResult.Should().NotBeNull();
-        statusCodeResult!.StatusCode.Should().Be(404);
+        // Assert - Handler now auto-creates loyalty record and returns empty transaction list
+        var ok = result as Ok<List<LoyaltyTransactionResponse>>;
+        ok.Should().NotBeNull();
+
+        var transactions = ok!.Value;
+        transactions.Should().NotBeNull();
+        transactions.Should().BeEmpty();
+
+        // Verify loyalty record was created in database
+        var createdLoyalty = await _context.Loyalties.FirstOrDefaultAsync(l => l.UserId == user.UserId);
+        createdLoyalty.Should().NotBeNull();
+        createdLoyalty!.CurrentPoints.Should().Be(0);
+        createdLoyalty.LifetimePoints.Should().Be(0);
     }
 
     #endregion

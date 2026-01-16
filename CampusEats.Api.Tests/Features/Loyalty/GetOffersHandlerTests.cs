@@ -301,7 +301,7 @@ public class GetOffersHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_ReturnsNotFound()
+    public async Task Given_UserWithoutLoyaltyRecord_When_Handle_Then_AutoCreatesLoyaltyAndReturnsOffers()
     {
         // Arrange
         var user = new UserEntity
@@ -316,16 +316,28 @@ public class GetOffersHandlerTests : IDisposable
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        // Seed an active offer without tier restriction
+        await SeedOffer("Free Offer", 100, isActive: true);
+
         var httpContext = CreateHttpContext(user.UserId);
         var request = new GetOffersRequest(httpContext);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
-        // Assert
-        var statusCodeResult = result as IStatusCodeHttpResult;
-        statusCodeResult.Should().NotBeNull();
-        statusCodeResult!.StatusCode.Should().Be(404);
+        // Assert - Handler now auto-creates loyalty record and returns available offers
+        var ok = result as Ok<List<OfferResponse>>;
+        ok.Should().NotBeNull();
+
+        var offers = ok!.Value;
+        offers.Should().NotBeNull();
+        offers.Should().HaveCount(1);
+
+        // Verify loyalty record was created in database
+        var createdLoyalty = await _context.Loyalties.FirstOrDefaultAsync(l => l.UserId == user.UserId);
+        createdLoyalty.Should().NotBeNull();
+        createdLoyalty!.CurrentPoints.Should().Be(0);
+        createdLoyalty.LifetimePoints.Should().Be(0);
     }
 
     #endregion
